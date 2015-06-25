@@ -106,6 +106,8 @@ public final class HostRuntime implements Mode {
         vmCommand.add("ANDROID_ROOT=" + buildRoot + "/out/host/linux-x86");
         vmCommand.add("LD_LIBRARY_PATH=" + libDir);
         vmCommand.add("DYLD_LIBRARY_PATH=" + libDir);
+        // This is needed on the host so that the linker loads core.oat at the necessary address.
+        vmCommand.add("LD_USE_LOAD_BIAS=1");
         Iterables.addAll(vmCommand, run.invokeWith());
         vmCommand.add(buildRoot + "/out/host/linux-x86/bin/" + run.vmCommand);
 
