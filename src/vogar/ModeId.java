@@ -64,7 +64,6 @@ public enum ModeId {
             "conscrypt-hostdex",
             "okhttp-hostdex",
             "bouncycastle-hostdex",
-            "apache-xml-hostdex",
     };
 
     public boolean acceptsVmArgs() {
