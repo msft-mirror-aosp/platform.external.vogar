@@ -59,7 +59,6 @@ public class AndroidSdk {
             "conscrypt-hostdex",
             "okhttp-hostdex",
             "bouncycastle-hostdex",
-            "apache-xml-hostdex",
     };
 
     private final Log log;
