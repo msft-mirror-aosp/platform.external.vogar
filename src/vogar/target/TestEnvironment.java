@@ -76,7 +76,7 @@ public final class TestEnvironment {
 
         // From "L" release onwards, calling System.setProperties(null) clears the java.io.tmpdir,
         // so we set it again. No-op on earlier releases.
-        System.setProperty("java.io.tmpdir", tmpDir);
+        setPropertyIfNull("java.io.tmpdir", tmpDir);
 
         String userHome = System.getProperty("user.home");
         String userDir = System.getProperty("user.dir");
@@ -97,29 +97,30 @@ public final class TestEnvironment {
 
         // From "L" release onwards, calling System.setProperties(null) clears the java.io.tmpdir,
         // so we set it again. No-op on earlier releases.
-        System.setProperty("java.io.tmpdir", tmpDir);
-
-        if (JAVA_RUNTIME_VERSION != null) {
-            System.setProperty("java.runtime.version", JAVA_RUNTIME_VERSION);
-        }
-        if (JAVA_VM_INFO != null) {
-            System.setProperty("java.vm.info", JAVA_VM_INFO);
-        }
-        if (JAVA_VM_VERSION != null) {
-            System.setProperty("java.vm.version", JAVA_VM_VERSION);
-        }
-        if (JAVA_VM_VENDOR != null) {
-            System.setProperty("java.vm.vendor", JAVA_VM_VENDOR);
-        }
-        if (JAVA_VM_NAME != null) {
-            System.setProperty("java.vm.name", JAVA_VM_NAME);
-        }
+        setPropertyIfNull("java.io.tmpdir", tmpDir);
 
         // Require writable java.home and user.dir directories for preferences
         if ("Dalvik".equals(System.getProperty("java.vm.name"))) {
             String javaHome = tmpDir + "/java.home";
             IoUtils.safeMkdirs(new File(javaHome));
-            System.setProperty("java.home", javaHome);
+            setPropertyIfNull("java.home", javaHome);
+        } else {
+            // The mode --jvm has these properties writable.
+            if (JAVA_RUNTIME_VERSION != null) {
+                System.setProperty("java.runtime.version", JAVA_RUNTIME_VERSION);
+            }
+            if (JAVA_VM_INFO != null) {
+                System.setProperty("java.vm.info", JAVA_VM_INFO);
+            }
+            if (JAVA_VM_VERSION != null) {
+                System.setProperty("java.vm.version", JAVA_VM_VERSION);
+            }
+            if (JAVA_VM_VENDOR != null) {
+                System.setProperty("java.vm.vendor", JAVA_VM_VENDOR);
+            }
+            if (JAVA_VM_NAME != null) {
+                System.setProperty("java.vm.name", JAVA_VM_NAME);
+            }
         }
         String userHome = System.getProperty("user.home");
         if (userHome.length() == 0) {
@@ -237,6 +238,12 @@ public final class TestEnvironment {
             Error e2 = new AssertionError("Unable to set java.text.DateFormat.is24Hour");
             e2.initCause(e);
             throw e2;
+        }
+    }
+
+    private static void setPropertyIfNull(String property, String value) {
+        if (System.getProperty(property) == null) {
+           System.setProperty(property, value);
         }
     }
 }
