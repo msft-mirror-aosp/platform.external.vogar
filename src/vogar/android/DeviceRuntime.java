@@ -104,16 +104,7 @@ public final class DeviceRuntime implements Mode {
                 .vmArgs("-Duser.language=en")
                 .vmArgs("-Duser.region=US");
 
-        if (modeId == ModeId.DEVICE_ART_KITKAT) {
-            // Required for KitKat to select the ART runtime. Default is Dalvik.
-            vmCommandBuilder.vmArgs("-XXlib:libart.so");
-        }
         if (!run.benchmark) {
-            if (modeId == ModeId.DEVICE_DALVIK) {
-              // Historically, vogar has turned off these options for Dalvik.
-              vmCommandBuilder.vmArgs("-Xverify:none");
-              vmCommandBuilder.vmArgs("-Xdexopt:none");
-            }
             vmCommandBuilder.vmArgs("-Xcheck:jni");
         }
         // dalvikvm defaults to no limit, but the framework sets the limit at 2000.

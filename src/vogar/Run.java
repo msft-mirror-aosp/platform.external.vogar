@@ -202,12 +202,8 @@ public final class Run {
             case JVM:
                 return new JavaVm(this);
             case HOST:
-            case HOST_DALVIK:
-            case HOST_ART_KITKAT:
                 return new HostRuntime(this, modeId, variant);
             case DEVICE:
-            case DEVICE_DALVIK:
-            case DEVICE_ART_KITKAT:
             case APP_PROCESS:
                 return new DeviceRuntime(this, modeId, variant);
             case ACTIVITY:
