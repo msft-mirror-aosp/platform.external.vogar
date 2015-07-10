@@ -119,16 +119,7 @@ public final class HostRuntime implements Mode {
                 .vmArgs("-Duser.language=en")
                 .vmArgs("-Duser.region=US");
         if (!run.benchmark) {
-            if (modeId == ModeId.HOST_DALVIK) {
-              // Historically, vogar has turned off these options for Dalvik.
-              builder.vmArgs("-Xverify:none");
-              builder.vmArgs("-Xdexopt:none");
-            }
             builder.vmArgs("-Xcheck:jni");
-        }
-        if (modeId == ModeId.HOST_ART_KITKAT) {
-            // Required for KitKat to select the ART runtime. Default is Dalvik.
-            builder.vmArgs("-XXlib:libart.so");
         }
         // dalvikvm defaults to no limit, but the framework sets the limit at 2000.
         builder.vmArgs("-Xjnigreflimit:2000");
