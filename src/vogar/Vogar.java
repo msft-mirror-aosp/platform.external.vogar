@@ -208,14 +208,10 @@ public final class Vogar {
         System.out.println();
         System.out.println("GENERAL OPTIONS");
         System.out.println();
-        System.out.println("  --mode <activity|device|device_dalvik|host|host_dalvik|jvm>: specify which environment to run in.");
+        System.out.println("  --mode <activity|device|host|jvm>: specify which environment to run in.");
         System.out.println("      activity: runs in an Android application on a device or emulator");
         System.out.println("      device: runs in an ART runtime on a device or emulator");
-        System.out.println("      device_dalvik: runs in a Dalvik runtime on a device or emulator");
-        System.out.println("      device_art_kitkat: runs in a KitKat ART runtime on a device or emulator");
         System.out.println("      host: runs in an ART runtime on the local desktop built with any lunch combo.");
-        System.out.println("      host_dalvik: runs in a Dalvik runtime on the local desktop built with any lunch combo.");
-        System.out.println("      host_art_kitkat: runs in a KitKat ART runtime on the local desktop built with any lunch combo.");
         System.out.println("      jvm: runs in a Java VM on the local desktop");
         System.out.println("      Default is: " + modeId);
         System.out.println();
