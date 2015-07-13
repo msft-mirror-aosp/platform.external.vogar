@@ -65,6 +65,7 @@ public class AndroidSdk {
     private final Mkdir mkdir;
     private final File[] compilationClasspath;
     public final DeviceFilesystem deviceFilesystem;
+    private final boolean useJack;
 
     private Md5Cache dexCache;
     private Md5Cache pushCache;
@@ -79,10 +80,11 @@ public class AndroidSdk {
         return (files != null) ? Arrays.asList(files) : Collections.<File>emptyList();
     }
 
-    public AndroidSdk(Log log, Mkdir mkdir, ModeId modeId) {
+    public AndroidSdk(Log log, Mkdir mkdir, ModeId modeId, boolean useJack) {
         this.log = log;
         this.mkdir = mkdir;
         this.deviceFilesystem = new DeviceFilesystem(log, "adb", "shell");
+        this.useJack = useJack;
 
         List<String> path = new Command(log, "which", "adb").execute();
         if (path.isEmpty()) {
@@ -122,7 +124,8 @@ public class AndroidSdk {
 
             String pattern = "out/target/common/obj/JAVA_LIBRARIES/%s_intermediates/classes.jar";
             if (modeId.isHost()) {
-                pattern = "out/host/common/obj/JAVA_LIBRARIES/%s_intermediates/classes.jar";
+                pattern = "out/host/common/obj/JAVA_LIBRARIES/%s_intermediates/classes"
+                        + ((useJack) ? ".jack" : ".jar");
             }
 
             String[] jarNames = modeId.getJarNames();

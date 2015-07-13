@@ -25,6 +25,9 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
+
+import com.google.common.collect.Sets;
+
 import vogar.Action;
 import vogar.Classpath;
 import vogar.Driver;
@@ -35,6 +38,7 @@ import vogar.Run;
 import vogar.TestProperties;
 import vogar.commands.Command;
 import vogar.commands.CommandFailedException;
+import vogar.commands.Jack;
 import vogar.commands.Javac;
 
 /**
@@ -58,7 +62,11 @@ public final class BuildActionTask extends Task {
 
     @Override protected Result execute() throws Exception {
         try {
-            compile(action, jar);
+            if (run.useJack) {
+                compileWithJack(action, jar);
+            } else {
+                compile(action, jar);
+            }
             return Result.SUCCESS;
         } catch (CommandFailedException e) {
             driver.addEarlyResult(new Outcome(action.getName(), Result.COMPILE_FAILED,
@@ -106,6 +114,55 @@ public final class BuildActionTask extends Task {
                     .compile(sourceFiles);
         }
 
+        new Command(run.log, run.javaPath("jar"), "cvfM", jar.getPath(),
+                "-C", classesDir.getPath(), "./").execute();
+    }
+
+
+
+    /**
+     * Compile sources using the Jack compiler.
+     */
+    private void compileWithJack(Action action, File jar) throws IOException {
+        // Create a folder for output classes
+        File classesDir = run.localFile(action, "classes");
+        run.mkdir.mkdirs(classesDir);
+        createJarMetadataFiles(action, classesDir);
+
+        File javaFile = action.getJavaFile();
+        Jack compiler = Jack.getJackCompiler(run.log);
+
+        if (run.debugPort != null) {
+            compiler.setDebug();
+        }
+
+        Set<File> sourceFiles = Sets.newHashSet();
+
+        // Add the source files to be compiled.
+        // The javac compiler supports the -sourcepath directive although jack
+        // does not have this (see b/22382563) so for now only the files given
+        // are actually compiled.
+        if (javaFile != null) {
+            if (!JAVA_SOURCE_PATTERN.matcher(javaFile.toString()).find()) {
+                throw new CommandFailedException(Collections.<String>emptyList(),
+                        Collections.singletonList("There is no source to compile here: "
+                                + javaFile));
+            }
+            sourceFiles.add(javaFile);
+        }
+
+        // Compile if there is anything to compile.
+        if (!sourceFiles.isEmpty()) {
+            if (!run.buildClasspath.isEmpty()) {
+                compiler.setClassPath(run.buildClasspath.toString() + ":"
+                        + run.classpath.toString());
+            }
+        }
+
+        compiler.outputDex(classesDir.toString())
+                .compile(sourceFiles);
+
+        // Create a .dex.jar from the jack output directory.
         new Command(run.log, run.javaPath("jar"), "cvfM", jar.getPath(),
                 "-C", classesDir.getPath(), "./").execute();
     }

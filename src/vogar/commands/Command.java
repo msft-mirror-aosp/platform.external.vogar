@@ -279,6 +279,16 @@ public final class Command {
             this.log = log;
         }
 
+        public Builder(Builder other) {
+            this.log = other.log;
+            this.args.addAll(other.args);
+            this.env.putAll(other.env);
+            this.workingDirectory = other.workingDirectory;
+            this.permitNonZeroExitStatus = other.permitNonZeroExitStatus;
+            this.tee = other.tee;
+            this.maxLength = other.maxLength;
+        }
+
         public Builder args(Object... args) {
             return args(Arrays.asList(args));
         }
