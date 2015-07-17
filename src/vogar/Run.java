@@ -17,6 +17,7 @@
 package vogar;
 
 import com.google.common.base.Splitter;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -26,20 +27,26 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+
 import vogar.android.ActivityMode;
 import vogar.android.AdbTarget;
 import vogar.android.AndroidSdk;
 import vogar.android.DeviceFileCache;
 import vogar.android.DeviceRuntime;
 import vogar.android.HostRuntime;
+import vogar.commands.CommandFailedException;
+import vogar.commands.Jack;
 import vogar.commands.Mkdir;
 import vogar.commands.Rm;
 import vogar.tasks.TaskQueue;
 import vogar.util.Strings;
 
 public final class Run {
-    /** A list of generic names that we avoid when naming generated files. */
+    /**
+     * A list of generic names that we avoid when naming generated files.
+     */
     private static final Set<String> BANNED_NAMES = new HashSet<String>();
+
     static {
         BANNED_NAMES.add("classes");
         BANNED_NAMES.add("javalib");
@@ -96,6 +103,7 @@ public final class Run {
     public final OutcomeStore outcomeStore;
     public final TaskQueue taskQueue;
     public final boolean testOnly;
+    public final boolean useJack;
 
     public Run(Vogar vogar) throws IOException {
         this.console = vogar.stream
@@ -118,6 +126,7 @@ public final class Run {
             this.target = new AdbTarget(this);
         }
 
+        this.useJack = vogar.toolchain.toLowerCase().equals("jack");
         this.vmCommand = vogar.vmCommand;
         this.dalvikCache = vogar.dalvikCache;
         this.additionalVmArgs = vogar.vmArgs;
@@ -154,16 +163,36 @@ public final class Run {
         this.profileInterval = vogar.profileInterval;
         this.profileThreadGroup = vogar.profileThreadGroup;
         this.recordResults = vogar.recordResults;
-        this.resultsDir =  vogar.resultsDir == null
+        this.resultsDir = vogar.resultsDir == null
                 ? new File(vogar.vogarDir, "results")
                 : vogar.resultsDir;
         this.keystore = localFile("activity", "vogar.keystore");
         this.classpath = Classpath.of(vogar.classpath);
-        this.classpath.addAll(vogarJar());
+
+        // When we are running in jack mode, extra jack files are needed to compile our sources
+        // as jack takes libraries in it's own .jack format, and these need to be in the classpath.
+        // We add the jack libraries for compiling although the jar libraries are still needed at
+        // runtime, so they are added too.
+        if (useJack) {
+            // We try to convert the vogar jar file with required testing frameworks into a jack
+            // library so we can use it while building sources.
+            try {
+                String vogarJarPath = vogarJar().getAbsolutePath();
+                String vogarJackPath = Jack.convertJarToJackLib(log, vogarJarPath);
+                this.classpath.addAll(new File(vogarJackPath), new File(vogarJarPath));
+            } catch (IllegalArgumentException | CommandFailedException e) {
+                System.out.println("There was an error finding required jack libraries. Details: "
+                        + e.getMessage());
+                throw new IllegalStateException("Jack was requested but could not be found.");
+            }
+        } else {
+            this.classpath.addAll(vogarJar());
+        }
+
         this.testOnly = vogar.testOnly;
 
         if (vogar.modeId.requiresAndroidSdk()) {
-            androidSdk = new AndroidSdk(log, mkdir, vogar.modeId);
+            androidSdk = new AndroidSdk(log, mkdir, vogar.modeId, this.useJack);
             androidSdk.setCaches(new HostFileCache(log, mkdir),
                     new DeviceFileCache(log, runnerDir, androidSdk));
         } else {

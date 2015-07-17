@@ -17,12 +17,14 @@
 package vogar.android;
 
 import com.google.common.collect.Iterables;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
 import vogar.Action;
 import vogar.Classpath;
 import vogar.Mode;
@@ -63,6 +65,7 @@ public final class HostRuntime implements Mode {
     @Override public Set<Task> installTasks() {
         Set<Task> result = new HashSet<Task>();
         for (File classpathElement : run.classpath.getElements()) {
+            // Libraries need to be dex'ed and put in the temporary directory.
             String name = run.basenameOfJar(classpathElement);
             result.add(new DexTask(run.androidSdk, run.classpath, run.benchmark, name,
                     classpathElement, null, run.localDexFile(name)));

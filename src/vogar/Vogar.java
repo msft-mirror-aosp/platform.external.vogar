@@ -17,12 +17,16 @@
 package vogar;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.LinkedHashSet;
+
 import vogar.android.AndroidSdk;
 import vogar.util.Strings;
 
@@ -39,6 +43,7 @@ public final class Vogar {
     private final OptionParser optionParser = new OptionParser(this);
     private File configFile = Vogar.dotFile(".vogarconfig");
     private String[] configArgs;
+    public final static Console console = new Console.StreamingConsole();
 
     public static File dotFile (String name) {
         return new File(System.getProperty("user.home", "."), name);
@@ -187,6 +192,9 @@ public final class Vogar {
 
     @Option(names = { "--test-only" })
     boolean testOnly = false;
+
+    @Option(names = { "--toolchain" })
+    String toolchain = "jdk";
 
     private Vogar() {}
 
@@ -479,6 +487,17 @@ public final class Vogar {
 
         if (!modeId.acceptsVmArgs() && !targetArgs.isEmpty()) {
             System.out.println("Target args " + targetArgs + " should not be specified for mode " + modeId);
+            return false;
+        }
+
+        // Check that jack is setup correctly & check compatability
+        if (toolchain.toLowerCase().equals("jack")) {
+            if (modeId != ModeId.HOST) {
+                System.out.println("Error: experimental jack support only works with host mode.");
+                return false;
+            }
+        } else if (!toolchain.toLowerCase().equals("jdk")) {
+            System.out.println("The options for toolchain are either jack or jdk.");
             return false;
         }
 
