@@ -33,7 +33,7 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
   vogar-jsr305 \
   vogar-kxml-libcore-20110123 \
   vogar-miniguice \
-  vogar-mockito-all-1.8.5 \
+  mockito-target
 
 # Vogar uses android.jar.
 LOCAL_SDK_VERSION := 9
@@ -55,8 +55,7 @@ LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := \
     vogar-guava:lib/guava$(COMMON_JAVA_PACKAGE_SUFFIX) \
     vogar-jsr305:lib/jsr305$(COMMON_JAVA_PACKAGE_SUFFIX) \
     vogar-kxml-libcore-20110123:lib/kxml-libcore-20110123$(COMMON_JAVA_PACKAGE_SUFFIX) \
-    vogar-miniguice:lib/miniguice$(COMMON_JAVA_PACKAGE_SUFFIX) \
-    vogar-mockito-all-1.8.5:lib/mockito-all-1.8.5$(COMMON_JAVA_PACKAGE_SUFFIX) \
+    vogar-miniguice:lib/miniguice$(COMMON_JAVA_PACKAGE_SUFFIX)
 
 LOCAL_MODULE_TAGS := optional
 
