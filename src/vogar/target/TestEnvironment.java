@@ -91,6 +91,12 @@ public final class TestEnvironment {
         disableSecurity();
     }
 
+    private String createTempDirectory(String subDirName) {
+        String dirName = tmpDir + "/" + subDirName;
+        IoUtils.safeMkdirs(new File(dirName));
+        return dirName;
+    }
+
     public void reset() {
         // Reset system properties.
         System.setProperties(null);
@@ -101,9 +107,8 @@ public final class TestEnvironment {
 
         // Require writable java.home and user.dir directories for preferences
         if ("Dalvik".equals(System.getProperty("java.vm.name"))) {
-            String javaHome = tmpDir + "/java.home";
-            IoUtils.safeMkdirs(new File(javaHome));
-            setPropertyIfNull("java.home", javaHome);
+            setPropertyIfNull("java.home", createTempDirectory("java.home"));
+            setPropertyIfNull("dexmaker.dexcache", createTempDirectory("dexmaker.dexcache"));
         } else {
             // The mode --jvm has these properties writable.
             if (JAVA_RUNTIME_VERSION != null) {
