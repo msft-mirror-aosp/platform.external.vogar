@@ -196,6 +196,9 @@ public final class Vogar {
     @Option(names = { "--toolchain" })
     String toolchain = "jdk";
 
+    @Option(names = { "--check-jni" })
+    boolean checkJni = true;
+
     private Vogar() {}
 
     private void printUsage() {
@@ -292,6 +295,10 @@ public final class Vogar {
         System.out.println("      Default is: " + testOnly);
         System.out.println();
         System.out.println("  --verbose: turn on persistent verbose output.");
+        System.out.println();
+        System.out.println("  --check-jni: enable CheckJNI mode.");
+        System.out.println("      See http://developer.android.com/training/articles/perf-jni.html.");
+        System.out.println("      Default is: " + checkJni + ", but disabled for --benchmark.");
         System.out.println();
         System.out.println("TARGET OPTIONS");
         System.out.println();

@@ -104,7 +104,7 @@ public final class DeviceRuntime implements Mode {
                 .vmArgs("-Duser.language=en")
                 .vmArgs("-Duser.region=US");
 
-        if (!run.benchmark) {
+        if (!run.benchmark && run.checkJni) {
             vmCommandBuilder.vmArgs("-Xcheck:jni");
         }
         // dalvikvm defaults to no limit, but the framework sets the limit at 2000.
