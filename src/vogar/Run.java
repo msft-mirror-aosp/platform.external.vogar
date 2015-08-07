@@ -104,6 +104,7 @@ public final class Run {
     public final TaskQueue taskQueue;
     public final boolean testOnly;
     public final boolean useJack;
+    public final boolean checkJni;
 
     public Run(Vogar vogar) throws IOException {
         this.console = vogar.stream
@@ -224,6 +225,7 @@ public final class Run {
                 expectationStore, date);
         this.driver = new Driver(this);
         this.taskQueue = new TaskQueue(console, maxConcurrentActions);
+        this.checkJni = vogar.checkJni;
     }
 
     private Mode createMode(ModeId modeId, Variant variant) {
