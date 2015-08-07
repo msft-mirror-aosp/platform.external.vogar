@@ -121,7 +121,7 @@ public final class HostRuntime implements Mode {
                 .vmArgs("-Xbootclasspath:" + bootClasspath.toString())
                 .vmArgs("-Duser.language=en")
                 .vmArgs("-Duser.region=US");
-        if (!run.benchmark) {
+        if (!run.benchmark && run.checkJni) {
             builder.vmArgs("-Xcheck:jni");
         }
         // dalvikvm defaults to no limit, but the framework sets the limit at 2000.
