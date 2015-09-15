@@ -109,7 +109,10 @@ public final class Driver {
 
         run.taskQueue.printTasks();
         run.taskQueue.runTasks();
-        run.taskQueue.printProblemTasks();
+        if (run.taskQueue.hasFailedTasks()) {
+            run.taskQueue.printProblemTasks();
+            return false;
+        }
 
         if (run.reportPrinter.isReady()) {
             run.console.info("Printing XML Reports... ");
