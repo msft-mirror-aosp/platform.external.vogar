@@ -84,15 +84,22 @@ public final class HostRuntime implements Mode {
     }
 
     @Override public VmCommandBuilder newVmCommandBuilder(Action action, File workingDirectory) {
-        String buildRoot = System.getenv("ANDROID_BUILD_TOP");
+        String hostOut = System.getenv("ANDROID_HOST_OUT");
+        if (hostOut == null || hostOut.length() == 0) {
+          hostOut = System.getenv("ANDROID_BUILD_TOP");
+          if (hostOut == null) {
+            hostOut = "";
+          }
+          hostOut += "out/host/linux-x86";
+        }
 
         List<File> jars = new ArrayList<File>();
         for (String jar : modeId.getJarNames()) {
-            jars.add(new File(buildRoot, "out/host/linux-x86/framework/" + jar + ".jar"));
+            jars.add(new File(hostOut, "framework/" + jar + ".jar"));
         }
         Classpath bootClasspath = Classpath.of(jars);
 
-        String libDir = buildRoot + "/out/host/linux-x86";
+        String libDir = hostOut;
         if (variant == Variant.X32) {
             libDir += "/lib";
         } else if (variant == Variant.X64) {
@@ -106,13 +113,13 @@ public final class HostRuntime implements Mode {
         vmCommand.add("ANDROID_PRINTF_LOG=tag");
         vmCommand.add("ANDROID_LOG_TAGS=*:i");
         vmCommand.add("ANDROID_DATA=" + dalvikCache().getParent());
-        vmCommand.add("ANDROID_ROOT=" + buildRoot + "/out/host/linux-x86");
+        vmCommand.add("ANDROID_ROOT=" + hostOut);
         vmCommand.add("LD_LIBRARY_PATH=" + libDir);
         vmCommand.add("DYLD_LIBRARY_PATH=" + libDir);
         // This is needed on the host so that the linker loads core.oat at the necessary address.
         vmCommand.add("LD_USE_LOAD_BIAS=1");
         Iterables.addAll(vmCommand, run.invokeWith());
-        vmCommand.add(buildRoot + "/out/host/linux-x86/bin/" + run.vmCommand);
+        vmCommand.add(hostOut + "/bin/" + run.vmCommand);
 
         VmCommandBuilder builder = new VmCommandBuilder(run.log);
 
