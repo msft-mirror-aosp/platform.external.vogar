@@ -105,10 +105,10 @@ public class AndroidSdk {
          *  <sdk>/platforms/android-?/android.jar
          *
          * Android build tree (target):
-         *  <source>/out/host/linux-x86/bin/aapt
-         *  <source>/out/host/linux-x86/bin/adb
-         *  <source>/out/host/linux-x86/bin/dx
-         *  <source>/out/target/common/obj/JAVA_LIBRARIES/core-libart_intermediates/classes.jar
+         *  <ANDROID_HOST_OUT>/bin/aapt
+         *  <ANDROID_HOST_OUT>bin/adb
+         *  <ANDROID_HOST_OUT>/bin/dx
+         *  <OUT_DIR>/target/common/obj/JAVA_LIBRARIES/core-libart_intermediates/classes.jar
          */
 
         if ("platform-tools".equals(parentFileName)) {
@@ -122,9 +122,15 @@ public class AndroidSdk {
                     .getParentFile().getParentFile().getParentFile();
             log.verbose("using android build tree: " + sourceRoot);
 
-            String pattern = "out/target/common/obj/JAVA_LIBRARIES/%s_intermediates/classes.jar";
+            String outDir = System.getenv("OUT_DIR");
+            if (outDir == null || outDir.length() == 0) {
+              outDir = "./out";
+            } else {
+              outDir += "/";
+            }
+            String pattern = outDir + "target/common/obj/JAVA_LIBRARIES/%s_intermediates/classes.jar";
             if (modeId.isHost()) {
-                pattern = "out/host/common/obj/JAVA_LIBRARIES/%s_intermediates/classes"
+                pattern = outDir + "host/common/obj/JAVA_LIBRARIES/%s_intermediates/classes"
                         + ((useJack) ? ".jack" : ".jar");
             }
 
