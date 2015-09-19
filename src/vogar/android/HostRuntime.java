@@ -89,6 +89,8 @@ public final class HostRuntime implements Mode {
           hostOut = System.getenv("ANDROID_BUILD_TOP");
           if (hostOut == null) {
             hostOut = "";
+          } else {
+            hostOut += "/";
           }
           hostOut += "out/host/linux-x86";
         }
