@@ -124,7 +124,7 @@ public class AndroidSdk {
 
             String outDir = System.getenv("OUT_DIR");
             if (outDir == null || outDir.length() == 0) {
-              outDir = "./out";
+              outDir = "./out/";
             } else {
               outDir += "/";
             }
