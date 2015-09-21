@@ -247,7 +247,12 @@ public class AndroidSdk {
     }
 
     public void rm(File name) {
-        new Command(log, "adb", "shell", "rm", "-r", name.getPath()).execute();
+        new Command.Builder(log)
+                .args("adb", "shell", "rm", "-r", name.getPath())
+                // Note: When all supported versions of Android correctly return the exit code
+                // from adb we can rely on the exit code to detect failure. Until then: no.
+                .permitNonZeroExitStatus(true)
+                .execute();
     }
 
     public void cp(File source, File destination) {

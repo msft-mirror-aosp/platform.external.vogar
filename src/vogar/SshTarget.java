@@ -62,7 +62,7 @@ public final class SshTarget extends Target {
     @Override public void rm(File file) {
         new Command.Builder(log)
                 .args("ssh", "-p", Integer.toString(port), host, "-C", "rm", "-r", file.getPath())
-                .permitNonZeroExitStatus()
+                .permitNonZeroExitStatus(true)
                 .execute();
     }
 

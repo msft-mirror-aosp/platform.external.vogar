@@ -317,11 +317,11 @@ public final class Command {
         }
 
         /**
-         * Prevents execute() from throwing if the invoked process returns a
+         * Controls whether execute() throws if the invoked process returns a
          * nonzero exit code.
          */
-        public Builder permitNonZeroExitStatus() {
-            this.permitNonZeroExitStatus = true;
+        public Builder permitNonZeroExitStatus(boolean value) {
+            this.permitNonZeroExitStatus = value;
             return this;
         }
 
