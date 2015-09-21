@@ -86,12 +86,12 @@ public class AndroidSdk {
         this.deviceFilesystem = new DeviceFilesystem(log, "adb", "shell");
         this.useJack = useJack;
 
-        List<String> path = new Command(log, "which", "adb").execute();
+        List<String> path = new Command(log, "which", "dx").execute();
         if (path.isEmpty()) {
-            throw new RuntimeException("adb not found");
+            throw new RuntimeException("dx not found");
         }
-        File adb = new File(path.get(0)).getAbsoluteFile();
-        String parentFileName = adb.getParentFile().getName();
+        File dx = new File(path.get(0)).getAbsoluteFile();
+        String parentFileName = dx.getParentFile().getName();
 
         /*
          * We probably get aapt/adb/dx from either a copy of the Android SDK or a copy
@@ -112,13 +112,13 @@ public class AndroidSdk {
          */
 
         if ("platform-tools".equals(parentFileName)) {
-            File sdkRoot = adb.getParentFile().getParentFile();
+            File sdkRoot = dx.getParentFile().getParentFile();
             File newestPlatform = getNewestPlatform(sdkRoot);
             log.verbose("using android platform: " + newestPlatform);
             compilationClasspath = new File[] { new File(newestPlatform, "android.jar") };
             log.verbose("using android sdk: " + sdkRoot);
         } else if ("bin".equals(parentFileName)) {
-            File sourceRoot = adb.getParentFile().getParentFile()
+            File sourceRoot = dx.getParentFile().getParentFile()
                     .getParentFile().getParentFile().getParentFile();
             log.verbose("using android build tree: " + sourceRoot);
 
@@ -141,7 +141,7 @@ public class AndroidSdk {
                 compilationClasspath[i] = new File(sourceRoot, String.format(pattern, jar));
             }
         } else {
-            throw new RuntimeException("Couldn't derive Android home from " + adb);
+            throw new RuntimeException("Couldn't derive Android home from " + dx);
         }
     }
 
