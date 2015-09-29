@@ -300,7 +300,10 @@ public class AndroidSdk {
     }
 
     public void waitForDevice() {
-        new Command(log, "adb", "wait-for-device").execute();
+        new Command.Builder(log)
+            .args("adb", "wait-for-device")
+            .permitNonZeroExitStatus(true)
+            .execute();
     }
 
     /**
@@ -313,7 +316,10 @@ public class AndroidSdk {
             // not want to use it. So we wait until it is not empty.
             waitForNonEmptyDirectory(pathArgument, 5 * 60);
         } else {
-            Command command = new Command(log, "adb", "shell", "ls", pathArgument);
+            Command command = new Command.Builder(log)
+                .args("adb", "shell", "ls", pathArgument)
+                .permitNonZeroExitStatus(true)
+                .build();
             List<String> output = command.execute();
             // TODO: We should avoid checking for the error message, and instead have
             // the Command class understand a non-zero exit code from an adb shell command.
@@ -333,7 +339,10 @@ public class AndroidSdk {
         while (true) {
             final int remainingSeconds =
                     (int) ((deadline - System.currentTimeMillis()) / millisPerSecond);
-            Command command = new Command(log, "adb", "shell", "ls", pathArgument);
+            Command command = new Command.Builder(log)
+                .args("adb", "shell", "ls", pathArgument)
+                .permitNonZeroExitStatus(true)
+                .build();
             List<String> output;
             try {
                 output = command.executeWithTimeout(remainingSeconds);
