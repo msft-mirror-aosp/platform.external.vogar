@@ -116,10 +116,11 @@ public class AndroidSdk {
          *  <sdk>/platforms/android-23/android.jar
          *
          * Android build tree (target):
-         *  <ANDROID_HOST_OUT>/bin/aapt
-         *  <ANDROID_HOST_OUT>bin/adb
-         *  <ANDROID_HOST_OUT>/bin/dx
-         *  <OUT_DIR>/target/common/obj/JAVA_LIBRARIES/core-libart_intermediates/classes.jar
+         *  ${ANDROID_BUILD_TOP}/out/host/linux-x86/bin/aapt
+         *  ${ANDROID_BUILD_TOP}/out/host/linux-x86/bin/adb
+         *  ${ANDROID_BUILD_TOP}/out/host/linux-x86/bin/dx
+         *  ${ANDROID_BUILD_TOP}/out/target/common/obj/JAVA_LIBRARIES/core-libart_intermediates
+         *      /classes.jar
          */
 
         // Accept that we are running in an SDK if the user has added the build-tools or
@@ -129,29 +130,37 @@ public class AndroidSdk {
             File sdkRoot = dxSdkPathValid ? dx.getParentFile().getParentFile().getParentFile()
                     : adb.getParentFile().getParentFile();
             File newestPlatform = getNewestPlatform(sdkRoot);
-            log.verbose("using android platform: " + newestPlatform);
+            log.verbose("Using android platform: " + newestPlatform);
             compilationClasspath = new File[] { new File(newestPlatform, "android.jar") };
             androidJarPath = new File(newestPlatform.getAbsolutePath(), "android.jar")
                     .getAbsolutePath();
             log.verbose("using android sdk: " + sdkRoot);
         } else if ("bin".equals(parentFileName)) {
-            File sourceRoot = dx.getParentFile().getParentFile()
-                    .getParentFile().getParentFile().getParentFile();
-            log.verbose("using android build tree: " + sourceRoot);
-
+            log.verbose("Using android source build mode to find dependencies.");
             String tmpJarPath = "prebuilts/sdk/current/android.jar";
-            String buildRoot = System.getenv().get("ANDROID_BUILD_TOP");
-            if (!com.google.common.base.Strings.isNullOrEmpty(buildRoot)) {
-                tmpJarPath = buildRoot + "/prebuilts/sdk/current/android.jar";
+            String androidBuildTop = System.getenv("ANDROID_BUILD_TOP");
+            if (!com.google.common.base.Strings.isNullOrEmpty(androidBuildTop)) {
+                tmpJarPath = androidBuildTop + "/prebuilts/sdk/current/android.jar";
+            } else {
+                log.warn("Assuming current directory is android build tree root.");
             }
             androidJarPath = tmpJarPath;
 
             String outDir = System.getenv("OUT_DIR");
-            if (outDir == null || outDir.length() == 0) {
-              outDir = "/out/";
+            if (Strings.isNullOrEmpty(outDir)) {
+                if (Strings.isNullOrEmpty(androidBuildTop)) {
+                    outDir = ".";
+                    log.warn("Assuming we are in android build tree root to find libraries.");
+                } else {
+                    log.verbose("Using ANDROID_BUILD_TOP to find built libraries.");
+                    outDir = androidBuildTop;
+                }
+                outDir += "/out/";
             } else {
-              outDir += "/";
+                log.verbose("Using OUT_DIR environment variable for finding built libs.");
+                outDir += "/";
             }
+
             String pattern = outDir + "target/common/obj/JAVA_LIBRARIES/%s_intermediates/classes.jar";
             if (modeId.isHost()) {
                 pattern = outDir + "host/common/obj/JAVA_LIBRARIES/%s_intermediates/classes"
@@ -162,7 +171,7 @@ public class AndroidSdk {
             compilationClasspath = new File[jarNames.length];
             for (int i = 0; i < jarNames.length; i++) {
                 String jar = jarNames[i];
-                compilationClasspath[i] = new File(sourceRoot, String.format(pattern, jar));
+                compilationClasspath[i] = new File(String.format(pattern, jar));
             }
         } else {
             throw new RuntimeException("Couldn't derive Android home from " + dx);
