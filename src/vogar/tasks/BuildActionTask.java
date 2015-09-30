@@ -91,7 +91,7 @@ public final class BuildActionTask extends Task {
         Set<File> sourceFiles = new HashSet<File>();
         File javaFile = action.getJavaFile();
         Javac javac = new Javac(run.log, run.javaPath("javac"));
-        if (run.debugPort != null) {
+        if (run.debugging) {
             javac.debug();
         }
         if (javaFile != null) {
@@ -132,7 +132,7 @@ public final class BuildActionTask extends Task {
         File javaFile = action.getJavaFile();
         Jack compiler = Jack.getJackCompiler(run.log);
 
-        if (run.debugPort != null) {
+        if (run.debugging) {
             compiler.setDebug();
         }
 

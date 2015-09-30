@@ -112,6 +112,9 @@ public final class Vogar {
     @Option(names = { "--debug" })
     Integer debugPort;
 
+    @Option(names = { "--debug-app" })
+    boolean debugApp;
+
     @Option(names = { "--device-dir" })
     File deviceDir;
 
@@ -306,6 +309,10 @@ public final class Vogar {
         System.out.println("      This port must be free both on the device and on the local");
         System.out.println("      system. Disables the timeout specified by --timeout-seconds.");
         System.out.println();
+        System.out.println("  --debug-app: enable debugging while running in an activity.");
+        System.out.println("      This will require the use of DDMS to connect to the activity");
+        System.out.println("      on the device, and expose the debugger on an appropriate port.");
+        System.out.println();
         System.out.println("  --device-dir <directory>: use the specified directory for");
         System.out.println("      on-device temporary files and code.");
         System.out.println();
@@ -497,7 +504,7 @@ public final class Vogar {
             return false;
         }
 
-        // Check that jack is setup correctly & check compatability
+        // Check that jack is setup correctly & check compatibility
         if (toolchain.toLowerCase().equals("jack")) {
             if (modeId != ModeId.HOST) {
                 System.out.println("Error: experimental jack support only works with host mode.");
@@ -505,6 +512,16 @@ public final class Vogar {
             }
         } else if (!toolchain.toLowerCase().equals("jdk")) {
             System.out.println("The options for toolchain are either jack or jdk.");
+            return false;
+        }
+
+        if (modeId == ModeId.ACTIVITY && debugPort != null) {
+            System.out.println("Activity debugging requires the use of --debug-app and DDMS.");
+            return false;
+        }
+
+        if (debugApp && modeId != ModeId.ACTIVITY) {
+            System.out.println("--debug-app can only be used in combination with --mode activity.");
             return false;
         }
 
