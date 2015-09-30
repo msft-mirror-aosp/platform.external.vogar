@@ -105,6 +105,7 @@ public final class Run {
     public final boolean testOnly;
     public final boolean useJack;
     public final boolean checkJni;
+    public final boolean debugging;
 
     public Run(Vogar vogar) throws IOException {
         this.console = vogar.stream
@@ -226,6 +227,7 @@ public final class Run {
         this.driver = new Driver(this);
         this.taskQueue = new TaskQueue(console, maxConcurrentActions);
         this.checkJni = vogar.checkJni;
+        this.debugging = (vogar.debugPort != null) || vogar.debugApp;
     }
 
     private Mode createMode(ModeId modeId, Variant variant) {

@@ -75,7 +75,8 @@ public final class InstallApkTask extends Task {
             "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
             "      package=\"" + packageName(action) + "\">\n" +
             "    <uses-permission android:name=\"android.permission.INTERNET\" />\n" +
-            "    <application>\n" +
+            "    <application" +
+                    ((run.debugging) ? " android:debuggable=\"true\"" : "") + ">\n" +
             "        <activity android:name=\"" + ACTIVITY_CLASS + "\">\n" +
             "            <intent-filter>\n" +
             "                <action android:name=\"android.intent.action.MAIN\" />\n" +
