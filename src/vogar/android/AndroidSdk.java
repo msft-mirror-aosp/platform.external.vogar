@@ -65,8 +65,7 @@ public class AndroidSdk {
     private final Mkdir mkdir;
     private final File[] compilationClasspath;
     public final DeviceFilesystem deviceFilesystem;
-    private final boolean useJack;
-
+    private final String androidJarPath;
     private Md5Cache dexCache;
     private Md5Cache pushCache;
 
@@ -84,25 +83,37 @@ public class AndroidSdk {
         this.log = log;
         this.mkdir = mkdir;
         this.deviceFilesystem = new DeviceFilesystem(log, "adb", "shell");
-        this.useJack = useJack;
 
-        List<String> path = new Command(log, "which", "dx").execute();
+        List<String> path = new Command.Builder(log).args("which", "dx")
+                .permitNonZeroExitStatus(true)
+                .build()
+                .execute();
         if (path.isEmpty()) {
             throw new RuntimeException("dx not found");
         }
         File dx = new File(path.get(0)).getAbsoluteFile();
         String parentFileName = dx.getParentFile().getName();
 
+        List<String> adbPath = new Command.Builder(log)
+                .args("which", "adb")
+                .permitNonZeroExitStatus(true)
+                .execute();
+
+        File adb;
+        if (!adbPath.isEmpty()) {
+            adb = new File(adbPath.get(0));
+        } else {
+            adb = new File(".");  // Set the path somewhere so it is safe to check later.
+        }
+
         /*
-         * We probably get aapt/adb/dx from either a copy of the Android SDK or a copy
-         * of the Android source code. In either case, all three tools are in the same
-         * directory as each other.
+         * Determine if we are running with a provided SDK or in the AOSP source tree.
          *
-         * Android SDK >= v9 (gingerbread):
-         *  <sdk>/platform-tools/aapt
+         * On Android SDK v23 (Marshmallow) the structure looks like:
+         *  <sdk>/build-tools/23.0.1/aapt
          *  <sdk>/platform-tools/adb
-         *  <sdk>/platform-tools/dx
-         *  <sdk>/platforms/android-?/android.jar
+         *  <sdk>/build-tools/23.0.1/dx
+         *  <sdk>/platforms/android-23/android.jar
          *
          * Android build tree (target):
          *  <ANDROID_HOST_OUT>/bin/aapt
@@ -111,20 +122,33 @@ public class AndroidSdk {
          *  <OUT_DIR>/target/common/obj/JAVA_LIBRARIES/core-libart_intermediates/classes.jar
          */
 
-        if ("platform-tools".equals(parentFileName)) {
-            File sdkRoot = dx.getParentFile().getParentFile();
+        // Accept that we are running in an SDK if the user has added the build-tools or
+        // platform-tools to their path.
+        boolean dxSdkPathValid = "build-tools".equals(dx.getParentFile().getParentFile().getName());
+        if (dxSdkPathValid || "platform-tools".equals(adb.getParentFile().getName())) {
+            File sdkRoot = dxSdkPathValid ? dx.getParentFile().getParentFile().getParentFile()
+                    : adb.getParentFile().getParentFile();
             File newestPlatform = getNewestPlatform(sdkRoot);
             log.verbose("using android platform: " + newestPlatform);
             compilationClasspath = new File[] { new File(newestPlatform, "android.jar") };
+            androidJarPath = new File(newestPlatform.getAbsolutePath(), "android.jar")
+                    .getAbsolutePath();
             log.verbose("using android sdk: " + sdkRoot);
         } else if ("bin".equals(parentFileName)) {
             File sourceRoot = dx.getParentFile().getParentFile()
                     .getParentFile().getParentFile().getParentFile();
             log.verbose("using android build tree: " + sourceRoot);
 
+            String tmpJarPath = "prebuilts/sdk/current/android.jar";
+            String buildRoot = System.getenv().get("ANDROID_BUILD_TOP");
+            if (!com.google.common.base.Strings.isNullOrEmpty(buildRoot)) {
+                tmpJarPath = buildRoot + "/prebuilts/sdk/current/android.jar";
+            }
+            androidJarPath = tmpJarPath;
+
             String outDir = System.getenv("OUT_DIR");
             if (outDir == null || outDir.length() == 0) {
-              outDir = "./out/";
+              outDir = "/out/";
             } else {
               outDir += "/";
             }
@@ -231,10 +255,10 @@ public class AndroidSdk {
 
     public void packageApk(File apk, File manifest) {
         List<String> aapt = new ArrayList<String>(Arrays.asList("aapt",
-                                                                "package",
-                                                                "-F", apk.getPath(),
-                                                                "-M", manifest.getPath(),
-                                                                "-I", "prebuilts/sdk/current/android.jar"));
+                "package",
+                "-F", apk.getPath(),
+                "-M", manifest.getPath(),
+                "-I", androidJarPath));
         new Command(log, aapt).execute();
     }
 
@@ -288,7 +312,10 @@ public class AndroidSdk {
     }
 
     public void uninstall(String packageName) {
-        new Command(log, "adb", "uninstall", packageName).execute();
+        new Command.Builder(log)
+                .args("adb", "uninstall", packageName)
+                .permitNonZeroExitStatus(true)
+                .execute();
     }
 
     public void forwardTcp(int port) {
