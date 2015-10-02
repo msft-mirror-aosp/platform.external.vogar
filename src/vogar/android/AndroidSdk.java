@@ -92,7 +92,7 @@ public class AndroidSdk {
             throw new RuntimeException("dx not found");
         }
         File dx = new File(path.get(0)).getAbsoluteFile();
-        String parentFileName = dx.getParentFile().getName();
+        String parentFileName = getParentFileNOrLast(dx, 1).getName();
 
         List<String> adbPath = new Command.Builder(log)
                 .args("which", "adb")
@@ -103,7 +103,7 @@ public class AndroidSdk {
         if (!adbPath.isEmpty()) {
             adb = new File(adbPath.get(0));
         } else {
-            adb = new File(".");  // Set the path somewhere so it is safe to check later.
+            adb = new File(".");
         }
 
         /*
@@ -125,10 +125,10 @@ public class AndroidSdk {
 
         // Accept that we are running in an SDK if the user has added the build-tools or
         // platform-tools to their path.
-        boolean dxSdkPathValid = "build-tools".equals(dx.getParentFile().getParentFile().getName());
-        if (dxSdkPathValid || "platform-tools".equals(adb.getParentFile().getName())) {
-            File sdkRoot = dxSdkPathValid ? dx.getParentFile().getParentFile().getParentFile()
-                    : adb.getParentFile().getParentFile();
+        boolean dxSdkPathValid = "build-tools".equals(getParentFileNOrLast(dx, 2).getName());
+        if (dxSdkPathValid || "platform-tools".equals(getParentFileNOrLast(adb, 1).getName())) {
+            File sdkRoot = dxSdkPathValid ? getParentFileNOrLast(dx, 3)
+                    : getParentFileNOrLast(adb, 2);
             File newestPlatform = getNewestPlatform(sdkRoot);
             log.verbose("Using android platform: " + newestPlatform);
             compilationClasspath = new File[] { new File(newestPlatform, "android.jar") };
@@ -176,6 +176,20 @@ public class AndroidSdk {
         } else {
             throw new RuntimeException("Couldn't derive Android home from " + dx);
         }
+    }
+
+    // Goes up N levels in the filesystem hierarchy. Return the last file that exists if this goes
+    // past /.
+    private File getParentFileNOrLast(File f, int n) {
+        File lastKnownExists = f;
+        for (int i = 0; i < n; i++) {
+            File parentFile = lastKnownExists.getParentFile();
+            if (parentFile == null) {
+                return lastKnownExists;
+            }
+            lastKnownExists = parentFile;
+        }
+        return lastKnownExists;
     }
 
     /**
