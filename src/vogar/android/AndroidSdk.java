@@ -103,7 +103,7 @@ public class AndroidSdk {
         if (!adbPath.isEmpty()) {
             adb = new File(adbPath.get(0));
         } else {
-            adb = new File(".");
+            adb = null;  // Could not find adb.
         }
 
         /*
@@ -126,9 +126,11 @@ public class AndroidSdk {
         // Accept that we are running in an SDK if the user has added the build-tools or
         // platform-tools to their path.
         boolean dxSdkPathValid = "build-tools".equals(getParentFileNOrLast(dx, 2).getName());
-        if (dxSdkPathValid || "platform-tools".equals(getParentFileNOrLast(adb, 1).getName())) {
-            File sdkRoot = dxSdkPathValid ? getParentFileNOrLast(dx, 3)
-                    : getParentFileNOrLast(adb, 2);
+        boolean isAdbPathValid = (adb != null) &&
+                "platform-tools".equals(getParentFileNOrLast(adb, 1).getName());
+        if (dxSdkPathValid || isAdbPathValid) {
+            File sdkRoot = dxSdkPathValid ? getParentFileNOrLast(dx, 3)  // if dx path invalid then
+                                          : getParentFileNOrLast(adb, 2);  // adb must be valid.
             File newestPlatform = getNewestPlatform(sdkRoot);
             log.verbose("Using android platform: " + newestPlatform);
             compilationClasspath = new File[] { new File(newestPlatform, "android.jar") };
