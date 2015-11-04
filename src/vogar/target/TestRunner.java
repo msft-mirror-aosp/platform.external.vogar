@@ -28,10 +28,11 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.Nullable;
 import vogar.Result;
 import vogar.TestProperties;
 import vogar.monitor.TargetMonitor;
-import vogar.target.junit.JUnitRunner;
+import vogar.target.junit.JUnitRunnerFactory;
 
 /**
  * Runs an action, in process on the target.
@@ -49,7 +50,8 @@ public final class TestRunner {
     /** use an atomic reference so the runner can null it out when it is encountered. */
     protected final AtomicReference<String> skipPastReference;
     protected final int timeoutSeconds;
-    protected final List<Runner> runners;
+
+    private final RunnerFactory runnerFactory;
     private final boolean profile;
     private final int profileDepth;
     private final int profileInterval;
@@ -76,11 +78,12 @@ public final class TestRunner {
 
         boolean testOnly = Boolean.parseBoolean(properties.getProperty(TestProperties.TEST_ONLY));
         if (testOnly) {
-          runners = Arrays.asList((Runner)new JUnitRunner());
+            runnerFactory = new CompositeRunnerFactory(new JUnitRunnerFactory());
         } else {
-          runners = Arrays.asList(new JUnitRunner(),
-                                  new CaliperRunner(),
-                                  new MainRunner());
+            runnerFactory = new CompositeRunnerFactory(
+                    new JUnitRunnerFactory(),
+                    new CaliperRunnerFactory(),
+                    new MainRunnerFactory());
         }
         for (Iterator<String> i = argsList.iterator(); i.hasNext(); ) {
             String arg = i.next();
@@ -140,22 +143,6 @@ public final class TestRunner {
             }
         }
         throw new IOException(TestProperties.FILE + " missing!");
-    }
-
-    /**
-     * Returns the class to run the test with based on {@param klass}. For instance, a class
-     * that extends junit.framework.TestCase should be run with JUnitSpec.
-     *
-     * Returns null if no such associated runner exists.
-     */
-    private Class<?> runnerClass(Class<?> klass) {
-        for (Runner runner : runners) {
-            if (runner.supports(klass)) {
-                return runner.getClass();
-            }
-        }
-
-        return null;
     }
 
     public void run() throws IOException {
@@ -226,8 +213,18 @@ public final class TestRunner {
             profiler.setup(profileThreadGroup, profileDepth, profileInterval);
         }
         for (Class<?> klass : classes) {
-            Class<?> runnerClass = runnerClass(klass);
-            if (runnerClass == null) {
+            Runner runner;
+            try {
+                runner = runnerFactory.newRunner(monitor, qualifiedName, qualification, klass,
+                        skipPastReference, testEnvironment, timeoutSeconds, profile);
+            } catch (RuntimeException e) {
+                monitor.outcomeStarted(null, qualifiedName, qualifiedName);
+                e.printStackTrace();
+                monitor.outcomeFinished(Result.ERROR);
+                return;
+            }
+
+            if (runner == null) {
                 monitor.outcomeStarted(null, klass.getName(), qualifiedName);
                 System.out.println("Skipping " + klass.getName()
                         + ": no associated runner class");
@@ -235,17 +232,6 @@ public final class TestRunner {
                 continue;
             }
 
-            Runner runner;
-            try {
-                runner = (Runner) runnerClass.newInstance();
-                runner.init(monitor, qualifiedName, qualification, klass, skipPastReference,
-                        testEnvironment, timeoutSeconds, profile);
-            } catch (Exception e) {
-                monitor.outcomeStarted(null, qualifiedName, qualifiedName);
-                e.printStackTrace();
-                monitor.outcomeFinished(Result.ERROR);
-                return;
-            }
             boolean completedNormally = runner.run(qualifiedName, profiler, args);
             if (!completedNormally) {
                 return; // let the caller start another process
@@ -263,4 +249,31 @@ public final class TestRunner {
         System.exit(0);
     }
 
+    /**
+     * A {@link RunnerFactory} that will traverse a list of {@link RunnerFactory} instances to find
+     * one that can be used to run the code.
+     */
+    private static class CompositeRunnerFactory implements RunnerFactory {
+
+        private List<? extends RunnerFactory> runnerFactories;
+
+        private CompositeRunnerFactory(RunnerFactory... runnerFactories) {
+            this.runnerFactories = Arrays.asList(runnerFactories);
+        }
+
+        @Override @Nullable
+        public Runner newRunner(TargetMonitor monitor, String actionName, String qualification,
+                Class<?> klass, AtomicReference<String> skipPastReference,
+                TestEnvironment testEnvironment, int timeoutSeconds, boolean profile) {
+            for (RunnerFactory runnerFactory : runnerFactories) {
+                Runner runner = runnerFactory.newRunner(monitor, actionName, qualification, klass,
+                        skipPastReference, testEnvironment, timeoutSeconds, profile);
+                if (runner != null) {
+                    return runner;
+                }
+            }
+
+            return null;
+        }
+    }
 }

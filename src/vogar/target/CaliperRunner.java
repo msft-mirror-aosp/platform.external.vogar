@@ -17,7 +17,6 @@
 package vogar.target;
 
 import com.google.caliper.Runner;
-import com.google.caliper.SimpleBenchmark;
 import com.google.common.collect.ObjectArrays;
 import java.util.concurrent.atomic.AtomicReference;
 import vogar.Result;
@@ -28,16 +27,14 @@ import vogar.monitor.TargetMonitor;
  */
 public final class CaliperRunner implements vogar.target.Runner {
 
-    private TargetMonitor monitor;
-    private boolean profile;
-    private Class<?> testClass;
+    private final TargetMonitor monitor;
+    private final boolean profile;
+    private final Class<?> testClass;
 
-    public void init(TargetMonitor monitor, String actionName, String qualification,
-            Class<?> testClass, AtomicReference<String> skipPastReference,
-            TestEnvironment testEnvironment, int timeoutSeconds, boolean profile) {
-        this.monitor = monitor;
-        this.profile = profile;
-        this.testClass = testClass;
+    public CaliperRunner(TargetMonitor monitor, boolean profile, Class<?> testClass) {
+      this.monitor = monitor;
+      this.profile = profile;
+      this.testClass = testClass;
     }
 
     public boolean run(String actionName, Profiler profiler,
@@ -61,9 +58,5 @@ public final class CaliperRunner implements vogar.target.Runner {
         }
         monitor.outcomeFinished(Result.SUCCESS);
         return true;
-    }
-
-    public boolean supports(Class<?> klass) {
-        return SimpleBenchmark.class.isAssignableFrom(klass);
     }
 }

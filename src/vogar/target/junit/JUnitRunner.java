@@ -38,21 +38,22 @@ import vogar.util.Threads;
  */
 public final class JUnitRunner implements Runner {
 
-    private TargetMonitor monitor;
-    private Class<?> testClass;
-    private String qualification;
-    private AtomicReference<String> skipPastReference;
-    private String actionName;
-    private TestEnvironment testEnvironment;
-    private int timeoutSeconds;
+    private final TargetMonitor monitor;
+    private final Class<?> testClass;
+    private final String qualification;
+    private final AtomicReference<String> skipPastReference;
+    private final String actionName;
+    private final TestEnvironment testEnvironment;
+    private final int timeoutSeconds;
     private boolean vmIsUnstable;
 
     private final ExecutorService executor = Executors.newCachedThreadPool(
             Threads.daemonThreadFactory("testrunner"));
 
-    public void init(TargetMonitor monitor, String actionName, String qualification,
+    public JUnitRunner(TargetMonitor monitor, String actionName, String qualification,
             Class<?> testClass, AtomicReference<String> skipPastReference,
-            TestEnvironment testEnvironment, int timeoutSeconds, boolean profile) {
+            TestEnvironment testEnvironment, int timeoutSeconds) {
+
         this.monitor = monitor;
         this.testClass = testClass;
         this.qualification = qualification;
@@ -211,9 +212,5 @@ public final class JUnitRunner implements Runner {
             System.arraycopy(stackTraceElements, first, copyOfRange, 0, last - first);
             t.setStackTrace(copyOfRange);
         }
-    }
-
-    public boolean supports(Class<?> klass) {
-        return Junit3.isJunit3Test(klass) || Junit4.isJunit4Test(klass);
     }
 }
