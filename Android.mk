@@ -19,10 +19,9 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE := vogar.jar
+LOCAL_MODULE := vogar
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
-intermediates := $(call local-intermediates-dir,COMMON)
 LOCAL_SRC_FILES := $(call all-java-files-under, src/)
 LOCAL_JAVA_RESOURCE_DIRS := resources
 
@@ -57,8 +56,6 @@ LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := \
     vogar-kxml-libcore-20110123:lib/kxml-libcore-20110123$(COMMON_JAVA_PACKAGE_SUFFIX) \
     vogar-miniguice:lib/miniguice$(COMMON_JAVA_PACKAGE_SUFFIX)
 
-LOCAL_MODULE_TAGS := optional
-
 include $(BUILD_MULTI_PREBUILT)
 
 # copy vogar script
@@ -66,12 +63,7 @@ include $(BUILD_MULTI_PREBUILT)
 include $(CLEAR_VARS)
 LOCAL_IS_HOST_MODULE := true
 LOCAL_MODULE_CLASS := EXECUTABLES
-LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := vogar
+LOCAL_SRC_FILES := bin/vogar-android
+include $(BUILD_PREBUILT)
 
-include $(BUILD_SYSTEM)/base_rules.mk
-
-$(LOCAL_BUILT_MODULE): $(LOCAL_PATH)/bin/vogar-android vogar.jar | $(ACP)
-	@echo "Copy: $(PRIVATE_MODULE) ($@)"
-	$(copy-file-to-new-target)
-	$(hide) chmod 755 $@
