@@ -22,6 +22,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 
 import junit.framework.Test;
@@ -170,7 +171,7 @@ public final class Junit3 {
     }
 
     private static void getTestSuiteTests(List<VogarTest> out, TestSuite suite) {
-        for (Object testsOrSuite : suite.getTestsAndSuites()) {
+        for (Object testsOrSuite : getTestsAndSuites(suite)) {
             if (testsOrSuite instanceof Class) {
                 getSuiteMethods(out, (Class<?>) testsOrSuite);
             } else if (testsOrSuite instanceof TestCase) {
@@ -185,7 +186,44 @@ public final class Junit3 {
     }
 
     private static VogarTest createForTestCase(TestCase testCase) {
-        return new TestCaseInstance(testCase, testCase.getMethod());
+        Method method;
+        try {
+            method = testCase.getMethod();
+        } catch (NoSuchMethodError e) {
+            // This is running with the standard JUnit TestCase class and not the Vogar specific
+            // one so the getMethod() method is not available. Fall back to invoking the runTest
+            // method instead of the test specific method. The JUnit version of TestCase will
+            // invoke the test specific method from with runTest.
+            if (!e.getMessage().contains("getMethod()Ljava/lang/reflect/Method;")) {
+                throw e;
+            }
+
+            method = runTest;
+        }
+
+        return new TestCaseInstance(testCase, method);
+    }
+
+    private static List<Object> getTestsAndSuites(TestSuite suite) {
+        try {
+            return suite.getTestsAndSuites();
+        } catch (NoSuchMethodError e) {
+            // This is running with the standard JUnit TestSuite class and not the Vogar specific
+            // one so the getTestsAndSuites() method is not available. Fall back to using the
+            // tests() method.
+            if (!e.getMessage().contains("getTestsAndSuites()Ljava/util/List;")) {
+                throw e;
+            }
+
+            // Create a list from the enumeration, cannot use Collections.list() without a lot of
+            // ugly casting.
+            Enumeration<?> enumeration = suite.tests();
+            List<Object> tests = new ArrayList<Object>();
+            while (enumeration.hasMoreElements()) {
+                tests.add(enumeration.nextElement());
+            }
+            return tests;
+        }
     }
 
     private static class ConfigurationError implements VogarTest {
