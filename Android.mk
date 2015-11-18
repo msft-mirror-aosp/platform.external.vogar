@@ -32,23 +32,18 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
   vogar-jsr305 \
   vogar-kxml-libcore-20110123 \
   vogar-miniguice \
-  mockito-target
+  mockito-host
 
 # Vogar uses android.jar.
-LOCAL_SDK_VERSION := 9
+LOCAL_CLASSPATH := prebuilts/sdk/9/android.jar
 
-# This is really a host java library which pretends to be a target
-# java library to pull in the Android SDK. We don't want to use jack
-# because jack doesn't produce jar files for STATIC_JAVA_LIBRARIES,
-# and produces its own intermediate representation instead.
-LOCAL_JACK_ENABLED := disabled
-include $(BUILD_STATIC_JAVA_LIBRARY)
+include $(BUILD_HOST_JAVA_LIBRARY)
 
 # Build dependencies.
 # ============================================================
 include $(CLEAR_VARS)
 
-LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := \
+LOCAL_PREBUILT_JAVA_LIBRARIES := \
     vogar-caliper:lib/caliper$(COMMON_JAVA_PACKAGE_SUFFIX) \
     vogar-gson-1.7.1:lib/gson-1.7.1$(COMMON_JAVA_PACKAGE_SUFFIX) \
     vogar-guava:lib/guava$(COMMON_JAVA_PACKAGE_SUFFIX) \
@@ -56,7 +51,7 @@ LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := \
     vogar-kxml-libcore-20110123:lib/kxml-libcore-20110123$(COMMON_JAVA_PACKAGE_SUFFIX) \
     vogar-miniguice:lib/miniguice$(COMMON_JAVA_PACKAGE_SUFFIX)
 
-include $(BUILD_MULTI_PREBUILT)
+include $(BUILD_HOST_PREBUILT)
 
 # copy vogar script
 # ============================================================
