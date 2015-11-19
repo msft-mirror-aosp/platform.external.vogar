@@ -314,13 +314,11 @@ public final class Run {
     }
 
     /**
-     * Returns an environment variable assignment to configure where the VM will
-     * store its dexopt files. This must be set on production devices and is
-     * optional for development devices.
+     * Returns the directory where the VM stores its dexopt files.
      */
-    public String getAndroidData() {
+    public String getAndroidDataPath() {
         // The VM wants the parent directory of a directory named "dalvik-cache"
-        return "ANDROID_DATA=" + dalvikCache().getParentFile();
+        return dalvikCache().getParentFile().getPath();
     }
 
     /**

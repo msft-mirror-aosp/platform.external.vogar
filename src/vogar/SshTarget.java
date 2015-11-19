@@ -56,7 +56,7 @@ public final class SshTarget extends Target {
         return new File("/data/local/tmp/vogar");
     }
 
-    @Override public List<String> targetProcessPrefix() {
+    @Override protected ImmutableList<String> targetProcessPrefix() {
         return sshCommandPrefixList;
     }
 

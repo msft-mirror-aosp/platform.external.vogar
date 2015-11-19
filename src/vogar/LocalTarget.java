@@ -30,6 +30,8 @@ import vogar.commands.Rm;
  */
 public final class LocalTarget extends Target {
 
+    private static final ImmutableList<String> TARGET_PROCESS_PREFIX = ImmutableList.of("sh", "-c");
+
     private final Log log;
 
     private final Mkdir mkdir;
@@ -46,8 +48,8 @@ public final class LocalTarget extends Target {
         return new File("/tmp/vogar");
     }
 
-    @Override public List<String> targetProcessPrefix() {
-        return ImmutableList.of("sh", "-c");
+    @Override protected ImmutableList<String> targetProcessPrefix() {
+        return TARGET_PROCESS_PREFIX;
     }
 
     @Override public String getDeviceUserName() {
