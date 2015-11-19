@@ -16,18 +16,23 @@
 
 package vogar;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.LinkedHashSet;
 
+import vogar.android.AdbTarget;
 import vogar.android.AndroidSdk;
+import vogar.android.DeviceFileCache;
+import vogar.android.DeviceFilesystem;
+import vogar.commands.Mkdir;
+import vogar.commands.Rm;
 import vogar.util.Strings;
 
 /**
@@ -44,6 +49,8 @@ public final class Vogar {
     private File configFile = Vogar.dotFile(".vogarconfig");
     private String[] configArgs;
     public final static Console console = new Console.StreamingConsole();
+
+    private boolean useJack;
 
     public static File dotFile (String name) {
         return new File(System.getProperty("user.home", "."), name);
@@ -62,10 +69,10 @@ public final class Vogar {
     Variant variant = Variant.X32;
 
     @Option(names = { "--ssh" })
-    String sshHost;
+    private String sshHost;
 
     @Option(names = { "--timeout" })
-    int timeoutSeconds = 1 * 60; // default is one minute;
+    int timeoutSeconds = 60; // default is one minute;
 
     @Option(names = { "--first-monitor-port" })
     int firstMonitorPort = -1;
@@ -83,31 +90,31 @@ public final class Vogar {
     File xmlReportsDirectory;
 
     @Option(names = { "--indent" })
-    String indent = "  ";
+    private String indent = "  ";
 
     @Option(names = { "--verbose" })
-    boolean verbose;
+    private boolean verbose;
 
     @Option(names = { "--stream" })
     boolean stream = true;
 
     @Option(names = { "--color" })
-    boolean color = true;
+    private boolean color = true;
 
     @Option(names = { "--pass-color" })
-    int passColor = 32; // green
+    private int passColor = 32; // green
 
     @Option(names = { "--skip-color" })
-    int skipColor = 33; // yellow
+    private int skipColor = 33; // yellow
 
     @Option(names = { "--fail-color" })
-    int failColor = 31; // red
+    private int failColor = 31; // red
 
     @Option(names = { "--warn-color" })
-    int warnColor = 35; // purple
+    private int warnColor = 35; // purple
 
     @Option(names = { "--ansi" })
-    boolean ansi = !"dumb".equals(System.getenv("TERM"));
+    private boolean ansi = !"dumb".equals(System.getenv("TERM"));
 
     @Option(names = { "--debug" })
     Integer debugPort;
@@ -116,7 +123,7 @@ public final class Vogar {
     boolean debugApp;
 
     @Option(names = { "--device-dir" })
-    File deviceDir;
+    private File deviceDir;
 
     @Option(names = { "--vm-arg" })
     List<String> vmArgs = new ArrayList<String>();
@@ -197,12 +204,12 @@ public final class Vogar {
     boolean testOnly = false;
 
     @Option(names = { "--toolchain" })
-    String toolchain = "jdk";
+    private String toolchain = "jdk";
 
     @Option(names = { "--check-jni" })
     boolean checkJni = true;
 
-    private Vogar() {}
+    @VisibleForTesting public Vogar() {}
 
     private void printUsage() {
         // have to reset fields so that "Default is: FOO" lines are accurate
@@ -398,9 +405,10 @@ public final class Vogar {
         System.out.println();
     }
 
-    private boolean parseArgs(String[] args) {
+    @VisibleForTesting
+    public boolean parseArgs(String[] args) {
         // extract arguments from config file
-        configArgs = optionParser.readFile(configFile);
+        configArgs = OptionParser.readFile(configFile);
 
         // config file args are added first so that in a conflict, the currently supplied
         // arguments win.
@@ -510,6 +518,7 @@ public final class Vogar {
                 System.out.println("Error: experimental jack support only works with host mode.");
                 return false;
             }
+            useJack = true;
         } else if (!toolchain.toLowerCase().equals("jdk")) {
             System.out.println("The options for toolchain are either jack or jdk.");
             return false;
@@ -528,8 +537,82 @@ public final class Vogar {
         return true;
     }
 
+    /**
+     * The type of the target.
+     */
+    private enum TargetType {
+        ADB(AdbTarget.defaultDeviceDir()),
+        LOCAL(LocalTarget.defaultDeviceDir()),
+        SSH(SshTarget.defaultDeviceDir());
+
+        /**
+         * The default device dir.
+         */
+        private final File defaultDeviceDir;
+
+        TargetType(File defaultDeviceDir) {
+            this.defaultDeviceDir = defaultDeviceDir;
+        }
+
+        public File defaultDeviceDir() {
+            return defaultDeviceDir;
+        }
+    }
+
     private boolean run() throws IOException {
-        Run run = new Run(this);
+        // Create a new Console for use by Run.
+        Console console = this.stream
+                ? new Console.StreamingConsole()
+                : new Console.MultiplexingConsole();
+        console.setUseColor(color, passColor, skipColor, failColor, warnColor);
+        console.setAnsi(ansi);
+        console.setIndent(indent);
+        console.setVerbose(verbose);
+
+        Mkdir mkdir = new Mkdir(console);
+        Rm rm = new Rm(console);
+
+        // Select the target type, this is needed in order to calculate the runnerDir, which is in
+        // turn needed for creating the AdbTarget below.
+        TargetType targetType;
+        if (sshHost != null) {
+            targetType = TargetType.SSH;
+        } else if (modeId.isLocal()) {
+            targetType = TargetType.LOCAL;
+        } else {
+            targetType = TargetType.ADB;
+        }
+
+        File runnerDir = deviceDir != null
+                ? new File(deviceDir, "run")
+                : new File(targetType.defaultDeviceDir(), "run");
+
+        // Create the target.
+        Target target;
+        switch (targetType) {
+            case ADB:
+                DeviceFilesystem deviceFilesystem =
+                        new DeviceFilesystem(console, ImmutableList.of("adb", "shell"));
+                DeviceFileCache deviceFileCache =
+                        new DeviceFileCache(console, runnerDir, deviceFilesystem);
+                target = new AdbTarget(console, deviceFilesystem, deviceFileCache);
+                break;
+            case SSH:
+                target = new SshTarget(console, sshHost);
+                break;
+            case LOCAL:
+                target = new LocalTarget(console, mkdir, rm);
+                break;
+            default:
+                throw new IllegalStateException("Unknown target type: " + targetType);
+        }
+
+        AndroidSdk androidSdk = null;
+        if (modeId.requiresAndroidSdk()) {
+            androidSdk = AndroidSdk.createAndroidSdk(console, mkdir, modeId, useJack);
+        }
+
+        Run run = new Run(this, useJack, console, mkdir, androidSdk, rm, target, runnerDir);
         if (configArgs.length > 0) {
             run.console.verbose("loaded arguments from .vogarconfig: " +
                                 Strings.join(" ", (Object)configArgs));

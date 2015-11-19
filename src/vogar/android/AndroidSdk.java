@@ -16,6 +16,7 @@
 
 package vogar.android;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
@@ -23,7 +24,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 import vogar.Classpath;
 import vogar.HostFileCache;
 import vogar.Log;
@@ -38,36 +38,11 @@ import vogar.util.Strings;
  */
 public class AndroidSdk {
 
-    // $BOOTCLASSPATH defined by system/core/rootdir/init.rc
-    public static final String[] BOOTCLASSPATH = new String[] { "core-libart",
-                                                                "conscrypt",
-                                                                "okhttp",
-                                                                "core-junit",
-                                                                "bouncycastle",
-                                                                "ext",
-                                                                "framework",
-                                                                "telephony-common",
-                                                                "mms-common",
-                                                                "framework",
-                                                                "android.policy",
-                                                                "services",
-                                                                "apache-xml"};
-
-
-    public static final String[] HOST_BOOTCLASSPATH = new String[] {
-            "core-libart-hostdex",
-            "conscrypt-hostdex",
-            "okhttp-hostdex",
-            "bouncycastle-hostdex",
-    };
-
     private final Log log;
     private final Mkdir mkdir;
     private final File[] compilationClasspath;
-    public final DeviceFilesystem deviceFilesystem;
     private final String androidJarPath;
-    private Md5Cache dexCache;
-    private Md5Cache pushCache;
+    private final Md5Cache dexCache;
 
     public static Collection<File> defaultExpectations() {
         File[] files = new File("libcore/expectations").listFiles(new FilenameFilter() {
@@ -79,14 +54,16 @@ public class AndroidSdk {
         return (files != null) ? Arrays.asList(files) : Collections.<File>emptyList();
     }
 
-    public AndroidSdk(Log log, Mkdir mkdir, ModeId modeId, boolean useJack) {
-        this.log = log;
-        this.mkdir = mkdir;
-        this.deviceFilesystem = new DeviceFilesystem(log, "adb", "shell");
-
+    /**
+     * Create an {@link AndroidSdk}.
+     *
+     * <p>Searches the PATH used to run this and scans the file system in order to determine the
+     * compilation class path and android jar path.
+     */
+    public static AndroidSdk createAndroidSdk(
+            Log log, Mkdir mkdir, ModeId modeId, boolean useJack) {
         List<String> path = new Command.Builder(log).args("which", "dx")
                 .permitNonZeroExitStatus(true)
-                .build()
                 .execute();
         if (path.isEmpty()) {
             throw new RuntimeException("dx not found");
@@ -122,6 +99,9 @@ public class AndroidSdk {
          *  ${ANDROID_BUILD_TOP}/out/target/common/obj/JAVA_LIBRARIES/core-libart_intermediates
          *      /classes.jar
          */
+
+        File[] compilationClasspath;
+        String androidJarPath;
 
         // Accept that we are running in an SDK if the user has added the build-tools or
         // platform-tools to their path.
@@ -178,11 +158,24 @@ public class AndroidSdk {
         } else {
             throw new RuntimeException("Couldn't derive Android home from " + dx);
         }
+
+        return new AndroidSdk(log, mkdir, compilationClasspath, androidJarPath,
+                new HostFileCache(log, mkdir));
+    }
+
+    @VisibleForTesting
+    AndroidSdk(Log log, Mkdir mkdir, File[] compilationClasspath, String androidJarPath,
+               HostFileCache hostFileCache) {
+        this.log = log;
+        this.mkdir = mkdir;
+        this.compilationClasspath = compilationClasspath;
+        this.androidJarPath = androidJarPath;
+        this.dexCache = new Md5Cache(log, "dex", hostFileCache);
     }
 
     // Goes up N levels in the filesystem hierarchy. Return the last file that exists if this goes
     // past /.
-    private File getParentFileNOrLast(File f, int n) {
+    private static File getParentFileNOrLast(File f, int n) {
         File lastKnownExists = f;
         for (int i = 0; i < n; i++) {
             File parentFile = lastKnownExists.getParentFile();
@@ -198,19 +191,26 @@ public class AndroidSdk {
      * Returns the platform directory that has the highest API version. API
      * platform directories are named like "android-9" or "android-11".
      */
-    private File getNewestPlatform(File sdkRoot) {
+    private static File getNewestPlatform(File sdkRoot) {
         File newestPlatform = null;
         int newestPlatformVersion = 0;
-        for (File platform : new File(sdkRoot, "platforms").listFiles()) {
-            try {
-                int version = Integer.parseInt(platform.getName().substring("android-".length()));
-                if (version > newestPlatformVersion) {
-                    newestPlatform = platform;
-                    newestPlatformVersion = version;
+        File[] platforms = new File(sdkRoot, "platforms").listFiles();
+        if (platforms != null) {
+            for (File platform : platforms) {
+                try {
+                    int version =
+                            Integer.parseInt(platform.getName().substring("android-".length()));
+                    if (version > newestPlatformVersion) {
+                        newestPlatform = platform;
+                        newestPlatformVersion = version;
+                    }
+                } catch (NumberFormatException ignore) {
+                    // Ignore non-numeric preview versions like android-Honeycomb
                 }
-            } catch (NumberFormatException ignore) {
-                // Ignore non-numeric preview versions like android-Honeycomb
             }
+        }
+        if (newestPlatform == null) {
+            throw new IllegalStateException("Cannot find newest platform in " + sdkRoot);
         }
         return newestPlatform;
     }
@@ -234,11 +234,6 @@ public class AndroidSdk {
 
     public File[] getCompilationClasspath() {
         return compilationClasspath;
-    }
-
-    public void setCaches(HostFileCache hostFileCache, DeviceFileCache deviceCache) {
-        this.dexCache = new Md5Cache(log, "dex", hostFileCache);
-        this.pushCache = new Md5Cache(log, "pushed", deviceCache);
     }
 
     /**
@@ -279,57 +274,15 @@ public class AndroidSdk {
     }
 
     public void packageApk(File apk, File manifest) {
-        List<String> aapt = new ArrayList<String>(Arrays.asList("aapt",
+        new Command(log, "aapt",
                 "package",
                 "-F", apk.getPath(),
                 "-M", manifest.getPath(),
-                "-I", androidJarPath));
-        new Command(log, aapt).execute();
+                "-I", androidJarPath).execute();
     }
 
     public void addToApk(File apk, File dex) {
         new Command(log, "aapt", "add", "-k", apk.getPath(), dex.getPath()).execute();
-    }
-
-    public void mv(File source, File destination) {
-        new Command(log, "adb", "shell", "mv", source.getPath(), destination.getPath()).execute();
-    }
-
-    public void rm(File name) {
-        new Command.Builder(log)
-                .args("adb", "shell", "rm", "-r", name.getPath())
-                // Note: When all supported versions of Android correctly return the exit code
-                // from adb we can rely on the exit code to detect failure. Until then: no.
-                .permitNonZeroExitStatus(true)
-                .execute();
-    }
-
-    public void cp(File source, File destination) {
-        // adb doesn't support "cp" command directly
-        new Command(log, "adb", "shell", "cat", source.getPath(), ">", destination.getPath())
-                .execute();
-    }
-
-    public void pull(File remote, File local) {
-        new Command(log, "adb", "pull", remote.getPath(), local.getPath()).execute();
-    }
-
-    public void push(File local, File remote) {
-        Command fallback = new Command(log, "adb", "push", local.getPath(), remote.getPath());
-        deviceFilesystem.mkdirs(remote.getParentFile());
-        // don't yet cache directories (only used by jtreg tests)
-        if (pushCache != null && local.isFile()) {
-            String key = pushCache.makeKey(local);
-            boolean cacheHit = pushCache.getFromCache(remote, key);
-            if (cacheHit) {
-                log.verbose("device cache hit for " + local);
-                return;
-            }
-            fallback.execute();
-            pushCache.insert(key, remote);
-        } else {
-            fallback.execute();
-        }
     }
 
     public void install(File apk) {
@@ -341,79 +294,5 @@ public class AndroidSdk {
                 .args("adb", "uninstall", packageName)
                 .permitNonZeroExitStatus(true)
                 .execute();
-    }
-
-    public void forwardTcp(int port) {
-        new Command(log, "adb", "forward", "tcp:" + port, "tcp:" + port).execute();
-    }
-
-    public void remount() {
-        new Command(log, "adb", "remount").execute();
-    }
-
-    public void waitForDevice() {
-        new Command.Builder(log)
-            .args("adb", "wait-for-device")
-            .permitNonZeroExitStatus(true)
-            .execute();
-    }
-
-    /**
-     * Make sure the directory exists.
-     */
-    public void ensureDirectory(File path) {
-        String pathArgument = path.getPath() + "/";
-        if (pathArgument.equals("/sdcard/")) {
-            // /sdcard is a mount point. If it exists but is empty we do
-            // not want to use it. So we wait until it is not empty.
-            waitForNonEmptyDirectory(pathArgument, 5 * 60);
-        } else {
-            Command command = new Command.Builder(log)
-                .args("adb", "shell", "ls", pathArgument)
-                .permitNonZeroExitStatus(true)
-                .build();
-            List<String> output = command.execute();
-            // TODO: We should avoid checking for the error message, and instead have
-            // the Command class understand a non-zero exit code from an adb shell command.
-            if (!output.isEmpty()
-                && output.get(0).equals(pathArgument + ": No such file or directory")) {
-                throw new RuntimeException("'" + pathArgument + "' does not exist on device");
-            }
-            // Otherwise the directory exists.
-        }
-    }
-
-    private void waitForNonEmptyDirectory(String pathArgument, int timeoutSeconds) {
-        final int millisPerSecond = 1000;
-        final long start = System.currentTimeMillis();
-        final long deadline = start + (millisPerSecond * timeoutSeconds);
-
-        while (true) {
-            final int remainingSeconds =
-                    (int) ((deadline - System.currentTimeMillis()) / millisPerSecond);
-            Command command = new Command.Builder(log)
-                .args("adb", "shell", "ls", pathArgument)
-                .permitNonZeroExitStatus(true)
-                .build();
-            List<String> output;
-            try {
-                output = command.executeWithTimeout(remainingSeconds);
-            } catch (TimeoutException e) {
-                throw new RuntimeException("Timed out after " + timeoutSeconds
-                                           + " seconds waiting for " + pathArgument, e);
-            }
-            try {
-                Thread.sleep(millisPerSecond);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-
-            // We just want any output.
-            if (!output.isEmpty()) {
-                return;
-            }
-
-            log.warn("Waiting on " + pathArgument + " to be mounted ");
-        }
     }
 }

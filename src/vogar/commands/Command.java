@@ -16,8 +16,8 @@
 
 package vogar.commands;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -47,7 +47,6 @@ public final class Command {
     private final Log log;
     private final List<String> args;
     private final Map<String, String> env;
-    private final File workingDirectory;
     private final boolean permitNonZeroExitStatus;
     private final PrintStream tee;
     private volatile Process process;
@@ -55,23 +54,17 @@ public final class Command {
     private volatile long timeoutNanoTime;
 
     public Command(Log log, String... args) {
-        this(log, Arrays.asList(args));
-    }
-
-    public Command(Log log, List<String> args) {
         this.log = log;
-        this.args = new ArrayList<String>(args);
+        this.args = processArgs(Arrays.asList(args));
         this.env = Collections.emptyMap();
-        this.workingDirectory = null;
         this.permitNonZeroExitStatus = false;
         this.tee = null;
     }
 
     private Command(Builder builder) {
         this.log = builder.log;
-        this.args = new ArrayList<String>(builder.args);
+        this.args = processArgs(builder.args);
         this.env = builder.env;
-        this.workingDirectory = builder.workingDirectory;
         this.permitNonZeroExitStatus = builder.permitNonZeroExitStatus;
         this.tee = builder.tee;
         if (builder.maxLength != -1) {
@@ -83,11 +76,7 @@ public final class Command {
         }
     }
 
-    public void start() throws IOException {
-        if (isStarted()) {
-            throw new IllegalStateException("Already started!");
-        }
-
+    private static List<String> processArgs(List<String> args) {
         // Translate ["sh", "-c", "ls", "/tmp"] into ["sh", "-c", "ls /tmp"].
         // This is needed for host execution.
         ArrayList<String> actual = new ArrayList<String>();
@@ -105,14 +94,19 @@ public final class Command {
             actual.add(cmd);
         }
 
-        log.verbose("executing " + actual);
+        return actual;
+    }
+
+    public void start() throws IOException {
+        if (isStarted()) {
+            throw new IllegalStateException("Already started!");
+        }
+
+        log.verbose("executing " + args);
 
         ProcessBuilder processBuilder = new ProcessBuilder()
-                .command(actual)
+                .command(args)
                 .redirectErrorStream(true);
-        if (workingDirectory != null) {
-            processBuilder.directory(workingDirectory);
-        }
 
         processBuilder.environment().putAll(env);
 
@@ -151,10 +145,6 @@ public final class Command {
         int exitValue = process.waitFor();
         destroyed = true;
         if (exitValue != 0 && !permitNonZeroExitStatus) {
-            StringBuilder message = new StringBuilder();
-            for (String line : outputLines) {
-                message.append("\n").append(line);
-            }
             throw new CommandFailedException(args, outputLines);
         }
 
@@ -206,9 +196,7 @@ public final class Command {
             process.waitFor();
             int exitValue = process.exitValue();
             log.verbose("received exit value " + exitValue + " from destroyed command " + this);
-        } catch (IllegalThreadStateException destroyUnsuccessful) {
-            log.warn("couldn't destroy " + this);
-        } catch (InterruptedException e) {
+        } catch (IllegalThreadStateException | InterruptedException destroyUnsuccessful) {
             log.warn("couldn't destroy " + this);
         }
     }
@@ -266,11 +254,15 @@ public final class Command {
         return System.nanoTime() >= timeoutNanoTime;
     }
 
+    @VisibleForTesting
+    public List<String> getArgs() {
+        return args;
+    }
+
     public static class Builder {
         private final Log log;
         private final List<String> args = new ArrayList<String>();
         private final Map<String, String> env = new LinkedHashMap<String, String>();
-        private File workingDirectory;
         private boolean permitNonZeroExitStatus = false;
         private PrintStream tee = null;
         private int maxLength = -1;
@@ -283,7 +275,6 @@ public final class Command {
             this.log = other.log;
             this.args.addAll(other.args);
             this.env.putAll(other.env);
-            this.workingDirectory = other.workingDirectory;
             this.permitNonZeroExitStatus = other.permitNonZeroExitStatus;
             this.tee = other.tee;
             this.maxLength = other.maxLength;
@@ -302,17 +293,6 @@ public final class Command {
 
         public Builder env(String key, String value) {
             env.put(key, value);
-            return this;
-        }
-
-        /**
-         * Sets the working directory from which the command will be executed.
-         * This must be a <strong>local</strong> directory; Commands run on
-         * remote devices (ie. via {@code adb shell}) require a local working
-         * directory.
-         */
-        public Builder workingDirectory(File workingDirectory) {
-            this.workingDirectory = workingDirectory;
             return this;
         }
 

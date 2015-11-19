@@ -18,6 +18,7 @@ package vogar;
 
 import com.google.common.base.Splitter;
 
+import com.google.common.base.Supplier;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -29,9 +30,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import vogar.android.ActivityMode;
-import vogar.android.AdbTarget;
 import vogar.android.AndroidSdk;
-import vogar.android.DeviceFileCache;
 import vogar.android.DeviceRuntime;
 import vogar.android.HostRuntime;
 import vogar.commands.CommandFailedException;
@@ -46,6 +45,12 @@ public final class Run {
      * A list of generic names that we avoid when naming generated files.
      */
     private static final Set<String> BANNED_NAMES = new HashSet<String>();
+
+    private static final String JAR_URI_PREFIX = "jar:file:";
+
+    private static final String FILE_URL_PREFIX = "file:";
+
+    private static final String VOGAR_CLASS_RESOURCE_PATH = "/vogar/Vogar.class";
 
     static {
         BANNED_NAMES.add("classes");
@@ -107,28 +112,17 @@ public final class Run {
     public final boolean checkJni;
     public final boolean debugging;
 
-    public Run(Vogar vogar) throws IOException {
-        this.console = vogar.stream
-                ? new Console.StreamingConsole()
-                : new Console.MultiplexingConsole();
-        console.setUseColor(
-            vogar.color, vogar.passColor, vogar.skipColor, vogar.failColor, vogar.warnColor);
-        console.setAnsi(vogar.ansi);
-        console.setIndent(vogar.indent);
-        console.setVerbose(vogar.verbose);
+    public Run(Vogar vogar, boolean useJack, Console console, Mkdir mkdir, AndroidSdk androidSdk,
+            Rm rm, Target target, File runnerDir)
+            throws IOException {
+        this.console = console;
 
         this.localTemp = new File("/tmp/vogar/" + UUID.randomUUID());
         this.log = console;
 
-        if (vogar.sshHost != null) {
-            this.target = new SshTarget(vogar.sshHost, log);
-        } else if (vogar.modeId.isLocal()) {
-            this.target = new LocalTarget(this);
-        } else {
-            this.target = new AdbTarget(this);
-        }
+        this.target = target;
 
-        this.useJack = vogar.toolchain.toLowerCase().equals("jack");
+        this.useJack = useJack;
         this.vmCommand = vogar.vmCommand;
         this.dalvikCache = vogar.dalvikCache;
         this.additionalVmArgs = vogar.vmArgs;
@@ -137,12 +131,10 @@ public final class Run {
         this.cleanAfter = vogar.cleanAfter;
         this.date = new Date();
         this.debugPort = vogar.debugPort;
-        this.runnerDir = vogar.deviceDir != null
-                ? new File(vogar.deviceDir, "run")
-                : new File(target.defaultDeviceDir(), "run");
+        this.runnerDir = runnerDir;
         this.deviceUserHome = new File(runnerDir, "user.home");
-        this.mkdir = new Mkdir(console);
-        this.rm = new Rm(console);
+        this.mkdir = mkdir;
+        this.rm = rm;
         this.firstMonitorPort = vogar.firstMonitorPort;
         this.invokeWith = vogar.invokeWith;
         this.javacArgs = vogar.javacArgs;
@@ -193,13 +185,7 @@ public final class Run {
 
         this.testOnly = vogar.testOnly;
 
-        if (vogar.modeId.requiresAndroidSdk()) {
-            androidSdk = new AndroidSdk(log, mkdir, vogar.modeId, this.useJack);
-            androidSdk.setCaches(new HostFileCache(log, mkdir),
-                    new DeviceFileCache(log, runnerDir, androidSdk));
-        } else {
-            androidSdk = null;
-        }
+        this.androidSdk = androidSdk;
 
         expectationStore = ExpectationStore.parse(
             console, vogar.expectationFiles, vogar.modeId, vogar.variant);
@@ -210,7 +196,7 @@ public final class Run {
         this.mode = createMode(vogar.modeId, vogar.variant);
 
         this.buildClasspath = Classpath.of(vogar.buildClasspath);
-        if (vogar.modeId.requiresAndroidSdk()) {
+        if (androidSdk != null) {
             buildClasspath.addAll(androidSdk.getCompilationClasspath());
         }
 
@@ -238,7 +224,12 @@ public final class Run {
                 return new HostRuntime(this, modeId, variant);
             case DEVICE:
             case APP_PROCESS:
-                return new DeviceRuntime(this, modeId, variant);
+                return new DeviceRuntime(this, modeId, variant, new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return target.getDeviceUserName();
+                    }
+                });
             case ACTIVITY:
                 return new ActivityMode(this);
             default:
@@ -251,7 +242,7 @@ public final class Run {
     }
 
     private File vogarJar() {
-        URL jarUrl = Vogar.class.getResource("/vogar/Vogar.class");
+        URL jarUrl = Vogar.class.getResource(VOGAR_CLASS_RESOURCE_PATH);
         if (jarUrl == null) {
             // should we add an option for IDE users, to use a user-specified vogar.jar?
             throw new IllegalStateException("Vogar cannot find its own .jar");
@@ -263,9 +254,12 @@ public final class Run {
          */
         String url = jarUrl.toString();
         int bang = url.indexOf("!");
-        String JAR_URI_PREFIX = "jar:file:";
         if (url.startsWith(JAR_URI_PREFIX) && bang != -1) {
             return new File(url.substring(JAR_URI_PREFIX.length(), bang));
+        } else if (url.startsWith(FILE_URL_PREFIX) && url.endsWith(VOGAR_CLASS_RESOURCE_PATH)) {
+            // Vogar is being run from a classes directory.
+            return new File(url.substring(FILE_URL_PREFIX.length(),
+                    url.length() - VOGAR_CLASS_RESOURCE_PATH.length()));
         } else {
             throw new IllegalStateException("Vogar cannot find the .jar file in " + jarUrl);
         }

@@ -26,7 +26,6 @@ import vogar.tasks.Task;
  */
 public abstract class Target {
     public abstract List<String> targetProcessPrefix();
-    public abstract File defaultDeviceDir();
     public abstract String getDeviceUserName();
 
     public abstract List<File> ls(File directory) throws FileNotFoundException;

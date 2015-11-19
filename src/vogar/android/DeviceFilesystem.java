@@ -16,10 +16,10 @@
 
 package vogar.android;
 
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,9 +36,9 @@ public final class DeviceFilesystem {
     private final List<String> targetProcessPrefix;
     private final Log log;
 
-    public DeviceFilesystem(Log log, String... targetProcessPrefix) {
+    public DeviceFilesystem(Log log, ImmutableList<String> targetProcessPrefix) {
         this.log = log;
-        this.targetProcessPrefix = Arrays.asList(targetProcessPrefix);
+        this.targetProcessPrefix = targetProcessPrefix;
     }
 
     public void mkdirs(File name) {

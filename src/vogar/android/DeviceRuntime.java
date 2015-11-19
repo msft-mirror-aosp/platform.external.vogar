@@ -16,6 +16,7 @@
 
 package vogar.android;
 
+import com.google.common.base.Supplier;
 import com.google.common.collect.Iterables;
 import java.io.File;
 import java.util.ArrayList;
@@ -39,8 +40,11 @@ import vogar.tasks.Task;
 public final class DeviceRuntime implements Mode {
     private final Run run;
     private final ModeId modeId;
+    private final Supplier<String> deviceUserNameSupplier;
 
-  public DeviceRuntime(Run run, ModeId modeId, Variant variant) {
+    public DeviceRuntime(Run run, ModeId modeId, Variant variant,
+                         Supplier<String> deviceUserNameSupplier) {
+        this.deviceUserNameSupplier = deviceUserNameSupplier;
         if (!modeId.isDevice() || !modeId.supportsVariant(variant)) {
             throw new IllegalArgumentException("Unsupported mode:" + modeId +
                     " or variant: " + variant);
@@ -100,7 +104,7 @@ public final class DeviceRuntime implements Mode {
         }
 
         vmCommandBuilder
-                .vmArgs("-Duser.name=" + run.target.getDeviceUserName())
+                .vmArgs("-Duser.name=" + deviceUserNameSupplier.get())
                 .vmArgs("-Duser.language=en")
                 .vmArgs("-Duser.region=US");
 
