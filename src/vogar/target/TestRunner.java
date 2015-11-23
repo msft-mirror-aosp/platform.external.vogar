@@ -39,17 +39,15 @@ import vogar.target.junit.JUnitRunnerFactory;
  */
 public final class TestRunner {
 
-    protected final Properties properties;
-
-    protected final String qualifiedName;
-    protected final String qualifiedClassOrPackageName;
+    private final String qualifiedName;
+    private final String qualifiedClassOrPackageName;
 
     /** the monitor port if a monitor is expected, or null for no monitor */
-    protected final Integer monitorPort;
+    private final Integer monitorPort;
 
     /** use an atomic reference so the runner can null it out when it is encountered. */
-    protected final AtomicReference<String> skipPastReference;
-    protected final int timeoutSeconds;
+    private final AtomicReference<String> skipPastReference;
+    private final int timeoutSeconds;
 
     private final RunnerFactory runnerFactory;
     private final boolean profile;
@@ -57,11 +55,11 @@ public final class TestRunner {
     private final int profileInterval;
     private final File profileFile;
     private final boolean profileThreadGroup;
-    protected final String[] args;
+    private final String[] args;
     private boolean useSocketMonitor;
 
     public TestRunner(List<String> argsList) {
-        properties = loadProperties();
+        Properties properties = loadProperties();
         qualifiedName = properties.getProperty(TestProperties.QUALIFIED_NAME);
         qualifiedClassOrPackageName = properties.getProperty(TestProperties.TEST_CLASS_OR_PACKAGE);
         timeoutSeconds = Integer.parseInt(properties.getProperty(TestProperties.TIMEOUT));
@@ -100,7 +98,7 @@ public final class TestRunner {
         }
 
         this.monitorPort = monitorPort;
-        this.skipPastReference = new AtomicReference<String>(skipPast);
+        this.skipPastReference = new AtomicReference<>(skipPast);
         this.profile = profile;
         this.profileDepth = profileDepth;
         this.profileInterval = profileInterval;
@@ -167,7 +165,7 @@ public final class TestRunner {
         }
     }
 
-    public void run(final TargetMonitor monitor) {
+    private void run(final TargetMonitor monitor) {
         TestEnvironment testEnvironment = new TestEnvironment();
         testEnvironment.reset();
 
@@ -191,7 +189,7 @@ public final class TestRunner {
         // if there is more than one class in the set, this must be a package. Since we're
         // running everything in the package already, remove any class called AllTests.
         if (classes.size() > 1) {
-            Set<Class<?>> toRemove = new HashSet<Class<?>>();
+            Set<Class<?>> toRemove = new HashSet<>();
             for (Class<?> klass : classes) {
                 if (klass.getName().endsWith(".AllTests")) {
                     toRemove.add(klass);
@@ -216,7 +214,7 @@ public final class TestRunner {
             Runner runner;
             try {
                 runner = runnerFactory.newRunner(monitor, qualification, klass,
-                        skipPastReference, testEnvironment, timeoutSeconds, profile);
+                        skipPastReference, testEnvironment, timeoutSeconds, profile, args);
             } catch (RuntimeException e) {
                 monitor.outcomeStarted(null, qualifiedName);
                 e.printStackTrace();
@@ -232,7 +230,7 @@ public final class TestRunner {
                 continue;
             }
 
-            boolean completedNormally = runner.run(qualifiedName, profiler, args);
+            boolean completedNormally = runner.run(profiler);
             if (!completedNormally) {
                 return; // let the caller start another process
             }
@@ -245,7 +243,7 @@ public final class TestRunner {
     }
 
     public static void main(String[] args) throws IOException {
-        new TestRunner(new ArrayList<String>(Arrays.asList(args))).run();
+        new TestRunner(new ArrayList<>(Arrays.asList(args))).run();
         System.exit(0);
     }
 
@@ -255,7 +253,7 @@ public final class TestRunner {
      */
     private static class CompositeRunnerFactory implements RunnerFactory {
 
-        private List<? extends RunnerFactory> runnerFactories;
+        private final List<? extends RunnerFactory> runnerFactories;
 
         private CompositeRunnerFactory(RunnerFactory... runnerFactories) {
             this.runnerFactories = Arrays.asList(runnerFactories);
@@ -264,10 +262,10 @@ public final class TestRunner {
         @Override @Nullable
         public Runner newRunner(TargetMonitor monitor, String qualification,
                 Class<?> klass, AtomicReference<String> skipPastReference,
-                TestEnvironment testEnvironment, int timeoutSeconds, boolean profile) {
+                TestEnvironment testEnvironment, int timeoutSeconds, boolean profile, String[] args) {
             for (RunnerFactory runnerFactory : runnerFactories) {
                 Runner runner = runnerFactory.newRunner(monitor, qualification, klass,
-                        skipPastReference, testEnvironment, timeoutSeconds, profile);
+                        skipPastReference, testEnvironment, timeoutSeconds, profile, args);
                 if (runner != null) {
                     return runner;
                 }

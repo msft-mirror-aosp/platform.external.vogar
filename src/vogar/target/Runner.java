@@ -22,10 +22,10 @@ package vogar.target;
  */
 public interface Runner {
 
-  /**
+    /**
      * @return true if this run completed normally. Otherwise the calling
      *     process should kill this process and attempt to resume after the last
      *     known outcome.
      */
-    boolean run(String actionName, Profiler profiler, String[] args);
+    boolean run(Profiler profiler);
 }

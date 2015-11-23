@@ -18,6 +18,7 @@ package vogar.target;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import junit.framework.TestCase;
 import static org.mockito.Mockito.mock;
@@ -26,22 +27,20 @@ import static org.mockito.Mockito.verify;
 import vogar.Result;
 import vogar.monitor.TargetMonitor;
 import vogar.target.junit.JUnitRunner;
+import vogar.target.junit.JUnitRunnerFactory;
+import vogar.target.junit.VogarTest;
 import vogar.target.junit3.FailTest;
 import vogar.target.junit3.LongTest;
 import vogar.target.junit3.LongTest2;
 import vogar.target.junit3.SimpleTest;
 import vogar.target.junit3.SimpleTest2;
 import vogar.target.junit3.SuiteTest;
-import vogar.target.junit3.WrongSuiteTest;
 
-// This test class is designed for both JUnit3 and newer than JUnit4.8.2
-// because it can work for original vogar which uses JUnit3 and new vogar which uses JUnit4.8.2
-// If you test it with JUnit4, please test with newer than JUnit4.8.2 in console because Eclipse Helios uses JUnit4.8.1
-
-// for JUnit 3: java -cp bin:lib/junit-3.8.2.jar:lib/mockito-all-1.8.5.jar junit.textui.TestRunner vogar.target.JUnitRunnerTest
-// for JUnit 4: java -cp bin:lib/junit-4.8.2.jar:lib/mockito-all-1.8.5.jar org.junit.runner.JUnitCore vogar.target.JUnitRunnerTest vogar.target.JUnit4RunnerTest
+/**
+ * Test of {@link JUnitRunner}
+ */
 public class JUnitRunnerTest extends TestCase {
-    private Runner runner;
+    private static final String[] EMPTY_ARGS = {};
     private TargetMonitor monitor;
     private TestEnvironment testEnvironment = new TestEnvironment();
     private final AtomicReference<String> skipPastReference = new AtomicReference<>();
@@ -52,9 +51,9 @@ public class JUnitRunnerTest extends TestCase {
 
     public void test_run_for_SimpleTest_should_perform_test() {
         Class<?> target = SimpleTest.class;
-        Runner runner =
-            new JUnitRunner(monitor, null, target, skipPastReference, testEnvironment, 0);
-        runner.run("", null, null);
+        List<VogarTest> tests = JUnitRunnerFactory.createVogarTests(target, null, EMPTY_ARGS);
+        Runner runner = new JUnitRunner(monitor, skipPastReference, testEnvironment, 0, tests);
+        runner.run(null);
 
         verify(monitor).outcomeStarted(JUnitRunner.class,
                 target.getName() + "#testSimple");
@@ -63,9 +62,9 @@ public class JUnitRunnerTest extends TestCase {
 
     public void test_run_for_SuiteTest_should_perform_tests() {
         Class<?> target = SuiteTest.class;
-        Runner runner =
-            new JUnitRunner(monitor, null, target, skipPastReference, testEnvironment, 0);
-        runner.run("", null, null);
+        List<VogarTest> tests = JUnitRunnerFactory.createVogarTests(target, null, EMPTY_ARGS);
+        Runner runner = new JUnitRunner(monitor, skipPastReference, testEnvironment, 0, tests);
+        runner.run(null);
 
         verify(monitor).outcomeStarted(JUnitRunner.class,
                 "vogar.target.junit3.SimpleTest#testSimple");
@@ -80,9 +79,9 @@ public class JUnitRunnerTest extends TestCase {
 
     public void test_run_for_SimpleTest2_with_ActionName_should_perform_test() {
         Class<?> target = SimpleTest2.class;
-        Runner runner = new JUnitRunner(
-            monitor, null, target, skipPastReference, testEnvironment, 0);
-        runner.run("", null, null);
+        List<VogarTest> tests = JUnitRunnerFactory.createVogarTests(target, null, EMPTY_ARGS);
+        Runner runner = new JUnitRunner(monitor, skipPastReference, testEnvironment, 0, tests);
+        runner.run(null);
 
         verify(monitor).outcomeStarted(JUnitRunner.class,
                 target.getName() + "#testSimple1");
@@ -95,9 +94,10 @@ public class JUnitRunnerTest extends TestCase {
 
     public void test_run_for_SimpleTest2_limiting_to_1method_should_perform_test() {
         Class<?> target = SimpleTest2.class;
-        Runner runner = new JUnitRunner(
-            monitor, null, target, skipPastReference, testEnvironment, 0);
-        runner.run("", null, new String[] { "testSimple2" });
+        List<VogarTest> tests =
+                JUnitRunnerFactory.createVogarTests(target, null,  new String[] { "testSimple2" });
+        Runner runner = new JUnitRunner(monitor, skipPastReference, testEnvironment, 0, tests);
+        runner.run(null);
 
         verify(monitor).outcomeStarted(JUnitRunner.class,
                 target.getName() + "#testSimple2");
@@ -106,9 +106,10 @@ public class JUnitRunnerTest extends TestCase {
 
     public void test_run_for_SimpleTest2_limiting_to_2methods_should_perform_test() {
         Class<?> target = SimpleTest2.class;
-        Runner runner = new JUnitRunner(
-            monitor, null, target, skipPastReference, testEnvironment, 0);
-        runner.run("", null, new String[] { "testSimple2", "testSimple3" });
+        List<VogarTest> tests = JUnitRunnerFactory.createVogarTests(target, null,
+                new String[] { "testSimple2", "testSimple3" });
+        Runner runner = new JUnitRunner(monitor, skipPastReference, testEnvironment, 0, tests);
+        runner.run(null);
 
         verify(monitor).outcomeStarted(JUnitRunner.class,
                 target.getName() + "#testSimple2");
@@ -119,26 +120,14 @@ public class JUnitRunnerTest extends TestCase {
 
     public void test_limiting_to_1method_and_run_for_SimpleTest2_should_perform_test() {
         Class<?> target = SimpleTest2.class;
-        Runner runner = new JUnitRunner(
-            monitor, "testSimple2", target, skipPastReference, testEnvironment, 0);
-        runner.run("", null, null);
+        List<VogarTest> tests =
+                JUnitRunnerFactory.createVogarTests(target, "testSimple2", EMPTY_ARGS);
+        Runner runner = new JUnitRunner(monitor, skipPastReference, testEnvironment, 0, tests);
+        runner.run(null);
 
         verify(monitor).outcomeStarted(JUnitRunner.class,
                 target.getName() + "#testSimple2");
         verify(monitor).outcomeFinished(Result.SUCCESS);
-    }
-
-    // JUnit3 can't perform test by indicating test method in test suite
-    public void test_limiting_to_1method_and_run_for_SuiteTest_should_throw_exception() {
-        Class<?> target = SuiteTest.class;
-
-        try {
-            Runner runner = new JUnitRunner(
-                monitor, "testSimple", target, skipPastReference, testEnvironment, 0);
-            runner.run("", null, null);
-            fail("should throw ClassCastException.");
-        } catch (ClassCastException ignored) {
-        }
     }
 
     public void test_limiting_to_wrong_1method_and_run_for_SimpleTest2_should_fail_test() {
@@ -146,9 +135,10 @@ public class JUnitRunnerTest extends TestCase {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         System.setOut(new PrintStream(baos));
 
-        Runner runner = new JUnitRunner(
-            monitor, "testSimple5", target, skipPastReference, testEnvironment, 0);
-        runner.run("", null, null);
+        List<VogarTest> tests =
+                JUnitRunnerFactory.createVogarTests(target, "testSimple5", EMPTY_ARGS);
+        Runner runner = new JUnitRunner(monitor, skipPastReference, testEnvironment, 0, tests);
+        runner.run(null);
 
         verify(monitor).outcomeStarted(JUnitRunner.class,
                 target.getName() + "#testSimple5");
@@ -162,13 +152,16 @@ public class JUnitRunnerTest extends TestCase {
 
     public void test_run_for_SimpleTest2_limiting_to_1method_with_both_run_should_perform_test() {
         Class<?> target = SimpleTest2.class;
-        Runner runner = new JUnitRunner(
-            monitor, "testSimple3", target, skipPastReference, testEnvironment, 0);
-        runner.run("", null, new String[] { "testSimple2" });
+        List<VogarTest> tests = JUnitRunnerFactory.createVogarTests(target, "testSimple3",
+                new String[]{"testSimple2"});
+        Runner runner = new JUnitRunner(monitor, skipPastReference, testEnvironment, 0, tests);
+        runner.run(null);
 
         verify(monitor).outcomeStarted(JUnitRunner.class,
                 target.getName() + "#testSimple2");
-        verify(monitor).outcomeFinished(Result.SUCCESS);
+        verify(monitor).outcomeStarted(JUnitRunner.class,
+                target.getName() + "#testSimple3");
+        verify(monitor, times(2)).outcomeFinished(Result.SUCCESS);
     }
 
     public void test_run_for_FailTest_should_perform_test() {
@@ -177,14 +170,13 @@ public class JUnitRunnerTest extends TestCase {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         System.setOut(new PrintStream(baos));
 
-        Runner runner = new JUnitRunner(
-            monitor, null, target, skipPastReference, testEnvironment, 0);
-        runner.run("", null, null);
+        List<VogarTest> tests = JUnitRunnerFactory.createVogarTests(target, null, EMPTY_ARGS);
+        Runner runner = new JUnitRunner(monitor, skipPastReference, testEnvironment, 0, tests);
+        runner.run(null);
 
         verify(monitor).outcomeStarted(JUnitRunner.class,
                 target.getName() + "#testSuccess");
-        verify(monitor).outcomeStarted(JUnitRunner.class, target.getName() + "#testFail"
-        );
+        verify(monitor).outcomeStarted(JUnitRunner.class, target.getName() + "#testFail");
         verify(monitor).outcomeStarted(JUnitRunner.class,
                 target.getName() + "#testThrowException");
         verify(monitor).outcomeFinished(Result.SUCCESS);
@@ -202,24 +194,23 @@ public class JUnitRunnerTest extends TestCase {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         System.setOut(new PrintStream(baos));
 
-        Runner runner = new JUnitRunner(
-            monitor, null, target, skipPastReference, testEnvironment, 0);
-        runner.run("", null, null);
+        List<VogarTest> tests = JUnitRunnerFactory.createVogarTests(target, null, EMPTY_ARGS);
+        Runner runner = new JUnitRunner(monitor, skipPastReference, testEnvironment, 1, tests);
+        runner.run(null);
 
-        verify(monitor).outcomeStarted(JUnitRunner.class, target.getName() + "#test"
-        );
+        verify(monitor).outcomeStarted(JUnitRunner.class, target.getName() + "#test");
         verify(monitor).outcomeFinished(Result.EXEC_FAILED);
 
         String outStr = baos.toString();
         assertTrue(outStr.contains("java.util.concurrent.TimeoutException"));
     }
 
-    public void test_run_for_LongTest2_with_time_limit_should_not_report_time_out() {
+    public void test_run_for_LongTest2_without_time_limit_should_not_report_time_out() {
         Class<?> target = LongTest2.class;
 
-        Runner runner = new JUnitRunner(
-            monitor, null, target, skipPastReference, testEnvironment, 0);
-        runner.run("", null, null);
+        List<VogarTest> tests = JUnitRunnerFactory.createVogarTests(target, null, EMPTY_ARGS);
+        Runner runner = new JUnitRunner(monitor, skipPastReference, testEnvironment, 0, tests);
+        runner.run(null);
 
         verify(monitor, times(8)).outcomeFinished(Result.SUCCESS);
     }

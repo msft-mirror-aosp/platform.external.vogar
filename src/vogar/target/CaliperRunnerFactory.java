@@ -28,9 +28,10 @@ public class CaliperRunnerFactory implements RunnerFactory {
     @Override @Nullable
     public Runner newRunner(TargetMonitor monitor, String qualification,
             Class<?> klass, AtomicReference<String> skipPastReference,
-            TestEnvironment testEnvironment, int timeoutSeconds, boolean profile) {
+            TestEnvironment testEnvironment, int timeoutSeconds, boolean profile,
+            String[] args) {
         if (SimpleBenchmark.class.isAssignableFrom(klass)) {
-            return new CaliperRunner(monitor, profile, klass);
+            return new CaliperRunner(monitor, profile, klass, args);
         } else {
             return null;
         }

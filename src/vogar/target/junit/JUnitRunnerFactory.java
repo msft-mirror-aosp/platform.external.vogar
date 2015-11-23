@@ -16,8 +16,13 @@
 package vogar.target.junit;
 
 import com.google.common.annotations.VisibleForTesting;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
+import junit.framework.AssertionFailedError;
 import vogar.monitor.TargetMonitor;
 import vogar.target.Runner;
 import vogar.target.RunnerFactory;
@@ -31,13 +36,36 @@ public class JUnitRunnerFactory implements RunnerFactory {
     @Override @Nullable
     public Runner newRunner(TargetMonitor monitor, String qualification,
             Class<?> klass, AtomicReference<String> skipPastReference,
-            TestEnvironment testEnvironment, int timeoutSeconds, boolean profile) {
+            TestEnvironment testEnvironment, int timeoutSeconds, boolean profile,
+            String[] args) {
         if (supports(klass)) {
-            return new JUnitRunner(monitor, qualification, klass, skipPastReference,
-                    testEnvironment, timeoutSeconds);
+            List<VogarTest> tests = createVogarTests(klass, qualification, args);
+            return new JUnitRunner(monitor, skipPastReference, testEnvironment, timeoutSeconds,
+                    tests);
         } else {
             return null;
         }
+    }
+
+    @VisibleForTesting
+    public static List<VogarTest> createVogarTests(
+            Class<?> testClass, String qualification, String[] args) {
+
+        Set<String> methodNames = new LinkedHashSet<>();
+        if (qualification != null) {
+            methodNames.add(qualification);
+        }
+        Collections.addAll(methodNames, args);
+
+        final List<VogarTest> tests;
+        if (Junit3.isJunit3Test(testClass)) {
+            tests = Junit3.classToVogarTests(testClass, methodNames);
+        } else if (Junit4.isJunit4Test(testClass)) {
+            tests = Junit4.classToVogarTests(testClass, methodNames);
+        } else {
+            throw new AssertionFailedError("Unknown JUnit type: " + testClass.getName());
+        }
+        return tests;
     }
 
     @VisibleForTesting

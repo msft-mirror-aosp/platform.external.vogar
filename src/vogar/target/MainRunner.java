@@ -27,11 +27,13 @@ public final class MainRunner implements Runner {
 
     private final TargetMonitor monitor;
     private final Class<?> mainClass;
+    private final String[] args;
     private final Method main;
 
-    public MainRunner(TargetMonitor monitor, Class<?> mainClass) {
+    public MainRunner(TargetMonitor monitor, Class<?> mainClass, String[] args) {
         this.monitor = monitor;
         this.mainClass = mainClass;
+        this.args = args;
         try {
             this.main = mainClass.getMethod("main", String[].class);
         } catch (NoSuchMethodException e) {
@@ -40,7 +42,7 @@ public final class MainRunner implements Runner {
         }
     }
 
-    public boolean run(String actionName, Profiler profiler, String[] args) {
+    public boolean run(Profiler profiler) {
         monitor.outcomeStarted(getClass(), mainClass.getName());
         try {
             if (profiler != null) {

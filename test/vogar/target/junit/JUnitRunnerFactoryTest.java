@@ -16,37 +16,58 @@
 
 package vogar.target.junit;
 
-import junit.framework.TestCase;
+import java.util.List;
 
-import vogar.target.junit.JUnitRunnerFactory;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import vogar.target.junit3.SimpleTest;
+import vogar.target.junit3.SimpleTest2;
 import vogar.target.junit3.SuiteTest;
 import vogar.target.junit3.WrongSuiteTest;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * Tests for {@link JUnitRunnerFactory}
  */
-public class JUnitRunnerFactoryTest extends TestCase {
+@RunWith(JUnit4.class)
+public class JUnitRunnerFactoryTest {
     private JUnitRunnerFactory runnerFactory;
 
-    @Override
+    @Before
     public void setUp() throws Exception {
         runnerFactory = new JUnitRunnerFactory();
     }
 
+    @Test
     public void test_supports_should_judge_whether_Object_is_not_supported() {
-      assertEquals(false, runnerFactory.supports(Object.class));
+        assertEquals(false, runnerFactory.supports(Object.class));
     }
 
+    @Test
     public void test_supports_should_judge_whether_SimpleTest_which_inherits_from_TestCase_is_supported() {
         assertEquals(true, runnerFactory.supports(SimpleTest.class));
     }
 
+    @Test
     public void test_supports_should_judge_whether_WrongSuiteTest_which_has_suite_non_static_method_is_not_supported() {
         assertEquals(false, runnerFactory.supports(WrongSuiteTest.class));
     }
 
+    @Test
     public void test_supports_should_judge_whether_SuiteTest_which_has_suite_static_method_is_supported() {
         assertEquals(true, runnerFactory.supports(SuiteTest.class));
+    }
+
+    @Test
+    public void test_method_names_merged() {
+        List<VogarTest> tests = JUnitRunnerFactory.createVogarTests(SimpleTest2.class, "testSimple2",
+                new String[]{"testSimple2", "testSimple1"});
+
+        assertEquals("[vogar.target.junit3.SimpleTest2#testSimple2,"
+                        + " vogar.target.junit3.SimpleTest2#testSimple1]",
+                tests.toString());
     }
 }
