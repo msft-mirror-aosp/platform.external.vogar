@@ -44,7 +44,7 @@ public class JUnitRunnerTest extends TestCase {
     private Runner runner;
     private TargetMonitor monitor;
     private TestEnvironment testEnvironment = new TestEnvironment();
-    private final AtomicReference<String> skipPastReference = new AtomicReference<String>();
+    private final AtomicReference<String> skipPastReference = new AtomicReference<>();
 
     public void setUp() {
         monitor = mock(TargetMonitor.class);
@@ -53,82 +53,78 @@ public class JUnitRunnerTest extends TestCase {
     public void test_run_for_SimpleTest_should_perform_test() {
         Class<?> target = SimpleTest.class;
         Runner runner =
-            new JUnitRunner(monitor, "", null, target, skipPastReference, testEnvironment, 0);
+            new JUnitRunner(monitor, null, target, skipPastReference, testEnvironment, 0);
         runner.run("", null, null);
 
-        verify(monitor).outcomeStarted(runner,
-                target.getName() + "#testSimple", "");
+        verify(monitor).outcomeStarted(JUnitRunner.class,
+                target.getName() + "#testSimple");
         verify(monitor).outcomeFinished(Result.SUCCESS);
     }
 
     public void test_run_for_SuiteTest_should_perform_tests() {
         Class<?> target = SuiteTest.class;
         Runner runner =
-            new JUnitRunner(monitor, "", null, target, skipPastReference, testEnvironment, 0);
+            new JUnitRunner(monitor, null, target, skipPastReference, testEnvironment, 0);
         runner.run("", null, null);
 
-        verify(monitor).outcomeStarted(runner,
-                "vogar.target.junit3.SimpleTest#testSimple", "");
-        verify(monitor).outcomeStarted(runner,
-                "vogar.target.junit3.SimpleTest2#testSimple1", "");
-        verify(monitor).outcomeStarted(runner,
-                "vogar.target.junit3.SimpleTest2#testSimple2", "");
-        verify(monitor).outcomeStarted(runner,
-                "vogar.target.junit3.SimpleTest2#testSimple3", "");
+        verify(monitor).outcomeStarted(JUnitRunner.class,
+                "vogar.target.junit3.SimpleTest#testSimple");
+        verify(monitor).outcomeStarted(JUnitRunner.class,
+                "vogar.target.junit3.SimpleTest2#testSimple1");
+        verify(monitor).outcomeStarted(JUnitRunner.class,
+                "vogar.target.junit3.SimpleTest2#testSimple2");
+        verify(monitor).outcomeStarted(JUnitRunner.class,
+                "vogar.target.junit3.SimpleTest2#testSimple3");
         verify(monitor, times(4)).outcomeFinished(Result.SUCCESS);
     }
 
     public void test_run_for_SimpleTest2_with_ActionName_should_perform_test() {
         Class<?> target = SimpleTest2.class;
-        String actionName = "actionName";
         Runner runner = new JUnitRunner(
-            monitor, actionName, null, target, skipPastReference, testEnvironment, 0);
+            monitor, null, target, skipPastReference, testEnvironment, 0);
         runner.run("", null, null);
 
-        verify(monitor).outcomeStarted(runner,
-                target.getName() + "#testSimple1", actionName);
-        verify(monitor).outcomeStarted(runner,
-                target.getName() + "#testSimple2", actionName);
-        verify(monitor).outcomeStarted(runner,
-                target.getName() + "#testSimple3", actionName);
+        verify(monitor).outcomeStarted(JUnitRunner.class,
+                target.getName() + "#testSimple1");
+        verify(monitor).outcomeStarted(JUnitRunner.class,
+                target.getName() + "#testSimple2");
+        verify(monitor).outcomeStarted(JUnitRunner.class,
+                target.getName() + "#testSimple3");
         verify(monitor, times(3)).outcomeFinished(Result.SUCCESS);
     }
 
     public void test_run_for_SimpleTest2_limiting_to_1method_should_perform_test() {
         Class<?> target = SimpleTest2.class;
-        String actionName = "actionName";
         Runner runner = new JUnitRunner(
-            monitor, actionName, null, target, skipPastReference, testEnvironment, 0);
+            monitor, null, target, skipPastReference, testEnvironment, 0);
         runner.run("", null, new String[] { "testSimple2" });
 
-        verify(monitor).outcomeStarted(runner,
-                target.getName() + "#testSimple2", actionName);
+        verify(monitor).outcomeStarted(JUnitRunner.class,
+                target.getName() + "#testSimple2");
         verify(monitor).outcomeFinished(Result.SUCCESS);
     }
 
     public void test_run_for_SimpleTest2_limiting_to_2methods_should_perform_test() {
         Class<?> target = SimpleTest2.class;
-        String actionName = "actionName";
         Runner runner = new JUnitRunner(
-            monitor, actionName, null, target, skipPastReference, testEnvironment, 0);
+            monitor, null, target, skipPastReference, testEnvironment, 0);
         runner.run("", null, new String[] { "testSimple2", "testSimple3" });
 
-        verify(monitor).outcomeStarted(runner,
-                target.getName() + "#testSimple2", actionName);
-        verify(monitor).outcomeStarted(runner,
-                target.getName() + "#testSimple3", actionName);
+        verify(monitor).outcomeStarted(JUnitRunner.class,
+                target.getName() + "#testSimple2");
+        verify(monitor).outcomeStarted(JUnitRunner.class,
+                target.getName() + "#testSimple3");
         verify(monitor, times(2)).outcomeFinished(Result.SUCCESS);
     }
 
     public void test_limiting_to_1method_and_run_for_SimpleTest2_should_perform_test() {
         Class<?> target = SimpleTest2.class;
-        String actionName = "actionName";
         Runner runner = new JUnitRunner(
-            monitor, actionName, "testSimple2", target, skipPastReference, testEnvironment, 0);
+            monitor, "testSimple2", target, skipPastReference, testEnvironment, 0);
         runner.run("", null, null);
 
-        verify(monitor).outcomeStarted(runner,
-                target.getName() + "#testSimple2", actionName);
+        verify(monitor).outcomeStarted(JUnitRunner.class,
+                target.getName() + "#testSimple2");
         verify(monitor).outcomeFinished(Result.SUCCESS);
     }
 
@@ -138,25 +134,24 @@ public class JUnitRunnerTest extends TestCase {
 
         try {
             Runner runner = new JUnitRunner(
-                monitor, "", "testSimple", target, skipPastReference, testEnvironment, 0);
+                monitor, "testSimple", target, skipPastReference, testEnvironment, 0);
             runner.run("", null, null);
             fail("should throw ClassCastException.");
-        } catch (ClassCastException e) {
+        } catch (ClassCastException ignored) {
         }
     }
 
     public void test_limiting_to_wrong_1method_and_run_for_SimpleTest2_should_fail_test() {
         Class<?> target = SimpleTest2.class;
-        String actionName = "actionName";
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         System.setOut(new PrintStream(baos));
 
         Runner runner = new JUnitRunner(
-            monitor, actionName, "testSimple5", target, skipPastReference, testEnvironment, 0);
+            monitor, "testSimple5", target, skipPastReference, testEnvironment, 0);
         runner.run("", null, null);
 
-        verify(monitor).outcomeStarted(runner,
-                target.getName() + "#testSimple5", actionName);
+        verify(monitor).outcomeStarted(JUnitRunner.class,
+                target.getName() + "#testSimple5");
         verify(monitor).outcomeFinished(Result.EXEC_FAILED);
 
         String outStr = baos.toString();
@@ -167,55 +162,52 @@ public class JUnitRunnerTest extends TestCase {
 
     public void test_run_for_SimpleTest2_limiting_to_1method_with_both_run_should_perform_test() {
         Class<?> target = SimpleTest2.class;
-        String actionName = "actionName";
         Runner runner = new JUnitRunner(
-            monitor, actionName, "testSimple3", target, skipPastReference, testEnvironment, 0);
+            monitor, "testSimple3", target, skipPastReference, testEnvironment, 0);
         runner.run("", null, new String[] { "testSimple2" });
 
-        verify(monitor).outcomeStarted(runner,
-                target.getName() + "#testSimple2", actionName);
+        verify(monitor).outcomeStarted(JUnitRunner.class,
+                target.getName() + "#testSimple2");
         verify(monitor).outcomeFinished(Result.SUCCESS);
     }
 
     public void test_run_for_FailTest_should_perform_test() {
         Class<?> target = FailTest.class;
-        String actionName = "actionName";
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         System.setOut(new PrintStream(baos));
 
         Runner runner = new JUnitRunner(
-            monitor, actionName, null, target, skipPastReference, testEnvironment, 0);
+            monitor, null, target, skipPastReference, testEnvironment, 0);
         runner.run("", null, null);
 
-        verify(monitor).outcomeStarted(runner,
-                target.getName() + "#testSuccess", actionName);
-        verify(monitor).outcomeStarted(runner, target.getName() + "#testFail",
-                actionName);
-        verify(monitor).outcomeStarted(runner,
-                target.getName() + "#testThrowException", actionName);
+        verify(monitor).outcomeStarted(JUnitRunner.class,
+                target.getName() + "#testSuccess");
+        verify(monitor).outcomeStarted(JUnitRunner.class, target.getName() + "#testFail"
+        );
+        verify(monitor).outcomeStarted(JUnitRunner.class,
+                target.getName() + "#testThrowException");
         verify(monitor).outcomeFinished(Result.SUCCESS);
         verify(monitor, times(2)).outcomeFinished(Result.EXEC_FAILED);
 
         String outStr = baos.toString();
         assertTrue(outStr
                 .contains("junit.framework.AssertionFailedError: failed."));
-        assertTrue(outStr.contains("java.lang.RuntimeException: exceptrion"));
+        assertTrue(outStr.contains("java.lang.RuntimeException: exception"));
     }
 
     public void test_run_for_LongTest_with_time_limit_should_report_time_out() {
         Class<?> target = LongTest.class;
-        String actionName = "actionName";
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         System.setOut(new PrintStream(baos));
 
         Runner runner = new JUnitRunner(
-            monitor, actionName, null, target, skipPastReference, testEnvironment, 0);
+            monitor, null, target, skipPastReference, testEnvironment, 0);
         runner.run("", null, null);
 
-        verify(monitor).outcomeStarted(runner, target.getName() + "#test",
-                actionName);
+        verify(monitor).outcomeStarted(JUnitRunner.class, target.getName() + "#test"
+        );
         verify(monitor).outcomeFinished(Result.EXEC_FAILED);
 
         String outStr = baos.toString();
@@ -224,10 +216,9 @@ public class JUnitRunnerTest extends TestCase {
 
     public void test_run_for_LongTest2_with_time_limit_should_not_report_time_out() {
         Class<?> target = LongTest2.class;
-        String actionName = "actionName";
 
         Runner runner = new JUnitRunner(
-            monitor, actionName, null, target, skipPastReference, testEnvironment, 0);
+            monitor, null, target, skipPastReference, testEnvironment, 0);
         runner.run("", null, null);
 
         verify(monitor, times(8)).outcomeFinished(Result.SUCCESS);

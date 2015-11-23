@@ -26,7 +26,7 @@ import vogar.monitor.TargetMonitor;
 public class CaliperRunnerFactory implements RunnerFactory {
 
     @Override @Nullable
-    public Runner newRunner(TargetMonitor monitor, String actionName, String qualification,
+    public Runner newRunner(TargetMonitor monitor, String qualification,
             Class<?> klass, AtomicReference<String> skipPastReference,
             TestEnvironment testEnvironment, int timeoutSeconds, boolean profile) {
         if (SimpleBenchmark.class.isAssignableFrom(klass)) {

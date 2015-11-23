@@ -29,11 +29,11 @@ import vogar.target.TestEnvironment;
 public class JUnitRunnerFactory implements RunnerFactory {
 
     @Override @Nullable
-    public Runner newRunner(TargetMonitor monitor, String actionName, String qualification,
+    public Runner newRunner(TargetMonitor monitor, String qualification,
             Class<?> klass, AtomicReference<String> skipPastReference,
             TestEnvironment testEnvironment, int timeoutSeconds, boolean profile) {
         if (supports(klass)) {
-            return new JUnitRunner(monitor, actionName, qualification, klass, skipPastReference,
+            return new JUnitRunner(monitor, qualification, klass, skipPastReference,
                     testEnvironment, timeoutSeconds);
         } else {
             return null;

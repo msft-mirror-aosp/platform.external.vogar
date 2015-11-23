@@ -18,7 +18,6 @@ package vogar.target;
 
 import com.google.caliper.Runner;
 import com.google.common.collect.ObjectArrays;
-import java.util.concurrent.atomic.AtomicReference;
 import vogar.Result;
 import vogar.monitor.TargetMonitor;
 
@@ -39,7 +38,7 @@ public final class CaliperRunner implements vogar.target.Runner {
 
     public boolean run(String actionName, Profiler profiler,
             String[] args) {
-        monitor.outcomeStarted(this, testClass.getName(), actionName);
+        monitor.outcomeStarted(getClass(), testClass.getName());
         String[] arguments = ObjectArrays.concat(testClass.getName(), args);
         if (profile) {
             arguments = ObjectArrays.concat("--debug", arguments);

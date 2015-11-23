@@ -42,7 +42,7 @@ public final class JUnitRunner implements Runner {
     private final Class<?> testClass;
     private final String qualification;
     private final AtomicReference<String> skipPastReference;
-    private final String actionName;
+
     private final TestEnvironment testEnvironment;
     private final int timeoutSeconds;
     private boolean vmIsUnstable;
@@ -50,7 +50,7 @@ public final class JUnitRunner implements Runner {
     private final ExecutorService executor = Executors.newCachedThreadPool(
             Threads.daemonThreadFactory("testrunner"));
 
-    public JUnitRunner(TargetMonitor monitor, String actionName, String qualification,
+    public JUnitRunner(TargetMonitor monitor, String qualification,
             Class<?> testClass, AtomicReference<String> skipPastReference,
             TestEnvironment testEnvironment, int timeoutSeconds) {
 
@@ -58,7 +58,6 @@ public final class JUnitRunner implements Runner {
         this.testClass = testClass;
         this.qualification = qualification;
         this.skipPastReference = skipPastReference;
-        this.actionName = actionName;
         this.testEnvironment = testEnvironment;
         this.timeoutSeconds = timeoutSeconds;
     }
@@ -104,7 +103,7 @@ public final class JUnitRunner implements Runner {
      */
     private void runWithTimeout(final Profiler profiler, final VogarTest test) {
         testEnvironment.reset();
-        monitor.outcomeStarted(JUnitRunner.this, test.toString(), actionName);
+        monitor.outcomeStarted(getClass(), test.toString());
 
         // Start the test on a background thread.
         final AtomicReference<Thread> executingThreadReference = new AtomicReference<Thread>();

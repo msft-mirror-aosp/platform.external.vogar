@@ -30,7 +30,7 @@ public interface RunnerFactory {
      * {@code null} if no such instance is available.
      */
     @Nullable
-    Runner newRunner(TargetMonitor monitor, String actionName, String qualification, Class<?> klass,
+    Runner newRunner(TargetMonitor monitor, String qualification, Class<?> klass,
             AtomicReference<String> skipPastReference, TestEnvironment testEnvironment,
             int timeoutSeconds, boolean profile);
 }

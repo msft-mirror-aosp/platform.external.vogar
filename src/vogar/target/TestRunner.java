@@ -215,17 +215,17 @@ public final class TestRunner {
         for (Class<?> klass : classes) {
             Runner runner;
             try {
-                runner = runnerFactory.newRunner(monitor, qualifiedName, qualification, klass,
+                runner = runnerFactory.newRunner(monitor, qualification, klass,
                         skipPastReference, testEnvironment, timeoutSeconds, profile);
             } catch (RuntimeException e) {
-                monitor.outcomeStarted(null, qualifiedName, qualifiedName);
+                monitor.outcomeStarted(null, qualifiedName);
                 e.printStackTrace();
                 monitor.outcomeFinished(Result.ERROR);
                 return;
             }
 
             if (runner == null) {
-                monitor.outcomeStarted(null, klass.getName(), qualifiedName);
+                monitor.outcomeStarted(null, klass.getName());
                 System.out.println("Skipping " + klass.getName()
                         + ": no associated runner class");
                 monitor.outcomeFinished(Result.UNSUPPORTED);
@@ -262,11 +262,11 @@ public final class TestRunner {
         }
 
         @Override @Nullable
-        public Runner newRunner(TargetMonitor monitor, String actionName, String qualification,
+        public Runner newRunner(TargetMonitor monitor, String qualification,
                 Class<?> klass, AtomicReference<String> skipPastReference,
                 TestEnvironment testEnvironment, int timeoutSeconds, boolean profile) {
             for (RunnerFactory runnerFactory : runnerFactories) {
-                Runner runner = runnerFactory.newRunner(monitor, actionName, qualification, klass,
+                Runner runner = runnerFactory.newRunner(monitor, qualification, klass,
                         skipPastReference, testEnvironment, timeoutSeconds, profile);
                 if (runner != null) {
                     return runner;
