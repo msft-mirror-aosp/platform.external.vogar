@@ -26,6 +26,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
 import vogar.Action;
@@ -94,6 +95,8 @@ public final class BuildActionTask extends Task {
         if (run.debugging) {
             javac.debug();
         }
+        // Set source and target version to 1.7 so that OpenJDK 8 output can be used with dx.
+        javac.extra(ImmutableList.of("-source", "1.7", "-target", "1.7"));
         if (javaFile != null) {
             if (!JAVA_SOURCE_PATTERN.matcher(javaFile.toString()).find()) {
                 throw new CommandFailedException(Collections.<String>emptyList(),
