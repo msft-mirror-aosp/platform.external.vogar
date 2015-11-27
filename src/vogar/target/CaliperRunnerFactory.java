@@ -15,7 +15,8 @@
  */
 package vogar.target;
 
-import com.google.caliper.SimpleBenchmark;
+import com.google.caliper.runner.BenchmarkClassChecker;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 import vogar.monitor.TargetMonitor;
@@ -25,12 +26,20 @@ import vogar.monitor.TargetMonitor;
  */
 public class CaliperRunnerFactory implements RunnerFactory {
 
+    private final BenchmarkClassChecker benchmarkClassChecker;
+
+    public CaliperRunnerFactory(List<String> argsList) {
+        // Command line arguments can affect the set of available instruments so pass that
+        // information on to the checker.
+        benchmarkClassChecker = BenchmarkClassChecker.create(argsList);
+    }
+
     @Override @Nullable
     public Runner newRunner(TargetMonitor monitor, String qualification,
             Class<?> klass, AtomicReference<String> skipPastReference,
             TestEnvironment testEnvironment, int timeoutSeconds, boolean profile,
             String[] args) {
-        if (SimpleBenchmark.class.isAssignableFrom(klass)) {
+        if (benchmarkClassChecker.isBenchmark(klass)) {
             return new CaliperRunner(monitor, profile, klass, args);
         } else {
             return null;

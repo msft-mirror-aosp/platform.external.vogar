@@ -26,13 +26,12 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src/)
 LOCAL_JAVA_RESOURCE_DIRS := resources
 
 LOCAL_STATIC_JAVA_LIBRARIES := \
-  vogar-caliper \
-  vogar-gson-1.7.1 \
-  vogar-guava \
+  caliper-host \
+  caliper-gson-host \
+  guavalib \
+  mockito-host \
   vogar-jsr305 \
-  vogar-kxml-libcore-20110123 \
-  vogar-miniguice \
-  mockito-host
+  vogar-kxml-libcore-20110123
 
 # Vogar uses android.jar.
 LOCAL_CLASSPATH := prebuilts/sdk/9/android.jar
@@ -44,12 +43,8 @@ include $(BUILD_HOST_JAVA_LIBRARY)
 include $(CLEAR_VARS)
 
 LOCAL_PREBUILT_JAVA_LIBRARIES := \
-    vogar-caliper:lib/caliper$(COMMON_JAVA_PACKAGE_SUFFIX) \
-    vogar-gson-1.7.1:lib/gson-1.7.1$(COMMON_JAVA_PACKAGE_SUFFIX) \
-    vogar-guava:lib/guava$(COMMON_JAVA_PACKAGE_SUFFIX) \
     vogar-jsr305:lib/jsr305$(COMMON_JAVA_PACKAGE_SUFFIX) \
-    vogar-kxml-libcore-20110123:lib/kxml-libcore-20110123$(COMMON_JAVA_PACKAGE_SUFFIX) \
-    vogar-miniguice:lib/miniguice$(COMMON_JAVA_PACKAGE_SUFFIX)
+    vogar-kxml-libcore-20110123:lib/kxml-libcore-20110123$(COMMON_JAVA_PACKAGE_SUFFIX)
 
 include $(BUILD_HOST_PREBUILT)
 

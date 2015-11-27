@@ -80,7 +80,7 @@ public final class TestRunner {
         } else {
             runnerFactory = new CompositeRunnerFactory(
                     new JUnitRunnerFactory(),
-                    new CaliperRunnerFactory(),
+                    new CaliperRunnerFactory(argsList),
                     new MainRunnerFactory());
         }
         for (Iterator<String> i = argsList.iterator(); i.hasNext(); ) {
