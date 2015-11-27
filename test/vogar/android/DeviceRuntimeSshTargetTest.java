@@ -44,6 +44,7 @@ public class DeviceRuntimeSshTargetTest extends AbstractModeTest {
     }
 
     @Test
+    @VogarArgs({"action"})
     public void testSshTarget()
             throws IOException {
 

@@ -16,14 +16,12 @@
 
 package vogar.android;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
-import vogar.Classpath;
 import vogar.LocalTarget;
 import vogar.Mode;
 import vogar.ModeId;
@@ -46,13 +44,12 @@ public class HostRuntimeLocalTargetTest extends AbstractModeTest {
     }
 
     @Test
+    @VogarArgs({"action"})
     public void testLocalTarget()
             throws IOException {
 
         Mode hostRuntime = new HostRuntime(run, ModeId.HOST, Variant.X32);
 
-        Classpath classpath = new Classpath();
-        classpath.addAll(new File("classes"));
         VmCommandBuilder builder = newVmCommandBuilder(hostRuntime)
                 .classpath(classpath)
                 .mainClass("mainclass")
@@ -78,6 +75,42 @@ public class HostRuntimeLocalTargetTest extends AbstractModeTest {
                         + " -Duser.language=en"
                         + " -Duser.region=US"
                         + " -Xcheck:jni"
+                        + " -Xjnigreflimit:2000"
+                        + " mainclass"
+                        + " -x a\\ b"), args);
+    }
+
+    @Test
+    @VogarArgs({"--benchmark", "action"})
+    public void testLocalTarget_Benchmark()
+            throws IOException {
+
+        Mode hostRuntime = new HostRuntime(run, ModeId.HOST, Variant.X32);
+
+        VmCommandBuilder builder = newVmCommandBuilder(hostRuntime)
+                .classpath(classpath)
+                .mainClass("mainclass")
+                .args("-x", "a b");
+        Command command = builder.build(run.target);
+        List<String> args = command.getArgs();
+        assertEquals(Arrays.asList(
+                "sh", "-c", ""
+                        + "ANDROID_PRINTF_LOG=tag"
+                        + " ANDROID_LOG_TAGS=*:i"
+                        + " ANDROID_DATA=" + run.localFile("android-data")
+                        + " ANDROID_ROOT=out/host/linux-x86"
+                        + " LD_LIBRARY_PATH=out/host/linux-x86/lib"
+                        + " DYLD_LIBRARY_PATH=out/host/linux-x86/lib"
+                        + " LD_USE_LOAD_BIAS=1"
+                        + " out/host/linux-x86/bin/dalvikvm32"
+                        + " -classpath classes"
+                        + " -Xbootclasspath"
+                        + ":out/host/linux-x86/framework/core-libart-hostdex.jar"
+                        + ":out/host/linux-x86/framework/conscrypt-hostdex.jar"
+                        + ":out/host/linux-x86/framework/okhttp-hostdex.jar"
+                        + ":out/host/linux-x86/framework/bouncycastle-hostdex.jar"
+                        + " -Duser.language=en"
+                        + " -Duser.region=US"
                         + " -Xjnigreflimit:2000"
                         + " mainclass"
                         + " -x a\\ b"), args);

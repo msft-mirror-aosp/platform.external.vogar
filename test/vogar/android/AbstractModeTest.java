@@ -16,10 +16,13 @@
 
 package vogar.android;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import java.io.File;
 import java.io.IOException;
+import junit.framework.AssertionFailedError;
 import org.junit.Before;
+import org.junit.Rule;
 import org.mockito.Mock;
 import vogar.Action;
 import vogar.Classpath;
@@ -37,6 +40,9 @@ import vogar.commands.VmCommandBuilder;
  * Base class for tests of {@link Mode} implementations.
  */
 public abstract class AbstractModeTest {
+
+    @Rule
+    public VogarArgsRule vogarArgsRule = new VogarArgsRule();
 
     @Mock protected Console console;
 
@@ -68,7 +74,11 @@ public abstract class AbstractModeTest {
         Target target = createTarget();
 
         final Vogar vogar = new Vogar();
-        vogar.parseArgs(new String[0]);
+        String[] args = vogarArgsRule.getTestSpecificArgs();
+        if (!vogar.parseArgs(args)) {
+            throw new AssertionFailedError("Parse error in: " + Joiner.on(",").join(args)
+                    + ". Please check stdout.");
+        }
 
         run = new Run(vogar, false, console, mkdir, androidSdk, new Rm(console), target,
                 new File("runner/dir"));
@@ -80,7 +90,7 @@ public abstract class AbstractModeTest {
     protected abstract Target createTarget();
 
     protected VmCommandBuilder newVmCommandBuilder(Mode mode) {
-        Action action = new Action("fred", "blah", new File("resources"), new File("source"),
+        Action action = new Action("action", "blah", new File("resources"), new File("source"),
                 new File("java"));
         return mode.newVmCommandBuilder(action, new File("/work"));
     }

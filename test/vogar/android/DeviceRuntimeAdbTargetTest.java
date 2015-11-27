@@ -50,7 +50,40 @@ public class DeviceRuntimeAdbTargetTest extends AbstractModeTest {
     }
 
     @Test
+    @VogarArgs({"action"})
     public void testAdbTarget()
+            throws IOException {
+
+        Mode deviceRuntime = new DeviceRuntime(run, ModeId.DEVICE, Variant.X32,
+                deviceUserNameSupplier);
+
+        VmCommandBuilder builder = newVmCommandBuilder(deviceRuntime)
+                .classpath(classpath)
+                .mainClass("mainclass")
+                .args("-x", "a b");
+        Command command = builder.build(run.target);
+        List<String> args = command.getArgs();
+        assertEquals(Arrays.asList(
+                "adb", "shell", ""
+                        + "cd /work"
+                        + " &&"
+                        + " ANDROID_DATA=runner"
+                        + " dalvikvm32"
+                        + " -classpath"
+                        + " classes"
+                        + " -Duser.home=runner/dir/user.home"
+                        + " -Duser.name=fred"
+                        + " -Duser.language=en"
+                        + " -Duser.region=US"
+                        + " -Xcheck:jni"
+                        + " -Xjnigreflimit:2000"
+                        + " mainclass"
+                        + " -x a\\ b"), args);
+    }
+
+    @Test
+    @VogarArgs({"--benchmark", "action"})
+    public void testAdbTarget_Benchmark()
             throws IOException {
 
         Mode deviceRuntime = new DeviceRuntime(run, ModeId.DEVICE, Variant.X32,
@@ -76,7 +109,6 @@ public class DeviceRuntimeAdbTargetTest extends AbstractModeTest {
                         + " -Duser.name=fred"
                         + " -Duser.language=en"
                         + " -Duser.region=US"
-                        + " -Xcheck:jni"
                         + " -Xjnigreflimit:2000"
                         + " mainclass"
                         + " -x a\\ b"), args);
