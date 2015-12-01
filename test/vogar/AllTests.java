@@ -20,7 +20,8 @@ import vogar.target.JUnitRunnerTest;
         DeviceRuntimeAdbTargetTest.class,
         DeviceRuntimeSshTargetTest.class,
         HostRuntimeLocalTargetTest.class,
-        JUnitRunnerTest.class
+        JUnitRunnerTest.class,
+        ScriptBuilderEscapingTest.class
 })
 @RunWith(Suite.class)
 public class AllTests {

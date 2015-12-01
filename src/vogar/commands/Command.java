@@ -17,6 +17,7 @@
 package vogar.commands;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -55,7 +56,7 @@ public final class Command {
 
     public Command(Log log, String... args) {
         this.log = log;
-        this.args = processArgs(Arrays.asList(args));
+        this.args = ImmutableList.copyOf(args);
         this.env = Collections.emptyMap();
         this.permitNonZeroExitStatus = false;
         this.tee = null;
@@ -63,7 +64,7 @@ public final class Command {
 
     private Command(Builder builder) {
         this.log = builder.log;
-        this.args = processArgs(builder.args);
+        this.args = ImmutableList.copyOf(builder.args);
         this.env = builder.env;
         this.permitNonZeroExitStatus = builder.permitNonZeroExitStatus;
         this.tee = builder.tee;
@@ -74,27 +75,6 @@ public final class Command {
                                                 + " exceeded by: " + string);
             }
         }
-    }
-
-    private static List<String> processArgs(List<String> args) {
-        // Translate ["sh", "-c", "ls", "/tmp"] into ["sh", "-c", "ls /tmp"].
-        // This is needed for host execution.
-        ArrayList<String> actual = new ArrayList<String>();
-        int i = 0;
-        while (i < args.size()) {
-            String arg = args.get(i++);
-            actual.add(arg);
-            if (arg.equals("-c")) break;
-        }
-        if (i < args.size()) {
-            String cmd = "";
-            for (; i < args.size(); ++i) {
-                cmd += args.get(i) + " ";
-            }
-            actual.add(cmd);
-        }
-
-        return actual;
     }
 
     public void start() throws IOException {

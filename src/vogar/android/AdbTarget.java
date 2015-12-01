@@ -31,6 +31,9 @@ import vogar.commands.Command;
 
 public final class AdbTarget extends Target {
 
+    private static final ImmutableList<String> TARGET_PROCESS_PREFIX =
+            ImmutableList.of("adb", "shell");
+
     private final Log log;
 
     private final DeviceFilesystem deviceFilesystem;
@@ -49,8 +52,8 @@ public final class AdbTarget extends Target {
         return new File("/data/local/tmp/vogar");
     }
 
-    @Override public List<String> targetProcessPrefix() {
-        return ImmutableList.of("adb", "shell");
+    @Override protected ImmutableList<String> targetProcessPrefix() {
+        return TARGET_PROCESS_PREFIX;
     }
 
     @Override public void await(File directory) {

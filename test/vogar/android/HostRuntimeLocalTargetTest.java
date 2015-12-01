@@ -55,8 +55,9 @@ public class HostRuntimeLocalTargetTest extends AbstractModeTest {
         classpath.addAll(new File("classes"));
         VmCommandBuilder builder = newVmCommandBuilder(hostRuntime)
                 .classpath(classpath)
-                .mainClass("mainclass");
-        Command command = builder.build();
+                .mainClass("mainclass")
+                .args("-x", "a b");
+        Command command = builder.build(run.target);
         List<String> args = command.getArgs();
         assertEquals(Arrays.asList(
                 "sh", "-c", ""
@@ -78,6 +79,7 @@ public class HostRuntimeLocalTargetTest extends AbstractModeTest {
                         + " -Duser.region=US"
                         + " -Xcheck:jni"
                         + " -Xjnigreflimit:2000"
-                        + " mainclass "), args);
+                        + " mainclass"
+                        + " -x a\\ b"), args);
     }
 }

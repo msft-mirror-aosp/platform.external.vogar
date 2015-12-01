@@ -111,22 +111,21 @@ public final class HostRuntime implements Mode {
         }
 
         List<String> vmCommand = new ArrayList<String>();
-        vmCommand.addAll(run.target.targetProcessPrefix());
-        vmCommand.add("ANDROID_PRINTF_LOG=tag");
-        vmCommand.add("ANDROID_LOG_TAGS=*:i");
-        vmCommand.add("ANDROID_DATA=" + dalvikCache().getParent());
-        vmCommand.add("ANDROID_ROOT=" + hostOut);
-        vmCommand.add("LD_LIBRARY_PATH=" + libDir);
-        vmCommand.add("DYLD_LIBRARY_PATH=" + libDir);
-        // This is needed on the host so that the linker loads core.oat at the necessary address.
-        vmCommand.add("LD_USE_LOAD_BIAS=1");
         Iterables.addAll(vmCommand, run.invokeWith());
         vmCommand.add(hostOut + "/bin/" + run.vmCommand);
 
-        VmCommandBuilder builder = new VmCommandBuilder(run.log);
-
         // If you edit this, see also DeviceRuntime...
-        builder.vmCommand(vmCommand)
+        VmCommandBuilder builder = new VmCommandBuilder(run.log)
+                .env("ANDROID_PRINTF_LOG", "tag")
+                .env("ANDROID_LOG_TAGS", "*:i")
+                .env("ANDROID_DATA", dalvikCache().getParent())
+                .env("ANDROID_ROOT", hostOut)
+                .env("LD_LIBRARY_PATH", libDir)
+                .env("DYLD_LIBRARY_PATH", libDir)
+                // This is needed on the host so that the linker loads core.oat at the necessary
+                // address.
+                .env("LD_USE_LOAD_BIAS", "1")
+                .vmCommand(vmCommand)
                 .vmArgs("-Xbootclasspath:" + bootClasspath.toString())
                 .vmArgs("-Duser.language=en")
                 .vmArgs("-Duser.region=US");
