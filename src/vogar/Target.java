@@ -77,7 +77,7 @@ public abstract class Target {
          * Escape any special shell characters so that the target shell treats them as literal
          * characters.
          *
-         * <p>e,g, an escaped space will not be treated as a token separator, an escaped dollar will
+         * <p>e.g. an escaped space will not be treated as a token separator, an escaped dollar will
          * not cause shell substitution.
          */
         @VisibleForTesting
