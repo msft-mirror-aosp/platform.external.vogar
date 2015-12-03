@@ -31,14 +31,16 @@ import vogar.util.Strings;
  */
 public class Jack {
 
+    private static final File JACK_SCRIPT;
     private static final File JACK_JAR;
     private static final File JILL_JAR;
 
-    // Initialise the jar files for jack and jill, letting them be null if the files
+    // Initialise the files for jack and jill, letting them be null if the files
     // cannot be found.
     static {
         String sdkTop = System.getenv("ANDROID_BUILD_TOP");
 
+        final File jackScript = new File(sdkTop + "/prebuilts/sdk/tools/jack");
         final File jackJar = new File(sdkTop + "/prebuilts/sdk/tools/jack.jar");
         final File jillJar = new File(sdkTop + "/prebuilts/sdk/tools/jill.jar");
 
@@ -47,6 +49,12 @@ public class Jack {
         String jackJarEnv = System.getenv("JACK_JAR");
 
         final File jackJarFromEnv = (jackJarEnv != null) ? new File(jackJarEnv) : null;
+
+        if (!jackScript.exists()) {
+            JACK_SCRIPT = null;
+        } else {
+            JACK_SCRIPT = jackScript;
+        }
 
         if (jackJarEnv != null && jackJarFromEnv.exists()) {
             JACK_JAR = jackJarFromEnv;
@@ -72,12 +80,15 @@ public class Jack {
      * @throws IllegalStateException when the jack library cannot be found.
      */
     public static Jack getJackCompiler(Log log) throws IllegalStateException {
-        if (JACK_JAR != null) {
-            // Configure jack compiler with right JACK_JAR path.
-            return new Jack(log, Lists.newArrayList("java", "-jar", JACK_JAR.getAbsolutePath()));
-        } else {
-            throw new IllegalStateException("Jack library not found, cannot use jack.");
+        if (JACK_SCRIPT != null) {
+            // Configure jack compiler with right JACK_SCRIPT path.
+            return new Jack(log, Lists.newArrayList(JACK_SCRIPT.getAbsolutePath()));
         }
+        if (JACK_JAR != null) {
+            // Fallback to jack.jar, for previous releases.
+            return new Jack(log, Lists.newArrayList("java", "-jar", JACK_JAR.getAbsolutePath()));
+        }
+        throw new IllegalStateException("Jack library not found, cannot use jack.");
     }
 
     /**
