@@ -35,6 +35,7 @@ public enum ModeId {
     // $BOOTCLASSPATH defined by system/core/rootdir/init.rc
     private static final String[] DEVICE_JARS = new String[] {
             "core-libart",
+            "core-oj",
             "conscrypt",
             "okhttp",
             "core-junit",
@@ -50,6 +51,7 @@ public enum ModeId {
 
     private static final String[] HOST_JARS = new String[] {
             "core-libart-hostdex",
+            "core-oj-hostdex",
             "conscrypt-hostdex",
             "okhttp-hostdex",
             "bouncycastle-hostdex",
