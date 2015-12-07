@@ -16,8 +16,9 @@
 
 package vogar.target;
 
-import com.google.caliper.Runner;
-import com.google.common.collect.ObjectArrays;
+import com.google.caliper.runner.CaliperMain;
+import com.google.common.collect.ImmutableList;
+import java.io.PrintWriter;
 import vogar.Result;
 import vogar.monitor.TargetMonitor;
 
@@ -41,15 +42,33 @@ public final class CaliperRunner implements vogar.target.Runner {
 
     public boolean run(Profiler profiler) {
         monitor.outcomeStarted(getClass(), testClass.getName());
-        String[] arguments = ObjectArrays.concat(testClass.getName(), args);
-        if (profile) {
-            arguments = ObjectArrays.concat("--debug", arguments);
+        ImmutableList.Builder<String> builder = ImmutableList.<String>builder()
+            .add(testClass.getName())
+            .add(args);
+
+        // Make sure that the results are output to the correct location so that vogar will
+        // copy them back to the ./vogar-results/ directory.
+        builder.add("-Cresults.file.options.dir=" + System.getProperty("java.io.tmpdir"));
+
+        // TODO(paulduffin): Remove once caliper supports suitable defaults for Android.
+        // Temporary change to force caliper to use a heap of 256M for each of it's workers when
+        // running on Android.
+        if (System.getProperty("java.specification.name").equals("Dalvik Core Library")) {
+            builder.add("-Cvm.args=-Xmx256M -Xms256M");
         }
+
+        if (profile) {
+          builder.add("--debug");
+        }
+        ImmutableList<String> argList = builder.build();
+        String[] arguments = argList.toArray(new String[argList.size()]);
         try {
             if (profiler != null) {
                 profiler.start();
             }
-            new Runner().run(arguments);
+          PrintWriter stdout = new PrintWriter(System.out);
+          PrintWriter stderr = new PrintWriter(System.err);
+          CaliperMain.exitlessMain(arguments, stdout, stderr);
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {
