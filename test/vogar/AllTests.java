@@ -24,6 +24,7 @@ import vogar.android.DeviceRuntimeSshTargetTest;
 import vogar.android.HostRuntimeLocalTargetTest;
 import vogar.target.AssertTest;
 import vogar.target.JUnitRunnerTest;
+import vogar.target.TestRunnerTest;
 
 /**
  * Run the selection of tests that we know work.
@@ -37,7 +38,8 @@ import vogar.target.JUnitRunnerTest;
         DeviceRuntimeSshTargetTest.class,
         HostRuntimeLocalTargetTest.class,
         JUnitRunnerTest.class,
-        ScriptBuilderEscapingTest.class
+        ScriptBuilderEscapingTest.class,
+        TestRunnerTest.class,
 })
 @RunWith(Suite.class)
 public class AllTests {
