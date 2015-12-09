@@ -16,6 +16,7 @@
 
 package vogar.target;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,7 +47,7 @@ public final class TestRunner {
     private final Integer monitorPort;
 
     /** use an atomic reference so the runner can null it out when it is encountered. */
-    private final AtomicReference<String> skipPastReference;
+    @VisibleForTesting final AtomicReference<String> skipPastReference;
     private final int timeoutSeconds;
 
     private final RunnerFactory runnerFactory;
@@ -74,15 +75,6 @@ public final class TestRunner {
         boolean profileThreadGroup
                 = Boolean.parseBoolean(properties.getProperty(TestProperties.PROFILE_THREAD_GROUP));
 
-        boolean testOnly = Boolean.parseBoolean(properties.getProperty(TestProperties.TEST_ONLY));
-        if (testOnly) {
-            runnerFactory = new CompositeRunnerFactory(new JUnitRunnerFactory());
-        } else {
-            runnerFactory = new CompositeRunnerFactory(
-                    new JUnitRunnerFactory(),
-                    new CaliperRunnerFactory(argsList),
-                    new MainRunnerFactory());
-        }
         for (Iterator<String> i = argsList.iterator(); i.hasNext(); ) {
             String arg = i.next();
             if (arg.equals("--monitorPort")) {
@@ -95,6 +87,16 @@ public final class TestRunner {
                 skipPast = i.next();
                 i.remove();
             }
+        }
+
+        boolean testOnly = Boolean.parseBoolean(properties.getProperty(TestProperties.TEST_ONLY));
+        if (testOnly) {
+            runnerFactory = new CompositeRunnerFactory(new JUnitRunnerFactory());
+        } else {
+            runnerFactory = new CompositeRunnerFactory(
+                    new JUnitRunnerFactory(),
+                    new CaliperRunnerFactory(argsList),
+                    new MainRunnerFactory());
         }
 
         this.monitorPort = monitorPort;
