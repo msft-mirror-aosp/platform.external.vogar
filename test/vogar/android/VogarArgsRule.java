@@ -16,23 +16,19 @@
 
 package vogar.android;
 
-import junit.framework.Assert;
 import junit.framework.AssertionFailedError;
-import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
+import vogar.testing.UndeprecatedMethodRule;
 
 /**
  * Obtains test specific arguments from the {@link VogarArgs} annotation on the test and makes them
  * available to the test itself.
  *
- * <p>Although MethodRule has been marked as deprecated in the current version of JUnit (4.10) it
- * has been undeprecated in JUnit 4.11.
- *
  * @see VogarArgs
  */
 @SuppressWarnings("deprecation")
-public class VogarArgsRule implements MethodRule {
+public class VogarArgsRule implements UndeprecatedMethodRule {
 
     private String[] testSpecificArgs = null;
 
