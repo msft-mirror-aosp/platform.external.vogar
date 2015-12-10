@@ -28,6 +28,7 @@ import vogar.testing.InterceptOutputStreams;
 import vogar.testing.InterceptOutputStreams.Stream;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for {@link TestRunner}
@@ -102,6 +103,48 @@ public class TestRunnerTest {
         String out = ios.contents(Stream.OUT);
         // Remove stack trace from output.
         out = out.replaceAll("\t[^\n]+\\n", "");
+        assertEquals(""
+                + "//00xx{\"outcome\":\"" + CaliperBenchmark.class.getName() + "\","
+                + "\"runner\":\"" + CaliperRunner.class.getName() + "\"}\n"
+                + "Experiment selection: \n"
+                + "  Benchmark Methods:   [timeMethod]\n"
+                + "  Instruments:   [runtime]\n"
+                + "  User parameters:   {}\n"
+                + "  Virtual machines:  [default]\n"
+                + "  Selection type:    Full cartesian product\n"
+                + "\n"
+                + "This selection yields 1 experiments.\n"
+                + UserCodeException.class.getName()
+                + ": An exception was thrown from the benchmark code\n"
+                + "Caused by: " + IllegalStateException.class.getName()
+                + ": " + CaliperBenchmark.CALIPER_BENCHMARK_MESSAGE + "\n"
+                + "//00xx{\"result\":\"SUCCESS\"}\n"
+                + "//00xx{\"completedNormally\":true}\n", out);
+    }
+
+    /**
+     * Ensure that requesting profiling doesn't send an invalid option to Caliper.
+     *
+     * <p>Cannot check that profiling works because it will only work on Android and these tests
+     * do not run on android yet.
+     */
+    @TestRunnerProperties(testClass = CaliperBenchmark.class, profile = true)
+    @Test
+    public void testConstructor_CaliperBenchmark_Profile() throws Exception {
+        TestRunner runner = testRunnerRule.createTestRunner("-i", "runtime");
+        runner.run();
+
+        String out = ios.contents(Stream.OUT);
+
+        // Make sure that profiling is requested (even though it's not supported).
+        assertTrue(out.startsWith("Profiling is disabled: "));
+
+        // Remove warning about profiling being disabled.
+        out = out.replaceAll("^Profiling is disabled:[^\n]+\\n", "");
+
+        // Remove stack trace from output.
+        out = out.replaceAll("\t[^\n]+\\n", "");
+
         assertEquals(""
                 + "//00xx{\"outcome\":\"" + CaliperBenchmark.class.getName() + "\","
                 + "\"runner\":\"" + CaliperRunner.class.getName() + "\"}\n"

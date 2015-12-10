@@ -58,7 +58,12 @@ public final class CaliperRunner implements vogar.target.Runner {
         }
 
         if (profile) {
-          builder.add("--debug");
+            // The --dry-run option causes Caliper to run the benchmark once, rather than hundreds
+            // if not thousands of times, and to run it in the main Caliper process rather than in
+            // a separate Worker process, one for each benchmark run. That is needed when profiling
+            // as otherwise the profiler just profiles the main Caliper process rather than the
+            // benchmark.
+            builder.add("--dry-run");
         }
         ImmutableList<String> argList = builder.build();
         String[] arguments = argList.toArray(new String[argList.size()]);
