@@ -67,7 +67,8 @@ public class TestActivity extends Activity {
         executor.execute(new Runnable() {
             public void run() {
                 try {
-                    TestRunner testRunner = new TestRunner(Collections.<String>emptyList());
+                    TestRunner testRunner = new TestRunner(TestRunner.loadProperties(),
+                            Collections.<String>emptyList());
                     testRunner.useSocketMonitor();
                     testRunner.run();
                 } catch (IOException e) {

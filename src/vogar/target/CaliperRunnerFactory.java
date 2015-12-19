@@ -16,6 +16,7 @@
 package vogar.target;
 
 import com.google.caliper.runner.BenchmarkClassChecker;
+import com.google.caliper.util.InvalidCommandException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
@@ -26,12 +27,25 @@ import vogar.monitor.TargetMonitor;
  */
 public class CaliperRunnerFactory implements RunnerFactory {
 
+    @Nullable
     private final BenchmarkClassChecker benchmarkClassChecker;
 
     public CaliperRunnerFactory(List<String> argsList) {
-        // Command line arguments can affect the set of available instruments so pass that
-        // information on to the checker.
-        benchmarkClassChecker = BenchmarkClassChecker.create(argsList);
+        BenchmarkClassChecker benchmarkClassChecker;
+        try {
+            // Command line arguments can affect the set of available instruments so pass that
+            // information on to the checker. Unfortunately, at this point we do not know whether
+            // the arguments are actually valid for Caliper, if they are not then this will fail.
+            // If that happens then we simply have to assume that the classes being tested are not
+            // Caliper benchmarks.
+            benchmarkClassChecker = BenchmarkClassChecker.create(argsList);
+        } catch (InvalidCommandException e) {
+            // The arguments are invalid for Caliper.
+            System.out.println("Warning: Arguments are invalid for Caliper: " + e.getMessage());
+            benchmarkClassChecker = null;
+        }
+
+        this.benchmarkClassChecker = benchmarkClassChecker;
     }
 
     @Override @Nullable
@@ -39,7 +53,7 @@ public class CaliperRunnerFactory implements RunnerFactory {
             Class<?> klass, AtomicReference<String> skipPastReference,
             TestEnvironment testEnvironment, int timeoutSeconds, boolean profile,
             String[] args) {
-        if (benchmarkClassChecker.isBenchmark(klass)) {
+        if (benchmarkClassChecker != null && benchmarkClassChecker.isBenchmark(klass)) {
             return new CaliperRunner(monitor, profile, klass, args);
         } else {
             return null;

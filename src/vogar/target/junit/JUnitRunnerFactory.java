@@ -17,6 +17,7 @@ package vogar.target.junit;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -65,6 +66,14 @@ public class JUnitRunnerFactory implements RunnerFactory {
         } else {
             throw new AssertionFailedError("Unknown JUnit type: " + testClass.getName());
         }
+
+        // Sort the tests to ensure consistent ordering.
+        Collections.sort(tests, new Comparator<VogarTest>() {
+            @Override
+            public int compare(VogarTest o1, VogarTest o2) {
+                return o1.toString().compareTo(o2.toString());
+            }
+        });
         return tests;
     }
 

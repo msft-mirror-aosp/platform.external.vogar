@@ -44,7 +44,7 @@ public final class TestRunner {
     private final String qualifiedClassOrPackageName;
 
     /** the monitor port if a monitor is expected, or null for no monitor */
-    private final Integer monitorPort;
+    @VisibleForTesting final Integer monitorPort;
 
     /** use an atomic reference so the runner can null it out when it is encountered. */
     @VisibleForTesting final AtomicReference<String> skipPastReference;
@@ -59,8 +59,7 @@ public final class TestRunner {
     private final String[] args;
     private boolean useSocketMonitor;
 
-    public TestRunner(List<String> argsList) {
-        Properties properties = loadProperties();
+    public TestRunner(Properties properties, List<String> argsList) {
         qualifiedName = properties.getProperty(TestProperties.QUALIFIED_NAME);
         qualifiedClassOrPackageName = properties.getProperty(TestProperties.TEST_CLASS_OR_PACKAGE);
         timeoutSeconds = Integer.parseInt(properties.getProperty(TestProperties.TIMEOUT));
@@ -109,7 +108,14 @@ public final class TestRunner {
         this.args = argsList.toArray(new String[argsList.size()]);
     }
 
-    private Properties loadProperties() {
+    /**
+     * Load the properties that were either encapsulated in the APK (if using
+     * {@link vogar.android.ActivityMode}), or encapsulated in the JAR compiled by Vogar (in other
+     * modes).
+     *
+     * @return The {@link Properties} that were loaded.
+     */
+    public static Properties loadProperties() {
         try {
             InputStream in = getPropertiesStream();
             Properties properties = new Properties();
@@ -134,7 +140,7 @@ public final class TestRunner {
      * Attempt to load the test properties file from both the application and system classloader.
      * This is necessary because sometimes we run tests from the boot classpath.
      */
-    private InputStream getPropertiesStream() throws IOException {
+    private static InputStream getPropertiesStream() throws IOException {
         for (Class<?> classToLoadFrom : new Class<?>[] { TestRunner.class, Object.class }) {
             InputStream propertiesStream = classToLoadFrom.getResourceAsStream(
                     "/" + TestProperties.FILE);
@@ -245,7 +251,7 @@ public final class TestRunner {
     }
 
     public static void main(String[] args) throws IOException {
-        new TestRunner(new ArrayList<>(Arrays.asList(args))).run();
+        new TestRunner(loadProperties(), new ArrayList<>(Arrays.asList(args))).run();
         System.exit(0);
     }
 
