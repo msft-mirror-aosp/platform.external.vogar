@@ -81,6 +81,7 @@ public final class Run {
     public final File profileFile;
     public final File javaHome;
     public final Integer debugPort;
+    public final Language language;
     public final List<String> javacArgs;
     public final boolean benchmark;
     public final File runnerDir;
@@ -137,6 +138,7 @@ public final class Run {
         this.rm = rm;
         this.firstMonitorPort = vogar.firstMonitorPort;
         this.invokeWith = vogar.invokeWith;
+        this.language = vogar.language;
         this.javacArgs = vogar.javacArgs;
         this.javaHome = vogar.javaHome;
         this.largeTimeoutSeconds = vogar.timeoutSeconds * Vogar.LARGE_TIMEOUT_MULTIPLIER;

@@ -206,6 +206,9 @@ public final class Vogar {
     @Option(names = { "--toolchain" })
     private String toolchain = "jdk";
 
+    @Option(names = { "--language" })
+    Language language = Language.J17;
+
     @Option(names = { "--check-jni" })
     boolean checkJni = true;
 
