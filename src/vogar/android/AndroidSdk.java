@@ -143,11 +143,11 @@ public class AndroidSdk {
                 outDir += "/";
             }
 
-            String pattern = outDir + "target/common/obj/JAVA_LIBRARIES/%s_intermediates/classes.jar";
+            String pattern = outDir + "target/common/obj/JAVA_LIBRARIES/%s_intermediates/classes";
             if (modeId.isHost()) {
-                pattern = outDir + "host/common/obj/JAVA_LIBRARIES/%s_intermediates/classes"
-                        + ((useJack) ? ".jack" : ".jar");
+                pattern = outDir + "host/common/obj/JAVA_LIBRARIES/%s_intermediates/classes";
             }
+            pattern += ((useJack) ? ".jack" : ".jar");
 
             String[] jarNames = modeId.getJarNames();
             compilationClasspath = new File[jarNames.length];
