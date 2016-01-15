@@ -514,10 +514,6 @@ public final class Vogar {
 
         // Check that jack is setup correctly & check compatibility
         if (toolchain.toLowerCase().equals("jack")) {
-            if (modeId != ModeId.HOST) {
-                System.out.println("Error: experimental jack support only works with host mode.");
-                return false;
-            }
             useJack = true;
         } else if (!toolchain.toLowerCase().equals("jdk")) {
             System.out.println("The options for toolchain are either jack or jdk.");
