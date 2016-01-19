@@ -278,7 +278,9 @@ public class AndroidSdk {
                 "package",
                 "-F", apk.getPath(),
                 "-M", manifest.getPath(),
-                "-I", androidJarPath).execute();
+                "-I", androidJarPath,
+                "--version-name", "1.0",
+                "--version-code", "1").execute();
     }
 
     public void addToApk(File apk, File dex) {
