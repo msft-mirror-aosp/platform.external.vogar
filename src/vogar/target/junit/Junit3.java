@@ -302,7 +302,13 @@ public final class Junit3 {
         }
 
         @Override protected TestCase getTestCase() throws Exception {
-            return constructor.newInstance(constructorArgs);
+            TestCase testCase = constructor.newInstance(constructorArgs);
+            // If the test case used the no argument constructor then make sure to set its name
+            // correctly.
+            if (constructor.getParameterTypes().length == 0) {
+                testCase.setName(method.getName());
+            }
+            return testCase;
         }
 
         @Override public String toString() {
