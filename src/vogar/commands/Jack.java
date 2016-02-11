@@ -82,46 +82,6 @@ public class Jack {
         throw new IllegalStateException("Jack library not found, cannot use jack.");
     }
 
-    /**
-     * Converts a jar file to a jack library.
-     * @param jarPath The jar file to convert.
-     * @return A string with the path to the newly converted jack library.
-     * @throws IllegalArgumentException If the given jarPath parameter isn't there.
-     * @throws CommandFailedException   If there was an error during the conversion.
-     */
-    public static String convertJarToJackLib(Log log, String jarPath) {
-        File jar = new File(jarPath);
-        if (!jar.exists()) {
-            throw new IllegalArgumentException("No such jar file to convert: " + jarPath);
-        }
-
-        String outPath = jarPath.replaceAll("\\.jar$", ".jack");
-
-        File outJackFile = new File(outPath);
-
-        // Avoid regenerating the .jack file if we can. This can be slow.
-        if (outJackFile.exists() && outJackFile.lastModified() < jar.lastModified()) {
-            log.info("Skipping .jack conversion for " + jarPath + "; " + outPath
-                + " already exists and is newer.");
-            return outPath;
-        }
-
-        try {
-            List<String> outputLog = getJackCommand(log)
-                .importFile(jarPath)
-                .outputJack(outPath)
-                .invoke();
-            if (!outputLog.isEmpty()) {
-                log.verbose("Output from Jack: " + outputLog.toString());
-            }
-        } catch (CommandFailedException cfe) {
-            System.out.println("There was an error converting " + jarPath + " to a jack library: "
-                + cfe.getMessage());
-            throw cfe;
-        }
-        return outPath;
-    }
-
     private final Command.Builder builder;
 
     public Jack(Log log, String jackArgs) {
@@ -166,6 +126,11 @@ public class Jack {
 
     public Jack outputDex(String dir) {
         builder.args("--output-dex", dir);
+        return this;
+    }
+
+    public Jack outputDexZip(String zipFile) {
+        builder.args("--output-dex-zip", zipFile);
         return this;
     }
 
@@ -235,5 +200,4 @@ public class Jack {
                 .args((Object[]) Strings.objectsToStrings(files))
                 .execute();
     }
-
 }

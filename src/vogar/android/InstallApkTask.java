@@ -65,6 +65,11 @@ public final class InstallApkTask extends Task {
         File dex = run.localFile(action, "classes.dex");
         Classpath classesToDex = Classpath.of(actionJar);
         classesToDex.addAll(run.classpath);
+        if (run.useJack) {
+            // TODO Implement Jack support for mode=activity.
+            throw new UnsupportedOperationException(
+                    "Jack support for --mode=activity not yet implemented");
+        }
         run.androidSdk.dex(dex, classesToDex);
         return dex;
     }
