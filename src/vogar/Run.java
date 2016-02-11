@@ -164,27 +164,7 @@ public final class Run {
                 : vogar.resultsDir;
         this.keystore = localFile("activity", "vogar.keystore");
         this.classpath = Classpath.of(vogar.classpath);
-
-        // When we are running in jack mode, extra jack files are needed to compile our sources
-        // as jack takes libraries in it's own .jack format, and these need to be in the classpath.
-        // We add the jack libraries for compiling although the jar libraries are still needed at
-        // runtime, so they are added too.
-        if (useJack) {
-            // We try to convert the vogar jar file with required testing frameworks into a jack
-            // library so we can use it while building sources.
-            try {
-                String vogarJarPath = vogarJar().getAbsolutePath();
-                String vogarJackPath = Jack.convertJarToJackLib(log, vogarJarPath);
-                this.classpath.addAll(new File(vogarJackPath), new File(vogarJarPath));
-            } catch (IllegalArgumentException | CommandFailedException e) {
-                System.out.println("There was an error finding required jack libraries. Details: "
-                        + e.getMessage());
-                throw new IllegalStateException("Jack was requested but could not be found.");
-            }
-        } else {
-            this.classpath.addAll(vogarJar());
-        }
-
+        this.classpath.addAll(vogarJar());
         this.testOnly = vogar.testOnly;
 
         this.androidSdk = androidSdk;
@@ -271,6 +251,10 @@ public final class Run {
         return localFile(nameOrAction, nameOrAction + ".jar");
     }
 
+    public File hostDexJar(Object nameOrAction) {
+        return localFile(nameOrAction, nameOrAction + ".dex.jar");
+    }
+
     /**
      * Returns a path for a Java tool such as java, javac, jar where
      * the Java home is used if present, otherwise assumes it will
@@ -299,7 +283,7 @@ public final class Run {
      * @return a recognizable base name like "core-libart_intermediates".
      */
     public String basenameOfJar(File file) {
-        String name = file.getName().replaceAll("\\.jar$", "");
+        String name = file.getName().replaceAll("(\\.jar|\\.jack)$", "");
         while (BANNED_NAMES.contains(name)) {
             file = file.getParentFile();
             name = file.getName();

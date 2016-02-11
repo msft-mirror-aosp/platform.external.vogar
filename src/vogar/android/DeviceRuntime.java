@@ -57,7 +57,7 @@ public final class DeviceRuntime implements Mode {
         Set<Task> result = new HashSet<Task>();
         // dex everything on the classpath and push it to the device.
         for (File classpathElement : run.classpath.getElements()) {
-            dexAndPush(result, run.basenameOfJar(classpathElement),
+            addCreateDexJarAndPushTasks(result, run.basenameOfJar(classpathElement),
                     classpathElement, null);
         }
         return result;
@@ -65,21 +65,12 @@ public final class DeviceRuntime implements Mode {
 
     @Override public Set<Task> installActionTasks(Action action, File jar) {
         Set<Task> result = new HashSet<Task>();
-        dexAndPush(result, action.getName(), jar, action);
+        addCreateDexJarAndPushTasks(result, action.getName(), jar, action);
         return result;
     }
 
     @Override public Task executeActionTask(Action action, boolean useLargeTimeout) {
         return new RunActionTask(run, action, useLargeTimeout);
-    }
-
-    private void dexAndPush(Set<Task> tasks, String name, File jar, Action action) {
-        File localDex = run.localDexFile(name);
-        File deviceDex = run.targetDexFile(name);
-        Task dex = new DexTask(run.androidSdk, run.classpath, run.benchmark, name, jar, action,
-                localDex);
-        tasks.add(dex);
-        tasks.add(run.target.pushTask(localDex, deviceDex).afterSuccess(dex));
     }
 
     @Override public VmCommandBuilder newVmCommandBuilder(Action action, File workingDirectory) {
@@ -128,5 +119,27 @@ public final class DeviceRuntime implements Mode {
         // Note we intentionally do not add run.resourceClasspath on
         // the device since it contains host path names.
         return result;
+    }
+
+    private void addCreateDexJarAndPushTasks(
+            Set<Task> tasks, String name, File jar, Action action) {
+        File localDex = run.localDexFile(name);
+        File deviceDex = run.targetDexFile(name);
+        Task createDexJarTask = newCreateDexJarTask(run.classpath, jar, name, action, localDex);
+        tasks.add(createDexJarTask);
+        tasks.add(run.target.pushTask(localDex, deviceDex).afterSuccess(createDexJarTask));
+    }
+
+    private Task newCreateDexJarTask(Classpath classpath, File classpathElement, String name,
+            Action action, File localDex) {
+        Task dex;
+        if (run.useJack) {
+            dex = new JackDexTask(run, classpath, run.benchmark, name, classpathElement,
+                    null, localDex);
+        } else {
+            dex = new DexTask(run.androidSdk, classpath, run.benchmark, name, classpathElement,
+                    action, localDex);
+        }
+        return dex;
     }
 }

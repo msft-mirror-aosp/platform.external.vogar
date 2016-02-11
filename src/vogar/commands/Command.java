@@ -19,6 +19,7 @@ package vogar.commands;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -46,16 +47,19 @@ public final class Command {
             = Executors.newSingleThreadScheduledExecutor();
 
     private final Log log;
+    private final File workingDir;
     private final List<String> args;
     private final Map<String, String> env;
     private final boolean permitNonZeroExitStatus;
     private final PrintStream tee;
+
     private volatile Process process;
     private volatile boolean destroyed;
     private volatile long timeoutNanoTime;
 
     public Command(Log log, String... args) {
         this.log = log;
+        this.workingDir = null;
         this.args = ImmutableList.copyOf(args);
         this.env = Collections.emptyMap();
         this.permitNonZeroExitStatus = false;
@@ -64,6 +68,7 @@ public final class Command {
 
     private Command(Builder builder) {
         this.log = builder.log;
+        this.workingDir = builder.workingDir;
         this.args = ImmutableList.copyOf(builder.args);
         this.env = builder.env;
         this.permitNonZeroExitStatus = builder.permitNonZeroExitStatus;
@@ -82,9 +87,10 @@ public final class Command {
             throw new IllegalStateException("Already started!");
         }
 
-        log.verbose("executing " + args);
+        log.verbose("executing " + args + (workingDir != null ? " in " + workingDir : ""));
 
         ProcessBuilder processBuilder = new ProcessBuilder()
+                .directory(workingDir)
                 .command(args)
                 .redirectErrorStream(true);
 
@@ -246,6 +252,7 @@ public final class Command {
         private boolean permitNonZeroExitStatus = false;
         private PrintStream tee = null;
         private int maxLength = -1;
+        private File workingDir;
 
         public Builder(Log log) {
             this.log = log;
@@ -253,6 +260,7 @@ public final class Command {
 
         public Builder(Builder other) {
             this.log = other.log;
+            this.workingDir = workingDir;
             this.args.addAll(other.args);
             this.env.putAll(other.env);
             this.permitNonZeroExitStatus = other.permitNonZeroExitStatus;
@@ -292,6 +300,11 @@ public final class Command {
 
         public Builder maxLength(int maxLength) {
             this.maxLength = maxLength;
+            return this;
+        }
+
+        public Builder workingDir(File workingDir) {
+            this.workingDir = workingDir;
             return this;
         }
 

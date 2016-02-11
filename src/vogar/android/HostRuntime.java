@@ -67,8 +67,9 @@ public final class HostRuntime implements Mode {
         for (File classpathElement : run.classpath.getElements()) {
             // Libraries need to be dex'ed and put in the temporary directory.
             String name = run.basenameOfJar(classpathElement);
-            result.add(new DexTask(run.androidSdk, run.classpath, run.benchmark, name,
-                    classpathElement, null, run.localDexFile(name)));
+            File localDex = run.localDexFile(name);
+            result.add(createCreateDexJarTask(run.classpath, classpathElement, name,
+                    null /* action */, localDex));
         }
         result.add(new MkdirTask(run.mkdir, dalvikCache()));
         return result;
@@ -79,8 +80,10 @@ public final class HostRuntime implements Mode {
     }
 
     @Override public Set<Task> installActionTasks(Action action, File jar) {
-        return Collections.<Task>singleton(new DexTask(run.androidSdk, Classpath.of(jar),
-                run.benchmark, action.getName(), jar, action, run.localDexFile(action.getName())));
+        File localDexFile = run.localDexFile(action.getName());
+        Task createDexJarTask = createCreateDexJarTask(Classpath.of(jar), jar, action.getName(),
+                action, localDexFile);
+        return Collections.singleton(createDexJarTask);
     }
 
     @Override public VmCommandBuilder newVmCommandBuilder(Action action, File workingDirectory) {
@@ -145,5 +148,18 @@ public final class HostRuntime implements Mode {
         }
         result.addAll(run.resourceClasspath);
         return result;
+    }
+
+    private Task createCreateDexJarTask(Classpath classpath, File classpathElement, String name,
+            Action action, File localDex) {
+        Task dex;
+        if (run.useJack) {
+            dex = new JackDexTask(run, classpath, run.benchmark, name, classpathElement, action,
+                    localDex);
+        } else {
+            dex = new DexTask(run.androidSdk, classpath, run.benchmark, name, classpathElement,
+                    action, localDex);
+        }
+        return dex;
     }
 }
