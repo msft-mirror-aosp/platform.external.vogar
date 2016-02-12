@@ -26,7 +26,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
 import vogar.Action;
@@ -95,8 +94,6 @@ public final class BuildActionTask extends Task {
         if (run.debugging) {
             javac.debug();
         }
-        // Set source and target version to 1.7 so that OpenJDK 8 output can be used with dx.
-        javac.extra(ImmutableList.of("-source", "1.7", "-target", "1.7"));
         if (javaFile != null) {
             if (!JAVA_SOURCE_PATTERN.matcher(javaFile.toString()).find()) {
                 throw new CommandFailedException(Collections.<String>emptyList(),
@@ -113,6 +110,7 @@ public final class BuildActionTask extends Task {
             }
             javac.classpath(run.classpath)
                     .destination(classesDir)
+                    .javaVersion(run.language.getJavacSourceAndTarget())
                     .extra(run.javacArgs)
                     .compile(sourceFiles);
         }
@@ -133,12 +131,12 @@ public final class BuildActionTask extends Task {
         createJarMetadataFiles(action, classesDir);
 
         File javaFile = action.getJavaFile();
-        Jack compiler = Jack.getJackCompiler(run.log);
+        Jack compiler = Jack.getJackCommand(run.log);
 
         if (run.debugging) {
             compiler.setDebug();
         }
-
+        compiler.sourceVersion(run.language.getJackArg());
         Set<File> sourceFiles = Sets.newHashSet();
 
         // Add the source files to be compiled.

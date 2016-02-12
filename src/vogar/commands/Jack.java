@@ -21,7 +21,6 @@ import vogar.Log;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import vogar.util.Strings;
@@ -33,7 +32,6 @@ public class Jack {
 
     private static final File JACK_SCRIPT;
     private static final File JACK_JAR;
-    private static final File JILL_JAR;
 
     // Initialise the files for jack and jill, letting them be null if the files
     // cannot be found.
@@ -42,7 +40,6 @@ public class Jack {
 
         final File jackScript = new File(sdkTop + "/prebuilts/sdk/tools/jack");
         final File jackJar = new File(sdkTop + "/prebuilts/sdk/tools/jack.jar");
-        final File jillJar = new File(sdkTop + "/prebuilts/sdk/tools/jill.jar");
 
         // If the system environment variable JACK_JAR is set then use that,
         // otherwise find the jar relative to the AOSP source.
@@ -65,21 +62,15 @@ public class Jack {
                 JACK_JAR = jackJar;
             }
         }
-
-        if (!jillJar.exists()) {
-            JILL_JAR = null;
-        } else {
-            JILL_JAR = jillJar;
-        }
     }
 
     /**
-     * Get an instance of the jack compiler with appropriate path settings.
+     * Get an instance of the jack command with appropriate path settings.
      *
-     * @return an instance of a jack compiler with appropriate paths to its dependencies if needed.
-     * @throws IllegalStateException when the jack library cannot be found.
+     * @return an instance of a jack command with appropriate paths to its dependencies if needed.
+     * @throws IllegalStateException when the jack command cannot be found.
      */
-    public static Jack getJackCompiler(Log log) throws IllegalStateException {
+    public static Jack getJackCommand(Log log) throws IllegalStateException {
         if (JACK_SCRIPT != null) {
             // Configure jack compiler with right JACK_SCRIPT path.
             return new Jack(log, Lists.newArrayList(JACK_SCRIPT.getAbsolutePath()));
@@ -105,21 +96,29 @@ public class Jack {
         }
 
         String outPath = jarPath.replaceAll("\\.jar$", ".jack");
-        if (JILL_JAR != null) {
-            try {
-                new Command.Builder(log).args("java", "-jar", JILL_JAR.getAbsolutePath(), jarPath,
-                        "--output", outPath).execute();
-            } catch (CommandFailedException cfe) {
-                System.out.println("There was an error converting " + jarPath + " to a jack library: "
-                        + cfe.getMessage());
-                throw cfe;
-            }
-        } else {
-            throw new CommandFailedException(
-                    Collections.<String>emptyList(),
-                    Collections.singletonList("Jill could not be found, did you run lunch?"));
+
+        File outJackFile = new File(outPath);
+
+        // Avoid regenerating the .jack file if we can. This can be slow.
+        if (outJackFile.exists() && outJackFile.lastModified() < jar.lastModified()) {
+            log.info("Skipping .jack conversion for " + jarPath + "; " + outPath
+                + " already exists and is newer.");
+            return outPath;
         }
 
+        try {
+            List<String> outputLog = getJackCommand(log)
+                .importFile(jarPath)
+                .outputJack(outPath)
+                .invoke();
+            if (!outputLog.isEmpty()) {
+                log.verbose("Output from Jack: " + outputLog.toString());
+            }
+        } catch (CommandFailedException cfe) {
+            System.out.println("There was an error converting " + jarPath + " to a jack library: "
+                + cfe.getMessage());
+            throw cfe;
+        }
         return outPath;
     }
 
@@ -157,6 +156,11 @@ public class Jack {
 
     public Jack multiDex(String mode) {
         builder.args("--multi-dex", mode);
+        return this;
+    }
+
+    public Jack sourceVersion(String version) {
+        setProperty("jack.java.source.version=" + version);
         return this;
     }
 
@@ -208,6 +212,15 @@ public class Jack {
     public Jack setEnvVar(String key, String value) {
         builder.env(key, value);
         return this;
+    }
+
+    /**
+     * Runs the command with the preconfigured options on Jack, and returns the outcome.
+     *
+     * @return A list of output lines from running the command.
+     */
+    public List<String> invoke() {
+        return builder.execute();
     }
 
     /**
