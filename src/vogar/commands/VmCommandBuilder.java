@@ -177,7 +177,6 @@ public final class VmCommandBuilder {
         if (debugPort != null) {
             builder.tokens("-Xrunjdwp:transport=dt_socket,address="
                     + debugPort + ",server=y,suspend=y");
-            builder.tokens("-Xcompiler-option", "--debuggable");
         }
 
         builder.tokens(vmArgs);
