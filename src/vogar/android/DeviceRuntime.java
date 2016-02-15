@@ -85,6 +85,10 @@ public final class DeviceRuntime implements Mode {
                 .vmCommand(vmCommand)
                 .vmArgs("-Duser.home=" + run.deviceUserHome)
                 .maxLength(1024);
+        if (run.debugPort != null) {
+            vmCommandBuilder.vmArgs("-Xcompiler-option", "--debuggable");
+        }
+
         if (modeId == ModeId.APP_PROCESS) {
             return vmCommandBuilder
                 .vmArgs(action.getUserDir().getPath())
