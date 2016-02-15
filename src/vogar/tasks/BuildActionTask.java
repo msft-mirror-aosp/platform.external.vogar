@@ -125,10 +125,10 @@ public final class BuildActionTask extends Task {
      * Compile sources using the Jack compiler.
      */
     private void compileWithJack(Action action, File jar) throws IOException {
-        // Create a folder for output classes
-        File classesDir = run.localFile(action, "classes");
-        run.mkdir.mkdirs(classesDir);
-        createJarMetadataFiles(action, classesDir);
+        // Create a folder for resources
+        File resourcesDir = run.localFile(action, "resources");
+        run.mkdir.mkdirs(resourcesDir);
+        createJarMetadataFiles(action, resourcesDir);
 
         File javaFile = action.getJavaFile();
         Jack compiler = Jack.getJackCommand(run.log);
@@ -160,12 +160,9 @@ public final class BuildActionTask extends Task {
             }
         }
 
-        compiler.outputDex(classesDir.toString())
+        compiler.outputDexZip(jar.getPath())
+                .importResource(resourcesDir.getPath())
                 .compile(sourceFiles);
-
-        // Create a .dex.jar from the jack output directory.
-        new Command(run.log, run.javaPath("jar"), "cvfM", jar.getPath(),
-                "-C", classesDir.getPath(), "./").execute();
     }
 
     /**
