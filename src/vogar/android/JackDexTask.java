@@ -81,6 +81,7 @@ public final class JackDexTask extends Task {
             }
         } else {
             Jack jack = Jack.getJackCommand(run.log).outputDexZip(localDex.getPath());
+            jack.sourceVersion(run.language.getJackArg());
 
             // Jack imports resources from .jack files but not .jar files. We keep track of the .jar
             // files so we can unpack them in reverse order (to maintain classpath ordering).
