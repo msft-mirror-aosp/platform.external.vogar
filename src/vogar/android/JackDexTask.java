@@ -39,7 +39,7 @@ public final class JackDexTask extends Task {
     private final File localDex;
 
     public JackDexTask(Run run, Classpath classpath, boolean benchmark, String name,
-        File inputFile, Action action, File localDex) {
+            File inputFile, Action action, File localDex) {
         super("jackdex " + name);
         this.run = run;
         this.classpath = classpath;
@@ -59,53 +59,39 @@ public final class JackDexTask extends Task {
         // for us.
         // 2) A .jar file containing .class files: We must ask Jack to convert it to a .dex.jar and
         // we have to handle resources.
-        // 3) A .dex.jar file produced by a prior compilation phase. We must copy it to the target
-        // location (if needed).
 
         // There are several things below that seem fishy and could be improved with a different
         // task workflow:
-        // 1) Being presented with a .dex.jar file suggests the workflow is broken (but is currently
-        // a necessary step while this step is done after compilation with jack where the
-        // alternative is compilation with javac).
-        // 2) Having to deal with multiple classpath entries for inclusion: if the purpose is
+        // 1) Having to deal with multiple classpath entries for inclusion: if the purpose is
         // to convert a .jack or .jar to a .dex.jar file we *may* not need supporting classes.
-        // 3) The resource inclusion behavior is almost certainly incorrect and may need a change in
+        // 2) The resource inclusion behavior is almost certainly incorrect and may need a change in
         // Jack if we persist with including the entire classpath (2).
 
-        if (inputFile.getName().endsWith(".dex.jar")) {
-            if (!inputFile.getCanonicalPath().equals(localDex.getCanonicalPath())) {
-                run.log.verbose("Copying " + inputFile + " to " + localDex);
-                new Command(run.log, "cp", inputFile.getPath(), localDex.getPath()).execute();
-            } else {
-                run.log.verbose("Skipping copy of " + inputFile);
-            }
-        } else {
-            Jack jack = Jack.getJackCommand(run.log).outputDexZip(localDex.getPath());
-            jack.sourceVersion(run.language.getJackArg());
+        Jack jack = Jack.getJackCommand(run.log).outputDexZip(localDex.getPath());
+        jack.sourceVersion(run.language.getJackArg());
 
-            // Jack imports resources from .jack files but not .jar files. We keep track of the .jar
-            // files so we can unpack them in reverse order (to maintain classpath ordering).
-            // Unfortunately, the inconsistency between .jack and .jar behavior makes it incorrect
-            // in some cases.
-            LinkedList<File> resourcesReverseClasspath = new LinkedList<>();
-            addClassPathEntryToJack(jack, resourcesReverseClasspath, inputFile);
-            if (benchmark && action != null) {
-                for (File classpathElement : classpath.getElements()) {
-                    addClassPathEntryToJack(jack, resourcesReverseClasspath, classpathElement);
-                }
+        // Jack imports resources from .jack files but not .jar files. We keep track of the .jar
+        // files so we can unpack them in reverse order (to maintain classpath ordering).
+        // Unfortunately, the inconsistency between .jack and .jar behavior makes it incorrect
+        // in some cases.
+        LinkedList<File> resourcesReverseClasspath = new LinkedList<>();
+        addClassPathEntryToJack(jack, resourcesReverseClasspath, inputFile);
+        if (benchmark && action != null) {
+            for (File classpathElement : classpath.getElements()) {
+                addClassPathEntryToJack(jack, resourcesReverseClasspath, classpathElement);
             }
-
-            if (!resourcesReverseClasspath.isEmpty()) {
-                File resourcesDir = run.localFile(localDex.getName() + "_resources");
-                run.mkdir.mkdirs(resourcesDir);
-                // Unpack each classpath entry into resourcesDir
-                for (File classpathEntry : resourcesReverseClasspath) {
-                    unpackJar(classpathEntry, resourcesDir);
-                }
-                jack.importResource(resourcesDir.getPath());
-            }
-            jack.invoke();
         }
+
+        if (!resourcesReverseClasspath.isEmpty()) {
+            File resourcesDir = run.localFile(localDex.getName() + "_resources");
+            run.mkdir.mkdirs(resourcesDir);
+            // Unpack each classpath entry into resourcesDir.
+            for (File classpathEntry : resourcesReverseClasspath) {
+                unpackJar(classpathEntry, resourcesDir);
+            }
+            jack.importResource(resourcesDir.getPath());
+        }
+        jack.invoke();
         return Result.SUCCESS;
     }
 

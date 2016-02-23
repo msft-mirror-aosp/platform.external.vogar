@@ -153,7 +153,7 @@ public final class Driver {
         boolean useLargeTimeout = expectation.getTags().contains("large");
         File jar;
         if (run.useJack) {
-            jar = run.hostDexJar(action);
+            jar = run.hostJack(action);
         } else {
             jar = run.hostJar(action);
         }
