@@ -251,8 +251,8 @@ public final class Run {
         return localFile(nameOrAction, nameOrAction + ".jar");
     }
 
-    public File hostDexJar(Object nameOrAction) {
-        return localFile(nameOrAction, nameOrAction + ".dex.jar");
+    public File hostJack(Object nameOrAction) {
+        return localFile(nameOrAction, nameOrAction + ".jack");
     }
 
     /**

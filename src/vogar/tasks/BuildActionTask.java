@@ -50,22 +50,22 @@ public final class BuildActionTask extends Task {
     private final Action action;
     private final Run run;
     private final Driver driver;
-    private final File jar;
+    private final File outputFile;
 
-    public BuildActionTask(Run run, Action action, Driver driver, File jar) {
+    public BuildActionTask(Run run, Action action, Driver driver, File outputFile) {
         super("build " + action.getName());
         this.run = run;
         this.action = action;
         this.driver = driver;
-        this.jar = jar;
+        this.outputFile = outputFile;
     }
 
     @Override protected Result execute() throws Exception {
         try {
             if (run.useJack) {
-                compileWithJack(action, jar);
+                compileWithJack(action, outputFile);
             } else {
-                compile(action, jar);
+                compile(action, outputFile);
             }
             return Result.SUCCESS;
         } catch (CommandFailedException e) {
@@ -124,8 +124,8 @@ public final class BuildActionTask extends Task {
     /**
      * Compile sources using the Jack compiler.
      */
-    private void compileWithJack(Action action, File jar) throws IOException {
-        // Create a folder for resources
+    private void compileWithJack(Action action, File jackFile) throws IOException {
+        // Create a folder for resources.
         File resourcesDir = run.localFile(action, "resources");
         run.mkdir.mkdirs(resourcesDir);
         createJarMetadataFiles(action, resourcesDir);
@@ -160,7 +160,7 @@ public final class BuildActionTask extends Task {
             }
         }
 
-        compiler.outputDexZip(jar.getPath())
+        compiler.outputJack(jackFile.getPath())
                 .importResource(resourcesDir.getPath())
                 .compile(sourceFiles);
     }

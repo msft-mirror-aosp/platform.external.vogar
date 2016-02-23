@@ -139,7 +139,7 @@ public final class DeviceRuntime implements Mode {
         Task dex;
         if (run.useJack) {
             dex = new JackDexTask(run, classpath, run.benchmark, name, classpathElement,
-                    null, localDex);
+                    action, localDex);
         } else {
             dex = new DexTask(run.androidSdk, classpath, run.benchmark, name, classpathElement,
                     action, localDex);
