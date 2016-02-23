@@ -35,6 +35,7 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
 
 # Vogar uses android.jar.
 LOCAL_CLASSPATH := prebuilts/sdk/9/android.jar
+LOCAL_JAVA_LANGUAGE_VERSION := 1.7
 
 include $(BUILD_HOST_JAVA_LIBRARY)
 
