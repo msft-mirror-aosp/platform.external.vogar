@@ -260,7 +260,7 @@ public final class Command {
 
         public Builder(Builder other) {
             this.log = other.log;
-            this.workingDir = workingDir;
+            this.workingDir = other.workingDir;
             this.args.addAll(other.args);
             this.env.putAll(other.env);
             this.permitNonZeroExitStatus = other.permitNonZeroExitStatus;
