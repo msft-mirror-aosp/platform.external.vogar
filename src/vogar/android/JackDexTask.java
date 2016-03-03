@@ -21,6 +21,7 @@ import java.util.LinkedList;
 
 import vogar.Action;
 import vogar.Classpath;
+import vogar.Md5Cache;
 import vogar.Result;
 import vogar.Run;
 import vogar.commands.Command;
@@ -67,8 +68,33 @@ public final class JackDexTask extends Task {
         // 2) The resource inclusion behavior is almost certainly incorrect and may need a change in
         // Jack if we persist with including the entire classpath (2).
 
+        // Check the jack cache first.
+        Md5Cache jackCache = run.jackCache;
+        String classpathSubKey = jackCache.makeKey(classpath);
+        String cacheKey = null;
+        if (classpathSubKey != null) {
+            // If the classpath contains things that are not .jar or .jack files we get null
+            // classpathSubKey and do not cache.
+
+            // cacheKey includes all the arguments that could affect the output.
+            cacheKey =
+                jackCache.makeKey(inputFile) +
+                classpathSubKey +
+                jackCache.makeKey(run.language.toString()) +
+                jackCache.makeKey(Boolean.toString(run.debugging));
+
+            if (jackCache.getFromCache(localDex, cacheKey)) {
+                run.log.verbose("JackDexTask: Obtained " + localDex + " from jackCache");
+                return Result.SUCCESS;
+            }
+        }
+        run.log.verbose("JackDexTask: Could not obtain " + localDex + " from jackCache");
+
         Jack jack = Jack.getJackCommand(run.log).outputDexZip(localDex.getPath());
         jack.sourceVersion(run.language.getJackArg());
+        if (run.debugging) {
+            jack.setDebug();
+        }
 
         // Jack imports resources from .jack files but not .jar files. We keep track of the .jar
         // files so we can unpack them in reverse order (to maintain classpath ordering).
@@ -92,6 +118,12 @@ public final class JackDexTask extends Task {
             jack.importResource(resourcesDir.getPath());
         }
         jack.invoke();
+
+        if (cacheKey != null) {
+            // Store the result of the jack invocation in the jackCache.
+            jackCache.insert(cacheKey, localDex);
+        }
+
         return Result.SUCCESS;
     }
 

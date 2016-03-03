@@ -17,19 +17,18 @@
 package vogar.commands;
 
 import com.google.common.collect.Lists;
-import vogar.Log;
 
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
+import vogar.Log;
 import vogar.util.Strings;
 
 /**
  * Runs the Jack compiler to generate dex files.
  */
 public class Jack {
-
     private static final File JACK_SCRIPT;
     private static final File JACK_JAR;
 
@@ -84,12 +83,7 @@ public class Jack {
 
     private final Command.Builder builder;
 
-    public Jack(Log log, String jackArgs) {
-        this.builder = new Command.Builder(log);
-        builder.args(jackArgs);
-    }
-
-    public Jack(Log log, Collection<String> jackArgs) {
+    private Jack(Log log, Collection<String> jackArgs) {
         this.builder = new Command.Builder(log);
         builder.args(jackArgs);
     }
