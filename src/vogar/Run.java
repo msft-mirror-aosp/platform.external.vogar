@@ -112,6 +112,7 @@ public final class Run {
     public final boolean useJack;
     public final boolean checkJni;
     public final boolean debugging;
+    public final Md5Cache jackCache;
 
     public Run(Vogar vogar, boolean useJack, Console console, Mkdir mkdir, AndroidSdk androidSdk,
             Rm rm, Target target, File runnerDir)
@@ -124,6 +125,7 @@ public final class Run {
         this.target = target;
 
         this.useJack = useJack;
+        this.jackCache = useJack ? new Md5Cache(log, "jack", new HostFileCache(log, mkdir)) : null;
         this.vmCommand = vogar.vmCommand;
         this.dalvikCache = vogar.dalvikCache;
         this.additionalVmArgs = vogar.vmArgs;
