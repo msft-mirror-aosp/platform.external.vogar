@@ -204,10 +204,10 @@ public final class Vogar {
     boolean testOnly = false;
 
     @Option(names = { "--toolchain" })
-    private String toolchain = "jdk";
+    private String toolchain = "jack";
 
     @Option(names = { "--language" })
-    Language language = Language.J17;
+    Language language = Language.JN;
 
     @Option(names = { "--check-jni" })
     boolean checkJni = true;
@@ -242,6 +242,12 @@ public final class Vogar {
         System.out.println("  --variant <x32>: specify which architecture variant to execute with.");
         System.out.println("      x32: 32-bit");
         System.out.println("      Default is: " + variant);
+        System.out.println();
+        System.out.println("  --toolchain <jdk|jack>: Which toolchain to use.");
+        System.out.println("      Default is: " + toolchain);
+        System.out.println();
+        System.out.println("  --language <J1_7|JN>: Which language level to use.");
+        System.out.println("      Default is: " + language);
         System.out.println();
         System.out.println("  --ssh <host:port>: target a remote machine via SSH.");
         System.out.println();
