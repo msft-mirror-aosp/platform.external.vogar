@@ -13,9 +13,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [[ -z ${JACK_VERSION} ]]; then
-  export JACK_VERSION=$(basename ${ANDROID_BUILD_TOP}/prebuilts/sdk/tools/jacks/*ALPHA* | sed 's/^jack-//' | sed 's/.jar$//')
-  echo Defaulting JACK_VERSION to ${JACK_VERSION}. http://b/27376034
-fi
 vogar_jar=${OUT_DIR-${ANDROID_BUILD_TOP}/out}/host/linux-x86/framework/vogar.jar
 exec java -classpath ${vogar_jar} vogar.Vogar "$@"
