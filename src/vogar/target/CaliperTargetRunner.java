@@ -25,15 +25,15 @@ import vogar.monitor.TargetMonitor;
 /**
  * Runs a <a href="http://code.google.com/p/caliper/">Caliper</a> benchmark.
  */
-public final class CaliperRunner implements vogar.target.Runner {
+public final class CaliperTargetRunner implements TargetRunner {
 
     private final TargetMonitor monitor;
     private final boolean profile;
     private final Class<?> testClass;
     private final String[] args;
 
-    public CaliperRunner(TargetMonitor monitor, boolean profile, Class<?> testClass,
-                         String[] args) {
+    public CaliperTargetRunner(TargetMonitor monitor, boolean profile, Class<?> testClass,
+                               String[] args) {
         this.monitor = monitor;
         this.profile = profile;
         this.testClass = testClass;
