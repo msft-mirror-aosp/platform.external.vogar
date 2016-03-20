@@ -16,6 +16,7 @@
 
 package vogar.target.junit;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -24,10 +25,13 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
-
+import org.junit.runner.Runner;
+import org.junit.runner.manipulation.NoTestsRemainException;
+import org.junit.runners.model.InitializationError;
 import vogar.Result;
 import vogar.monitor.TargetMonitor;
 import vogar.target.Profiler;
+import vogar.target.SkipPastFilter;
 import vogar.target.TargetRunner;
 import vogar.target.TestEnvironment;
 import vogar.util.Threads;
@@ -59,12 +63,22 @@ public final class JUnitTargetRunner implements TargetRunner {
 
     public boolean run(Profiler profiler) {
         for (VogarTest test : tests) {
-            String skipPast = skipPastReference.get();
+
+            // Use JUnit infrastructure to run the tests.
+            Runner runner;
+            try {
+                runner = new VogarTestRunner(Collections.singletonList(test));
+            } catch (InitializationError e) {
+                throw new IllegalStateException("Could not create VogarTestRunner", e);
+            }
+
+            final String skipPast = skipPastReference.get();
             if (skipPast != null) {
-                if (skipPast.equals(test.toString())) {
-                    skipPastReference.set(null);
+                try {
+                    new SkipPastFilter(skipPastReference).apply(runner);
+                } catch (NoTestsRemainException ignored) {
+                    continue;
                 }
-                continue;
             }
 
             runWithTimeout(profiler, test);
