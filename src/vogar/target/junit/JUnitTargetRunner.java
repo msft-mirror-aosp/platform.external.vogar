@@ -24,6 +24,7 @@ import org.junit.runner.manipulation.NoTestsRemainException;
 import org.junit.runners.model.InitializationError;
 import vogar.monitor.TargetMonitor;
 import vogar.target.Profiler;
+import vogar.target.ProfilerRunListener;
 import vogar.target.SkipPastFilter;
 import vogar.target.TargetMonitorRunListener;
 import vogar.target.TargetRunner;
@@ -54,7 +55,7 @@ public final class JUnitTargetRunner implements TargetRunner {
         // Use JUnit infrastructure to run the tests.
         Runner runner;
         try {
-            runner = new VogarTestRunner(tests, testEnvironment, timeoutSeconds, profiler);
+            runner = new VogarTestRunner(tests, testEnvironment, timeoutSeconds);
         } catch (InitializationError e) {
             throw new IllegalStateException("Could not create VogarTestRunner", e);
         }
@@ -71,6 +72,9 @@ public final class JUnitTargetRunner implements TargetRunner {
         try {
             JUnitCore core = new JUnitCore();
             core.addListener(new TargetMonitorRunListener(monitor));
+            if (profiler != null) {
+                core.addListener(new ProfilerRunListener(profiler));
+            }
             core.run(runner);
         } catch (VmIsUnstableException e) {
             // If a test reports that the VM is unstable then inform the caller so that the
