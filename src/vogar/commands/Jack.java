@@ -118,6 +118,11 @@ public class Jack {
         return this;
     }
 
+    public Jack minApiLevel(String minApiLevel) {
+        setProperty("jack.android.min-api-level=" + minApiLevel);
+        return this;
+    }
+
     public Jack outputDex(String dir) {
         builder.args("--output-dex", dir);
         return this;
