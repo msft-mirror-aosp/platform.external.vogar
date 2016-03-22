@@ -91,7 +91,8 @@ public final class JackDexTask extends Task {
         run.log.verbose("JackDexTask: Could not obtain " + localDex + " from jackCache");
 
         Jack jack = Jack.getJackCommand(run.log).outputDexZip(localDex.getPath());
-        jack.sourceVersion(run.language.getJackArg());
+        jack.sourceVersion(run.language.getJackSourceVersion());
+        jack.minApiLevel(String.valueOf(run.language.getJackMinApilevel()));
         if (run.debugging) {
             jack.setDebug();
         }
