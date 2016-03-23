@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package vogar.testing;
+package vogar.target.main;
 
-import org.junit.rules.MethodRule;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+import org.junit.runners.Suite.SuiteClasses;
 
 /**
- * A simple wrapper to isolate the deprecated code.
- *
- * <p>Although MethodRule has been marked as deprecated in the current version of JUnit (4.10) it
- * has been undeprecated in JUnit 4.11.
+ * Run the tests in this package.
  */
-// TODO(paulduffin): Remove this once we have upgraded to 4.11 or above.
-@SuppressWarnings("deprecation")
-public interface UndeprecatedMethodRule extends MethodRule {
+@SuiteClasses({
+        TestRunnerMainTest.class,
+})
+@RunWith(Suite.class)
+public class AllMainTests {
 }

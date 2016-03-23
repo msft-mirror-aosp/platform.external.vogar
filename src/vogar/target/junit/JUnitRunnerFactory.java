@@ -15,7 +15,6 @@
  */
 package vogar.target.junit;
 
-import com.google.common.annotations.VisibleForTesting;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -48,8 +47,7 @@ public class JUnitRunnerFactory implements RunnerFactory {
         }
     }
 
-    @VisibleForTesting
-    public static List<VogarTest> createVogarTests(
+    private static List<VogarTest> createVogarTests(
             Class<?> testClass, String qualification, String[] args) {
 
         Set<String> methodNames = new LinkedHashSet<>();
@@ -77,8 +75,7 @@ public class JUnitRunnerFactory implements RunnerFactory {
         return tests;
     }
 
-    @VisibleForTesting
-    boolean supports(Class<?> klass) {
+    private boolean supports(Class<?> klass) {
         return Junit3.isJunit3Test(klass) || Junit4.isJunit4Test(klass);
     }
 }
