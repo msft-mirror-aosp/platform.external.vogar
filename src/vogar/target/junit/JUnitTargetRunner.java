@@ -56,7 +56,7 @@ public final class JUnitTargetRunner implements TargetRunner {
 
     public boolean run(Profiler profiler) {
         // Use JUnit infrastructure to run the tests.
-        RunnerBuilder builder = new VogarTestRunnerBuilder(runnerParams);
+        RunnerBuilder builder = new VogarRunnerBuilder(runnerParams);
         Runner runner = builder.safeRunnerForClass(testClass);
         if (runner == null) {
             throw new IllegalStateException("Cannot create runner for: " + testClass.getName());
