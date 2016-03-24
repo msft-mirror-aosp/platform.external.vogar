@@ -210,13 +210,17 @@ public class TestRunnerJUnit4Test extends AbstractTestRunnerTest {
         TestRunner runner = testRunnerRule.createTestRunner();
         runner.run();
 
+        // The order is different from previous version of Vogar as that sorted a flattened list
+        // but JUnit has it organized as a hierarchy and sorts each level so classes which are on
+        // a separate level, like SimpleTest2 and SimpleTest3 are not sorted relative to each
+        // other.
         expectedResults()
+                .forTestClass(SimpleTest3.class)
+                .success("simple")
                 .forTestClass(SimpleTest2.class)
                 .success("Simple3")
                 .success("simple1")
                 .success("simple2")
-                .forTestClass(SimpleTest3.class)
-                .success("simple")
                 .completedNormally();
     }
 
@@ -303,6 +307,20 @@ public class TestRunnerJUnit4Test extends AbstractTestRunnerTest {
                 .completedNormally();
     }
 
+    @TestRunnerProperties(testClass = AnnotatedMethodsTest.class)
+    @Test
+    public void testRunner_AnnotatedMethodsTest() throws Exception {
+        TestRunner runner = testRunnerRule.createTestRunner();
+        runner.run();
+
+        expectedResults()
+                .text("Before Class\n")
+                .success("test1", "Before\nTest 1\nAfter\n")
+                .success("test2", "Before\nTest 2\nAfter\n")
+                .text("After Class\n")
+                .completedNormally();
+    }
+
     @TestRunnerProperties(testClass = LazyTestCreationTest.class)
     @Test
     public void testRunner_LazyTestCreationTest() throws Exception {
@@ -310,8 +328,10 @@ public class TestRunnerJUnit4Test extends AbstractTestRunnerTest {
         runner.run();
 
         expectedResults()
-                .success("test1", "Creating\n")
-                .success("test2", "Creating\n")
+                .text("Creating\n")
+                .success("test1")
+                .text("Creating\n")
+                .success("test2")
                 .completedNormally();
     }
 
