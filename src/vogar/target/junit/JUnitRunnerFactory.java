@@ -15,14 +15,8 @@
  */
 package vogar.target.junit;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
-import junit.framework.AssertionFailedError;
 import vogar.monitor.TargetMonitor;
 import vogar.target.RunnerFactory;
 import vogar.target.TargetRunner;
@@ -39,40 +33,11 @@ public class JUnitRunnerFactory implements RunnerFactory {
             TestEnvironment testEnvironment, int timeoutSeconds, boolean profile,
             String[] args) {
         if (supports(klass)) {
-            List<VogarTest> tests = createVogarTests(klass, qualification, args);
-            return new JUnitTargetRunner(monitor, skipPastReference, testEnvironment, timeoutSeconds,
-                    tests);
+            return new JUnitTargetRunner(monitor, skipPastReference, testEnvironment,
+                    timeoutSeconds, klass, qualification, args);
         } else {
             return null;
         }
-    }
-
-    private static List<VogarTest> createVogarTests(
-            Class<?> testClass, String qualification, String[] args) {
-
-        Set<String> methodNames = new LinkedHashSet<>();
-        if (qualification != null) {
-            methodNames.add(qualification);
-        }
-        Collections.addAll(methodNames, args);
-
-        final List<VogarTest> tests;
-        if (Junit3.isJunit3Test(testClass)) {
-            tests = Junit3.classToVogarTests(testClass, methodNames);
-        } else if (Junit4.isJunit4Test(testClass)) {
-            tests = Junit4.classToVogarTests(testClass, methodNames);
-        } else {
-            throw new AssertionFailedError("Unknown JUnit type: " + testClass.getName());
-        }
-
-        // Sort the tests to ensure consistent ordering.
-        Collections.sort(tests, new Comparator<VogarTest>() {
-            @Override
-            public int compare(VogarTest o1, VogarTest o2) {
-                return o1.toString().compareTo(o2.toString());
-            }
-        });
-        return tests;
     }
 
     private boolean supports(Class<?> klass) {
