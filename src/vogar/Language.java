@@ -20,7 +20,7 @@ package vogar;
  * An enum for the different language variants supported by vogar.
  */
 public enum Language {
-  J17("1.7", "1.7", 23),
+  J17("1.7", "1.7", 21),
   JN("1.8", "1.8", 24);
 
   private final String javacSourceAndTarget;
