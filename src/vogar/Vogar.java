@@ -212,6 +212,9 @@ public final class Vogar {
     @Option(names = { "--check-jni" })
     boolean checkJni = true;
 
+    @Option(names = {"--runner-type"})
+    RunnerType runnerType;
+
     @VisibleForTesting public Vogar() {}
 
     private void printUsage() {
@@ -258,7 +261,10 @@ public final class Vogar {
         System.out.println();
         System.out.println("  --benchmark: for use with dalvikvm, this dexes all files together,");
         System.out.println("      and is mandatory for running Caliper benchmarks, and a good idea");
-        System.out.println("      other performance sensitive code.");
+        System.out.println("      for other performance sensitive code.");
+        System.out.println("      If you specify this without specifying --runner-type then it");
+        System.out.println("      assumes --runner-type="
+                + RunnerType.CALIPER.name().toLowerCase());
         System.out.println();
         System.out.println("  --profile: run with a profiler to produce an hprof file.");
         System.out.println();
@@ -310,15 +316,25 @@ public final class Vogar {
         System.out.println("  --results-dir <directory>: read and write (if --record-results used)");
         System.out.println("      results from and to this directory.");
         System.out.println();
+        System.out.println("  --runner-type <default|caliper|main|junit>: specify which runner to use.");
+        System.out.println("      default: runs both JUnit tests and main() classes");
+        System.out.println("      caliper: runs Caliper benchmarks only");
+        System.out.println("      main: runs main() classes only");
+        System.out.println("      junit: runs JUnit tests only");
+        System.out.println("      Default is determined by --benchmark and --testonly, if they are");
+        System.out.println("      not specified then defaults to: default");
+        System.out.println();
         System.out.println("  --test-only: only run JUnit tests.");
         System.out.println("      Default is: " + testOnly);
+        System.out.println("      DEPRECATED: Use --runner-type="
+                + RunnerType.JUNIT.name().toLowerCase());
         System.out.println();
         System.out.println("  --verbose: turn on persistent verbose output.");
         System.out.println();
         System.out.println("  --check-jni: enable CheckJNI mode.");
         System.out.println("      See http://developer.android.com/training/articles/perf-jni.html.");
         System.out.println("      Default is: " + checkJni + ", but disabled for --benchmark.");
-        System.out.println();
+        System.out.println("");
         System.out.println("TARGET OPTIONS");
         System.out.println();
         System.out.println("  --debug <port>: enable Java debugging on the specified port.");
@@ -615,6 +631,40 @@ public final class Vogar {
         AndroidSdk androidSdk = null;
         if (modeId.requiresAndroidSdk()) {
             androidSdk = AndroidSdk.createAndroidSdk(console, mkdir, modeId, useJack);
+        }
+
+        if (runnerType == null) {
+            if (benchmark) {
+                if (testOnly) {
+                    throw new IllegalStateException(
+                            "--benchmark and --testOnly are mutually exclusive and deprecated,"
+                                    + " use --runner-type");
+                }
+                if (modeId == ModeId.ACTIVITY) {
+                    throw new IllegalStateException(
+                            "--benchmark and --mode activity are mutually exclusive");
+                }
+                runnerType = RunnerType.CALIPER;
+            } else if (testOnly) {
+                runnerType = RunnerType.JUNIT;
+            } else {
+                runnerType = RunnerType.DEFAULT;
+            }
+        } else {
+            if (testOnly) {
+                throw new IllegalStateException(
+                        "--runnerType and --testOnly are mutually exclusive");
+            }
+
+            if (runnerType.supportsCaliper()) {
+                if (modeId == ModeId.ACTIVITY) {
+                    throw new IllegalStateException(
+                            "--runnerType caliper and --mode activity are mutually exclusive");
+                }
+
+                // Assume --benchmark
+                benchmark = true;
+            }
         }
 
         Run run = new Run(this, useJack, console, mkdir, androidSdk, rm, target, runnerDir);

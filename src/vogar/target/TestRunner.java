@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 import vogar.Result;
+import vogar.RunnerType;
 import vogar.TestProperties;
 import vogar.monitor.TargetMonitor;
 import vogar.target.junit.JUnitRunnerFactory;
@@ -88,15 +89,20 @@ public final class TestRunner {
             }
         }
 
-        boolean testOnly = Boolean.parseBoolean(properties.getProperty(TestProperties.TEST_ONLY));
-        if (testOnly) {
-            runnerFactory = new CompositeRunnerFactory(new JUnitRunnerFactory());
-        } else {
-            runnerFactory = new CompositeRunnerFactory(
-                    new JUnitRunnerFactory(),
-                    new CaliperRunnerFactory(argsList),
-                    new MainRunnerFactory());
+        // Select the RunnerFactory instances to use based on the selected runner type.
+        RunnerType runnerType =
+                RunnerType.valueOf(properties.getProperty(TestProperties.RUNNER_TYPE));
+        List<RunnerFactory> runnerFactories = new ArrayList<>();
+        if (runnerType.supportsCaliper()) {
+            runnerFactories.add(new CaliperRunnerFactory(argsList));
         }
+        if (runnerType.supportsJUnit()) {
+            runnerFactories.add(new JUnitRunnerFactory());
+        }
+        if (runnerType.supportsMain()) {
+            runnerFactories.add(new MainRunnerFactory());
+        }
+        runnerFactory = new CompositeRunnerFactory(runnerFactories);
 
         this.monitorPort = monitorPort;
         this.skipPastReference = new AtomicReference<>(skipPast);
@@ -224,14 +230,14 @@ public final class TestRunner {
                 runner = runnerFactory.newRunner(monitor, qualification, klass,
                         skipPastReference, testEnvironment, timeoutSeconds, profile, args);
             } catch (RuntimeException e) {
-                monitor.outcomeStarted(null, qualifiedName);
+                monitor.outcomeStarted(qualifiedName);
                 e.printStackTrace();
                 monitor.outcomeFinished(Result.ERROR);
                 return;
             }
 
             if (runner == null) {
-                monitor.outcomeStarted(null, klass.getName());
+                monitor.outcomeStarted(klass.getName());
                 System.out.println("Skipping " + klass.getName()
                         + ": no associated runner class");
                 monitor.outcomeFinished(Result.UNSUPPORTED);
@@ -263,8 +269,8 @@ public final class TestRunner {
 
         private final List<? extends RunnerFactory> runnerFactories;
 
-        private CompositeRunnerFactory(RunnerFactory... runnerFactories) {
-            this.runnerFactories = Arrays.asList(runnerFactories);
+        private CompositeRunnerFactory(List<RunnerFactory> factories) {
+            this.runnerFactories = factories;
         }
 
         @Override @Nullable

@@ -75,9 +75,9 @@ final public class TestProperties {
     public static final String PROFILE_THREAD_GROUP = "profileThreadGroup";
 
     /**
-     * Only run JUnit tests?
+     * The type of runner to use.
      */
-    public static final String TEST_ONLY = "testOnly";
+    public static final String RUNNER_TYPE = "runnerType";
 
     private TestProperties() {}
 }
