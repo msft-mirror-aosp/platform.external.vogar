@@ -125,8 +125,13 @@ public final class Md5Cache {
     /**
      * Returns a key corresponding to the MD5ed contents of the element.
      */
-    public String makeKey(String element) {
-        return keyPrefix + "-" + md5(element);
+    public String makeKey(String... elements) {
+        StringBuilder sb = new StringBuilder();
+        for (String element : elements) {
+          sb.append(element);
+          sb.append('|');
+        }
+        return keyPrefix + "-" + md5(sb.toString());
     }
 
     /**

@@ -77,11 +77,8 @@ public final class JackDexTask extends Task {
             // classpathSubKey and do not cache.
 
             // cacheKey includes all the arguments that could affect the output.
-            cacheKey =
-                jackCache.makeKey(inputFile) +
-                classpathSubKey +
-                jackCache.makeKey(run.language.toString()) +
-                jackCache.makeKey(Boolean.toString(run.debugging));
+            cacheKey = jackCache.makeKey(inputFile.toString(), classpathSubKey,
+                run.language.toString(), Boolean.toString(run.debugging));
 
             if (jackCache.getFromCache(localDex, cacheKey)) {
                 run.log.verbose("JackDexTask: Obtained " + localDex + " from jackCache");
