@@ -19,6 +19,7 @@ package vogar;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+import vogar.android.AllAndroidTests;
 import vogar.android.DeviceRuntimeAdbTargetTest;
 import vogar.android.DeviceRuntimeSshTargetTest;
 import vogar.android.HostRuntimeLocalTargetTest;
@@ -34,9 +35,7 @@ import vogar.target.TestRunnerTest;
  */
 @SuiteClasses({
         AssertTest.class,
-        DeviceRuntimeAdbTargetTest.class,
-        DeviceRuntimeSshTargetTest.class,
-        HostRuntimeLocalTargetTest.class,
+        AllAndroidTests.class,
         JUnitRunnerTest.class,
         ScriptBuilderEscapingTest.class,
         TestRunnerTest.class,
