@@ -39,6 +39,32 @@ LOCAL_JAVA_LANGUAGE_VERSION := 1.7
 
 include $(BUILD_HOST_JAVA_LIBRARY)
 
+# build vogar tests jar
+# ============================================================
+# Run the tests using the following command:
+# java -cp ${ANDROID_BUILD_TOP}/out/host/linux-x86/framework/vogar-tests.jar \
+       org.junit.runner.JUnitCore vogar.AllTests
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := vogar-tests
+LOCAL_MODULE_TAGS := optional
+LOCAL_MODULE_CLASS := JAVA_LIBRARIES
+LOCAL_SRC_FILES := $(call all-java-files-under, test/)
+
+# The order of libraries is important as there are overlapping classes.
+# vogar must come first so that it's custom implementation of JUnit classes
+# will be replaced by the standard ones.
+LOCAL_STATIC_JAVA_LIBRARIES := \
+	vogar \
+	junit \
+	mockito-host \
+	objenesis-host
+
+LOCAL_JAVA_LANGUAGE_VERSION := 1.7
+
+include $(BUILD_HOST_JAVA_LIBRARY)
+
 # Build dependencies.
 # ============================================================
 include $(CLEAR_VARS)
