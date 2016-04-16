@@ -135,11 +135,13 @@ public final class Junit4 {
         for (Annotation a : klass.getAnnotations()) {
             Class<?> annotationClass = a.annotationType();
 
-            if (Parameterized.class.isAssignableFrom(annotationClass)) {
-                return true;
-            } else if (RunWith.class.isAssignableFrom(annotationClass)
-                    && Suite.class.isAssignableFrom(((RunWith) a).value())) {
-                isTestSuite = true;
+            if (RunWith.class.isAssignableFrom(annotationClass)) {
+                Class<?> runnerClass = ((RunWith) a).value();
+                if (Suite.class.isAssignableFrom(runnerClass)) {
+                    isTestSuite = true;
+                } else if (Parameterized.class.isAssignableFrom(runnerClass)) {
+                    return true;
+                }
             } else if (Suite.SuiteClasses.class.isAssignableFrom(annotationClass)) {
                 hasSuiteClasses = true;
             }
