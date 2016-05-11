@@ -64,11 +64,17 @@ public class TestSuite implements Test {
     public void addTestSuite(Class<?> suite) {
         testsAndSuites.add(suite);
     }
-    
+
+    @Override
     public int countTestCases() {
         return testsAndSuites.size();
     }
-    
+
+    @Override
+    public void run(TestResult result) {
+        throw new UnsupportedOperationException();
+    }
+
     /**
      * The official JUnit framework creates test instances eagerly and holds
      * them for the duration of the test run. We prefer to create tests lazily,
