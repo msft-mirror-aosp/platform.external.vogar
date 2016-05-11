@@ -20,6 +20,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -49,14 +50,19 @@ public final class Junit4 {
      * @param methodNames if non-empty, this is the list of test method names.
      */
     static List<VogarTest> classToVogarTests(Class<?> testClass, Collection<String> methodNames) {
-        List<VogarTest> result = new ArrayList<VogarTest>();
+        List<VogarTest> result = new ArrayList<>();
         getSuiteMethods(result, testClass, methodNames);
         return result;
     }
 
     private static void getSuiteMethods(
         List<VogarTest> out, Class<?> testClass, Collection<String> methodNames) {
-        boolean isJunit4TestClass = false;
+
+        // Try the suites first, if we find one then exit as suites take priority.
+        boolean isJunit4TestClass = getSuiteTests(out, testClass);
+        if (isJunit4TestClass) {
+            return;
+        }
 
         Collection<Object[]> argCollection = findParameters(testClass);
 
@@ -67,31 +73,57 @@ public final class Junit4 {
 
                 isJunit4TestClass = true;
 
-                if (m.isAnnotationPresent(Ignore.class)) {
-                    out.add(new IgnoredTest(testClass, m));
-                } else if (m.getParameterTypes().length == 0) {
-                    addAllParameterizedTests(out, testClass, m, argCollection);
-                } else {
-                    out.add(new ConfigurationError(testClass.getName() + "#" + m.getName(),
-                            new IllegalStateException("Tests may not have parameters!")));
-                }
+                addTest(out, testClass, m, argCollection);
             }
         } else {
             for (String methodName : methodNames) {
                 try {
-                    addAllParameterizedTests(out, testClass, testClass.getMethod(methodName),
-                            argCollection);
+                    Method m = testClass.getMethod(methodName);
+                    if (!m.isAnnotationPresent(org.junit.Test.class)) continue;
+
+                    isJunit4TestClass = true;
+
+                    addTest(out, testClass, m, argCollection);
                 } catch (final NoSuchMethodException e) {
-                    out.add(new ConfigurationError(testClass.getName() + "#" + methodName, e));
+                    // Check to see if any method with the specified name exists.
+                    Throwable cause = null;
+                    for (Method m : testClass.getMethods()) {
+                        if (m.getName().equals(methodName)) {
+                            cause = new Exception("Method " + methodName
+                                    + " should have no parameters");
+                            break;
+                        }
+                    }
+                    if (cause == null) {
+                        cause = new AssertionFailedError("Method \"" + methodName + "\" not found");
+                    }
+                    ConfigurationError error = new ConfigurationError(
+                            testClass.getName() + "#" + methodName,
+                            cause);
+                    out.add(error);
+
+                    // An error happened so just treat this as a JUnit4 test otherwise it will end
+                    // up producing another error below.
+                    isJunit4TestClass = true;
                 }
             }
         }
 
-        isJunit4TestClass |= getSuiteTests(out, testClass);
-
         if (!isJunit4TestClass) {
             out.add(new ConfigurationError(testClass.getName(),
                     new IllegalStateException("Not a test case: " + testClass)));
+        }
+    }
+
+    private static void addTest(List<VogarTest> out, Class<?> testClass, Method m, Collection<Object[]> argCollection) {
+        if (m.isAnnotationPresent(Ignore.class)) {
+            // Ignore the test.
+        } else if (m.getParameterTypes().length == 0) {
+            addAllParameterizedTests(out, testClass, m, argCollection);
+        } else {
+            String name = m.getName();
+            out.add(new ConfigurationError(testClass.getName() + "#" + name,
+                    new Exception("Method " + name + " should have no parameters")));
         }
     }
 
@@ -126,6 +158,8 @@ public final class Junit4 {
         boolean isTestSuite = false;
         boolean hasSuiteClasses = false;
 
+        boolean concrete = !Modifier.isAbstract(klass.getModifiers());
+
         // @RunWith(Suite.class)
         // @SuiteClasses( ... )
         // public class MyTest { ... }
@@ -140,15 +174,22 @@ public final class Junit4 {
                 if (Suite.class.isAssignableFrom(runnerClass)) {
                     isTestSuite = true;
                 } else if (Parameterized.class.isAssignableFrom(runnerClass)) {
-                    return true;
+                    // @Parameterized test classes are instantiated so must be concrete.
+                    return concrete;
                 }
             } else if (Suite.SuiteClasses.class.isAssignableFrom(annotationClass)) {
                 hasSuiteClasses = true;
             }
 
             if (isTestSuite && hasSuiteClasses) {
+                // This doesn't instantiate the class so doesn't care if it's abstract.
                 return true;
             }
+        }
+
+        // Test classes that have methods annotated with @Test are instantiated so must be concrete.
+        if (!concrete) {
+            return false;
         }
 
         // public class MyTest {
@@ -281,7 +322,7 @@ public final class Junit4 {
                     : (failure != null && expected.isAssignableFrom(failure.getClass()));
         }
 
-        protected abstract Object getTestCase() throws Exception;
+        protected abstract Object getTestCase() throws Throwable;
     }
 
     /**
@@ -326,8 +367,12 @@ public final class Junit4 {
                     new Exception("Test cases must have a no-arg or string constructor."));
         }
 
-        @Override protected Object getTestCase() throws Exception {
-            return constructor.newInstance(constructorArgs);
+        @Override protected Object getTestCase() throws Throwable {
+            try {
+                return constructor.newInstance(constructorArgs);
+            } catch (InvocationTargetException e) {
+                throw e.getCause();
+            }
         }
 
         @Override public String toString() {
