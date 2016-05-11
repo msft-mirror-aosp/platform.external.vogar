@@ -105,7 +105,8 @@ public class TestRunnerTest {
         }
     }
 
-    @TestRunnerProperties(testClass = CaliperBenchmark.class, runnerType = RunnerType.CALIPER)
+    @TestRunnerProperties(testClass = CaliperBenchmarkFailing.class,
+            runnerType = RunnerType.CALIPER)
     @Test
     public void testConstructor_CaliperBenchmark() throws Exception {
         TestRunner runner = testRunnerRule.createTestRunner("-i", "runtime");
@@ -115,7 +116,7 @@ public class TestRunnerTest {
         // Remove stack trace from output.
         out = out.replaceAll("\t[^\n]+\\n", "");
         assertEquals(""
-                + "//00xx{\"outcome\":\"" + CaliperBenchmark.class.getName() + "\"}\n"
+                + "//00xx{\"outcome\":\"" + CaliperBenchmarkFailing.class.getName() + "\"}\n"
                 + "Experiment selection: \n"
                 + "  Benchmark Methods:   [timeMethod]\n"
                 + "  Instruments:   [runtime]\n"
@@ -128,8 +129,18 @@ public class TestRunnerTest {
                 + ": An exception was thrown from the benchmark code\n"
                 + "Caused by: " + IllegalStateException.class.getName()
                 + ": " + CaliperBenchmark.CALIPER_BENCHMARK_MESSAGE + "\n"
-                + "//00xx{\"result\":\"SUCCESS\"}\n"
+                + "//00xx{\"result\":\"EXEC_FAILED\"}\n"
                 + "//00xx{\"completedNormally\":true}\n", out);
+    }
+
+    public static class CaliperBenchmarkFailing {
+
+        static final String CALIPER_BENCHMARK_MESSAGE = "Aborting test to save time";
+
+        @Benchmark
+        public long timeMethod(long reps) {
+            throw new IllegalStateException(CALIPER_BENCHMARK_MESSAGE);
+        }
     }
 
     /**
@@ -166,10 +177,7 @@ public class TestRunnerTest {
                 + "  Selection type:    Full cartesian product\n"
                 + "\n"
                 + "This selection yields 1 experiments.\n"
-                + UserCodeException.class.getName()
-                + ": An exception was thrown from the benchmark code\n"
-                + "Caused by: " + IllegalStateException.class.getName()
-                + ": " + CaliperBenchmark.CALIPER_BENCHMARK_MESSAGE + "\n"
+                + "1\n"
                 + "//00xx{\"result\":\"SUCCESS\"}\n"
                 + "//00xx{\"completedNormally\":true}\n", out);
     }
@@ -180,7 +188,8 @@ public class TestRunnerTest {
 
         @Benchmark
         public long timeMethod(long reps) {
-            throw new IllegalStateException(CALIPER_BENCHMARK_MESSAGE);
+            System.out.println(reps);
+            return reps;
         }
     }
 
