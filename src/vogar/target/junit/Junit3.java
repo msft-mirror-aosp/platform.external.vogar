@@ -157,6 +157,9 @@ public final class Junit3 {
             junit.framework.Test test;
             try {
                 test = (junit.framework.Test) suiteMethod.invoke(null);
+            } catch (InvocationTargetException e) {
+                out.add(new ConfigurationError(testClass.getName() + "#suite", e.getCause()));
+                return;
             } catch (Throwable e) {
                 out.add(new ConfigurationError(testClass.getName() + "#suite", e));
                 return;
@@ -242,7 +245,12 @@ public final class Junit3 {
         }
 
         public void run() throws Throwable {
-            TestCase testCase = getTestCase();
+            TestCase testCase;
+            try {
+                testCase = getTestCase();
+            } catch (InvocationTargetException t) {
+                throw t.getCause();
+            }
             Throwable failure = null;
             try {
                 setUp.invoke(testCase);
@@ -297,11 +305,18 @@ public final class Junit3 {
                         new Object[] { method.getName() });
             } catch (NoSuchMethodException ignored) {
             }
-            return new ConfigurationError(testClass.getName() + "#" + method.getName(),
-                    new Exception("Test cases must have a no-arg or string constructor."));
+            String testClassName = testClass.getName();
+            return new ConfigurationError(testClassName + "#" + method.getName(),
+                    new AssertionFailedError("Class " + testClassName
+                            + " has no public constructor TestCase(String name) or TestCase()"));
         }
 
         @Override protected TestCase getTestCase() throws Exception {
+
+            if (!Modifier.isPublic(constructor.getDeclaringClass().getModifiers())) {
+                throw new AssertionFailedError("Class " + testClass.getName() + " is not public");
+            }
+
             TestCase testCase = constructor.newInstance(constructorArgs);
             // If the test case used the no argument constructor then make sure to set its name
             // correctly.
