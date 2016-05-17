@@ -57,7 +57,7 @@ public class TestRunnerRule implements UndeprecatedMethodRule {
                 }
             }
             setProperty(TestProperties.TEST_CLASS_OR_PACKAGE, testClassOrPackage);
-            setProperty(TestProperties.TEST_ONLY, testRunnerProperties.testOnly());
+            setProperty(TestProperties.RUNNER_TYPE, testRunnerProperties.runnerType().toString());
             setProperty(TestProperties.TIMEOUT, testRunnerProperties.timeout());
         }
         return base;

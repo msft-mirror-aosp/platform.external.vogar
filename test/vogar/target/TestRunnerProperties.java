@@ -19,6 +19,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import vogar.RunnerType;
 
 /**
  * Allows test properties to be specified for tests.
@@ -45,7 +46,7 @@ public @interface TestRunnerProperties {
 
     String testClassOrPackage() default "";
 
-    boolean testOnly() default false;
+    RunnerType runnerType() default RunnerType.DEFAULT;
 
     int timeout() default 0;
 
