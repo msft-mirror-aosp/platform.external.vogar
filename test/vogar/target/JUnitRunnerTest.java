@@ -55,8 +55,7 @@ public class JUnitRunnerTest extends TestCase {
         Runner runner = new JUnitRunner(monitor, skipPastReference, testEnvironment, 0, tests);
         runner.run(null);
 
-        verify(monitor).outcomeStarted(JUnitRunner.class,
-                target.getName() + "#testSimple");
+        verify(monitor).outcomeStarted(target.getName() + "#testSimple");
         verify(monitor).outcomeFinished(Result.SUCCESS);
     }
 
@@ -66,13 +65,13 @@ public class JUnitRunnerTest extends TestCase {
         Runner runner = new JUnitRunner(monitor, skipPastReference, testEnvironment, 0, tests);
         runner.run(null);
 
-        verify(monitor).outcomeStarted(JUnitRunner.class,
+        verify(monitor).outcomeStarted(
                 "vogar.target.junit3.SimpleTest#testSimple");
-        verify(monitor).outcomeStarted(JUnitRunner.class,
+        verify(monitor).outcomeStarted(
                 "vogar.target.junit3.SimpleTest2#testSimple1");
-        verify(monitor).outcomeStarted(JUnitRunner.class,
+        verify(monitor).outcomeStarted(
                 "vogar.target.junit3.SimpleTest2#testSimple2");
-        verify(monitor).outcomeStarted(JUnitRunner.class,
+        verify(monitor).outcomeStarted(
                 "vogar.target.junit3.SimpleTest2#testSimple3");
         verify(monitor, times(4)).outcomeFinished(Result.SUCCESS);
     }
@@ -83,11 +82,11 @@ public class JUnitRunnerTest extends TestCase {
         Runner runner = new JUnitRunner(monitor, skipPastReference, testEnvironment, 0, tests);
         runner.run(null);
 
-        verify(monitor).outcomeStarted(JUnitRunner.class,
+        verify(monitor).outcomeStarted(
                 target.getName() + "#testSimple1");
-        verify(monitor).outcomeStarted(JUnitRunner.class,
+        verify(monitor).outcomeStarted(
                 target.getName() + "#testSimple2");
-        verify(monitor).outcomeStarted(JUnitRunner.class,
+        verify(monitor).outcomeStarted(
                 target.getName() + "#testSimple3");
         verify(monitor, times(3)).outcomeFinished(Result.SUCCESS);
     }
@@ -99,7 +98,7 @@ public class JUnitRunnerTest extends TestCase {
         Runner runner = new JUnitRunner(monitor, skipPastReference, testEnvironment, 0, tests);
         runner.run(null);
 
-        verify(monitor).outcomeStarted(JUnitRunner.class,
+        verify(monitor).outcomeStarted(
                 target.getName() + "#testSimple2");
         verify(monitor).outcomeFinished(Result.SUCCESS);
     }
@@ -111,9 +110,9 @@ public class JUnitRunnerTest extends TestCase {
         Runner runner = new JUnitRunner(monitor, skipPastReference, testEnvironment, 0, tests);
         runner.run(null);
 
-        verify(monitor).outcomeStarted(JUnitRunner.class,
+        verify(monitor).outcomeStarted(
                 target.getName() + "#testSimple2");
-        verify(monitor).outcomeStarted(JUnitRunner.class,
+        verify(monitor).outcomeStarted(
                 target.getName() + "#testSimple3");
         verify(monitor, times(2)).outcomeFinished(Result.SUCCESS);
     }
@@ -125,7 +124,7 @@ public class JUnitRunnerTest extends TestCase {
         Runner runner = new JUnitRunner(monitor, skipPastReference, testEnvironment, 0, tests);
         runner.run(null);
 
-        verify(monitor).outcomeStarted(JUnitRunner.class,
+        verify(monitor).outcomeStarted(
                 target.getName() + "#testSimple2");
         verify(monitor).outcomeFinished(Result.SUCCESS);
     }
@@ -140,7 +139,7 @@ public class JUnitRunnerTest extends TestCase {
         Runner runner = new JUnitRunner(monitor, skipPastReference, testEnvironment, 0, tests);
         runner.run(null);
 
-        verify(monitor).outcomeStarted(JUnitRunner.class,
+        verify(monitor).outcomeStarted(
                 target.getName() + "#testSimple5");
         verify(monitor).outcomeFinished(Result.EXEC_FAILED);
 
@@ -157,9 +156,9 @@ public class JUnitRunnerTest extends TestCase {
         Runner runner = new JUnitRunner(monitor, skipPastReference, testEnvironment, 0, tests);
         runner.run(null);
 
-        verify(monitor).outcomeStarted(JUnitRunner.class,
+        verify(monitor).outcomeStarted(
                 target.getName() + "#testSimple2");
-        verify(monitor).outcomeStarted(JUnitRunner.class,
+        verify(monitor).outcomeStarted(
                 target.getName() + "#testSimple3");
         verify(monitor, times(2)).outcomeFinished(Result.SUCCESS);
     }
@@ -174,10 +173,10 @@ public class JUnitRunnerTest extends TestCase {
         Runner runner = new JUnitRunner(monitor, skipPastReference, testEnvironment, 0, tests);
         runner.run(null);
 
-        verify(monitor).outcomeStarted(JUnitRunner.class,
+        verify(monitor).outcomeStarted(
                 target.getName() + "#testSuccess");
-        verify(monitor).outcomeStarted(JUnitRunner.class, target.getName() + "#testFail");
-        verify(monitor).outcomeStarted(JUnitRunner.class,
+        verify(monitor).outcomeStarted(target.getName() + "#testFail");
+        verify(monitor).outcomeStarted(
                 target.getName() + "#testThrowException");
         verify(monitor).outcomeFinished(Result.SUCCESS);
         verify(monitor, times(2)).outcomeFinished(Result.EXEC_FAILED);
@@ -198,7 +197,7 @@ public class JUnitRunnerTest extends TestCase {
         Runner runner = new JUnitRunner(monitor, skipPastReference, testEnvironment, 1, tests);
         runner.run(null);
 
-        verify(monitor).outcomeStarted(JUnitRunner.class, target.getName() + "#test");
+        verify(monitor).outcomeStarted(target.getName() + "#test");
         verify(monitor).outcomeFinished(Result.EXEC_FAILED);
 
         String outStr = baos.toString();

@@ -23,7 +23,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import vogar.target.junit.JUnitRunner;
+import vogar.RunnerType;
 import vogar.testing.InterceptOutputStreams;
 import vogar.testing.InterceptOutputStreams.Stream;
 
@@ -40,6 +40,20 @@ public class TestRunnerTest {
 
     @Rule public TestRunnerRule testRunnerRule = new TestRunnerRule();
 
+    @TestRunnerProperties(testClass = JUnit3Test.class, runnerType = RunnerType.JUNIT)
+    @Test
+    public void testConstructor_JUnit3Test_RunnerType_JUNIT() throws Exception {
+        TestRunner runner = testRunnerRule.createTestRunner();
+        runner.run();
+
+        assertEquals(""
+                + "//00xx{\"outcome\":\"" + JUnit3Test.class.getName() + "#testMethodName\"}\n"
+                + "//00xx{\"result\":\"SUCCESS\"}\n"
+                + "//00xx{\"outcome\":\"" + JUnit3Test.class.getName() + "#testOtherName\"}\n"
+                + "//00xx{\"result\":\"SUCCESS\"}\n"
+                + "//00xx{\"completedNormally\":true}\n", ios.contents(Stream.OUT));
+    }
+
     @TestRunnerProperties(testClass = JUnit3Test.class)
     @Test
     public void testConstructor_JUnit3Test() throws Exception {
@@ -47,11 +61,9 @@ public class TestRunnerTest {
         runner.run();
 
         assertEquals(""
-                + "//00xx{\"outcome\":\"" + JUnit3Test.class.getName() + "#testMethodName\","
-                + "\"runner\":\"" + JUnitRunner.class.getName() + "\"}\n"
+                + "//00xx{\"outcome\":\"" + JUnit3Test.class.getName() + "#testMethodName\"}\n"
                 + "//00xx{\"result\":\"SUCCESS\"}\n"
-                + "//00xx{\"outcome\":\"" + JUnit3Test.class.getName() + "#testOtherName\","
-                + "\"runner\":\"" + JUnitRunner.class.getName() + "\"}\n"
+                + "//00xx{\"outcome\":\"" + JUnit3Test.class.getName() + "#testOtherName\"}\n"
                 + "//00xx{\"result\":\"SUCCESS\"}\n"
                 + "//00xx{\"completedNormally\":true}\n", ios.contents(Stream.OUT));
     }
@@ -80,8 +92,7 @@ public class TestRunnerTest {
 
         runner.run();
         assertEquals(""
-                + "//00xx{\"outcome\":\"" + JUnit3Test.class.getName() + "#testOtherName\","
-                + "\"runner\":\"" + JUnitRunner.class.getName() + "\"}\n"
+                + "//00xx{\"outcome\":\"" + JUnit3Test.class.getName() + "#testOtherName\"}\n"
                 + "//00xx{\"result\":\"SUCCESS\"}\n"
                 + "//00xx{\"completedNormally\":true}\n", ios.contents(Stream.OUT));
     }
@@ -94,7 +105,7 @@ public class TestRunnerTest {
         }
     }
 
-    @TestRunnerProperties(testClass = CaliperBenchmark.class)
+    @TestRunnerProperties(testClass = CaliperBenchmark.class, runnerType = RunnerType.CALIPER)
     @Test
     public void testConstructor_CaliperBenchmark() throws Exception {
         TestRunner runner = testRunnerRule.createTestRunner("-i", "runtime");
@@ -104,8 +115,7 @@ public class TestRunnerTest {
         // Remove stack trace from output.
         out = out.replaceAll("\t[^\n]+\\n", "");
         assertEquals(""
-                + "//00xx{\"outcome\":\"" + CaliperBenchmark.class.getName() + "\","
-                + "\"runner\":\"" + CaliperRunner.class.getName() + "\"}\n"
+                + "//00xx{\"outcome\":\"" + CaliperBenchmark.class.getName() + "\"}\n"
                 + "Experiment selection: \n"
                 + "  Benchmark Methods:   [timeMethod]\n"
                 + "  Instruments:   [runtime]\n"
@@ -128,7 +138,8 @@ public class TestRunnerTest {
      * <p>Cannot check that profiling works because it will only work on Android and these tests
      * do not run on android yet.
      */
-    @TestRunnerProperties(testClass = CaliperBenchmark.class, profile = true)
+    @TestRunnerProperties(testClass = CaliperBenchmark.class, profile = true,
+            runnerType = RunnerType.CALIPER)
     @Test
     public void testConstructor_CaliperBenchmark_Profile() throws Exception {
         TestRunner runner = testRunnerRule.createTestRunner("-i", "runtime");
@@ -146,8 +157,7 @@ public class TestRunnerTest {
         out = out.replaceAll("\t[^\n]+\\n", "");
 
         assertEquals(""
-                + "//00xx{\"outcome\":\"" + CaliperBenchmark.class.getName() + "\","
-                + "\"runner\":\"" + CaliperRunner.class.getName() + "\"}\n"
+                + "//00xx{\"outcome\":\"" + CaliperBenchmark.class.getName() + "\"}\n"
                 + "Experiment selection: \n"
                 + "  Benchmark Methods:   [timeMethod]\n"
                 + "  Instruments:   [runtime]\n"
@@ -174,6 +184,18 @@ public class TestRunnerTest {
         }
     }
 
+    @TestRunnerProperties(testClass = Main.class, runnerType = RunnerType.MAIN)
+    @Test
+    public void testConstructor_Main_RunnerType_MAIN() throws Exception {
+        TestRunner runner = testRunnerRule.createTestRunner();
+        runner.run();
+
+        assertEquals(""
+                + "//00xx{\"outcome\":\"" + Main.class.getName() + "\"}\n"
+                + "//00xx{\"result\":\"SUCCESS\"}\n"
+                + "//00xx{\"completedNormally\":true}\n", ios.contents(Stream.OUT));
+    }
+
     @TestRunnerProperties(testClass = Main.class)
     @Test
     public void testConstructor_Main() throws Exception {
@@ -181,8 +203,7 @@ public class TestRunnerTest {
         runner.run();
 
         assertEquals(""
-                + "//00xx{\"outcome\":\"" + Main.class.getName() + "\","
-                + "\"runner\":\"" + MainRunner.class.getName() + "\"}\n"
+                + "//00xx{\"outcome\":\"" + Main.class.getName() + "\"}\n"
                 + "//00xx{\"result\":\"SUCCESS\"}\n"
                 + "//00xx{\"completedNormally\":true}\n", ios.contents(Stream.OUT));
     }
@@ -200,10 +221,7 @@ public class TestRunnerTest {
         runner.run();
 
         assertEquals(""
-                + "Warning: Arguments are invalid for Caliper: "
-                + "Extra stuff, did not expect non-option arguments: [" + methodName + "]\n"
-                + "//00xx{\"outcome\":\"" + JUnit3Test.class.getName() + "#" + methodName + "\","
-                + "\"runner\":\"" + JUnitRunner.class.getName() + "\"}\n"
+                + "//00xx{\"outcome\":\"" + JUnit3Test.class.getName() + "#" + methodName + "\"}\n"
                 + "//00xx{\"result\":\"SUCCESS\"}\n"
                 + "//00xx{\"completedNormally\":true}\n", ios.contents(Stream.OUT));
     }
