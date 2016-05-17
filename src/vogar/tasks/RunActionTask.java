@@ -23,10 +23,10 @@ import vogar.Classpath;
 import vogar.Outcome;
 import vogar.Result;
 import vogar.Run;
+import vogar.RunnerType;
 import vogar.commands.Command;
 import vogar.commands.VmCommandBuilder;
 import vogar.monitor.HostMonitor;
-import vogar.target.CaliperRunner;
 import vogar.target.TestRunner;
 
 /**
@@ -175,15 +175,10 @@ public class RunActionTask extends Task implements HostMonitor.Handler {
                 : run.firstMonitorPort + runnerThreadId.get();
     }
 
-    @Override public void start(String outcomeName, String runnerClass) {
+    @Override public void start(String outcomeName) {
         outcomeName = toQualifiedOutcomeName(outcomeName);
         lastStartedOutcome = outcomeName;
-        // TODO add to Outcome knowledge about what class was used to run it
-        if (CaliperRunner.class.getName().equals(runnerClass)) {
-            if (!run.benchmark) {
-                throw new RuntimeException("you must use --benchmark when running Caliper "
-                        + "benchmarks.");
-            }
+        if (run.runnerType.supportsCaliper()) {
             run.console.verbose("running " + outcomeName + " with unlimited timeout");
             Command command = currentCommand;
             if (command != null && run.smallTimeoutSeconds != 0) {

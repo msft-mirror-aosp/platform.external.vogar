@@ -41,7 +41,7 @@ public final class CaliperRunner implements vogar.target.Runner {
     }
 
     public boolean run(Profiler profiler) {
-        monitor.outcomeStarted(getClass(), testClass.getName());
+        monitor.outcomeStarted(testClass.getName());
         ImmutableList.Builder<String> builder = ImmutableList.<String>builder()
             .add(testClass.getName())
             .add(args);

@@ -85,7 +85,7 @@ public final class JUnitRunner implements Runner {
      */
     private void runWithTimeout(final Profiler profiler, final VogarTest test) {
         testEnvironment.reset();
-        monitor.outcomeStarted(getClass(), test.toString());
+        monitor.outcomeStarted(test.toString());
 
         // Start the test on a background thread.
         final AtomicReference<Thread> executingThreadReference = new AtomicReference<Thread>();
