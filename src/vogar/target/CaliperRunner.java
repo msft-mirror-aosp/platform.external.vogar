@@ -67,13 +67,15 @@ public final class CaliperRunner implements vogar.target.Runner {
         }
         ImmutableList<String> argList = builder.build();
         String[] arguments = argList.toArray(new String[argList.size()]);
+        Result result = Result.EXEC_FAILED;
         try {
             if (profiler != null) {
                 profiler.start();
             }
-          PrintWriter stdout = new PrintWriter(System.out);
-          PrintWriter stderr = new PrintWriter(System.err);
-          CaliperMain.exitlessMain(arguments, stdout, stderr);
+            PrintWriter stdout = new PrintWriter(System.out);
+            PrintWriter stderr = new PrintWriter(System.err);
+            CaliperMain.exitlessMain(arguments, stdout, stderr);
+            result = Result.SUCCESS;
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {
@@ -81,7 +83,7 @@ public final class CaliperRunner implements vogar.target.Runner {
                 profiler.stop();
             }
         }
-        monitor.outcomeFinished(Result.SUCCESS);
+        monitor.outcomeFinished(result);
         return true;
     }
 }
