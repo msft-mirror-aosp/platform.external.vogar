@@ -18,8 +18,4 @@ package junit.framework;
 
 // Note: this class was written without inspecting the junit.framework code
 
-public interface Test {
-    int countTestCases();
-
-    void run(TestResult result);
-}
+public interface Test {}
