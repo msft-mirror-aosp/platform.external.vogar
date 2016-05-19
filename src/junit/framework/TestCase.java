@@ -51,16 +51,6 @@ public class TestCase extends Assert implements Test {
         this.name = name;
     }
 
-    @Override
-    public int countTestCases() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void run(TestResult result) {
-        throw new UnsupportedOperationException();
-    }
-
     public final void setMethod(Method method) {
         this.method = method;
         this.name = method.getName();
