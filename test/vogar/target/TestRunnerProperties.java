@@ -40,8 +40,6 @@ public @interface TestRunnerProperties {
 
     boolean profileThreadGroup() default false;
 
-    String qualifiedName() default "";
-
     Class testClass() default Default.class;
 
     String testClassOrPackage() default "";
