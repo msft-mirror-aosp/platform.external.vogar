@@ -184,7 +184,6 @@ public final class BuildActionTask extends Task {
      */
     private void fillInProperties(Properties properties, Action action) {
         properties.setProperty(TestProperties.TEST_CLASS_OR_PACKAGE, action.getTargetClass());
-        properties.setProperty(TestProperties.QUALIFIED_NAME, action.getName());
         properties.setProperty(TestProperties.MONITOR_PORT, Integer.toString(run.firstMonitorPort));
         properties.setProperty(TestProperties.TIMEOUT, Integer.toString(run.timeoutSeconds));
         properties.setProperty(TestProperties.PROFILE, Boolean.toString(run.profile));

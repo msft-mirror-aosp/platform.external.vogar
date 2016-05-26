@@ -41,7 +41,6 @@ import vogar.target.junit.JUnitRunnerFactory;
  */
 public final class TestRunner {
 
-    private final String qualifiedName;
     private final String qualifiedClassOrPackageName;
 
     /** the monitor port if a monitor is expected, or null for no monitor */
@@ -61,7 +60,6 @@ public final class TestRunner {
     private boolean useSocketMonitor;
 
     public TestRunner(Properties properties, List<String> argsList) {
-        qualifiedName = properties.getProperty(TestProperties.QUALIFIED_NAME);
         qualifiedClassOrPackageName = properties.getProperty(TestProperties.TEST_CLASS_OR_PACKAGE);
         timeoutSeconds = Integer.parseInt(properties.getProperty(TestProperties.TIMEOUT));
 
@@ -230,7 +228,7 @@ public final class TestRunner {
                 runner = runnerFactory.newRunner(monitor, qualification, klass,
                         skipPastReference, testEnvironment, timeoutSeconds, profile, args);
             } catch (RuntimeException e) {
-                monitor.outcomeStarted(qualifiedName);
+                monitor.outcomeStarted(klass.getName());
                 e.printStackTrace();
                 monitor.outcomeFinished(Result.ERROR);
                 return;
