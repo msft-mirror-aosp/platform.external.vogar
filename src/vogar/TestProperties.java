@@ -34,12 +34,6 @@ final public class TestProperties {
     public static final String TEST_CLASS_OR_PACKAGE = "testClassOrPackage";
 
     /**
-     * Name of the property giving the test's name, such as {@code
-     * java.math.BigDecimal.PowTests}.
-     */
-    public static final String QUALIFIED_NAME = "qualifiedName";
-
-    /**
      * Port to accept monitor connections on.
      */
     public static final String MONITOR_PORT = "monitorPort";
