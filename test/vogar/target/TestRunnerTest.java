@@ -200,7 +200,7 @@ public class TestRunnerTest {
         runner.run();
 
         assertEquals(""
-                + "//00xx{\"outcome\":\"" + Main.class.getName() + "\"}\n"
+                + "//00xx{\"outcome\":\"" + Main.class.getName() + "#main\"}\n"
                 + "//00xx{\"result\":\"SUCCESS\"}\n"
                 + "//00xx{\"completedNormally\":true}\n", ios.contents(Stream.OUT));
     }
@@ -212,7 +212,7 @@ public class TestRunnerTest {
         runner.run();
 
         assertEquals(""
-                + "//00xx{\"outcome\":\"" + Main.class.getName() + "\"}\n"
+                + "//00xx{\"outcome\":\"" + Main.class.getName() + "#main\"}\n"
                 + "//00xx{\"result\":\"SUCCESS\"}\n"
                 + "//00xx{\"completedNormally\":true}\n", ios.contents(Stream.OUT));
     }

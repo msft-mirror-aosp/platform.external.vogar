@@ -43,7 +43,7 @@ public final class MainRunner implements Runner {
     }
 
     public boolean run(Profiler profiler) {
-        monitor.outcomeStarted(mainClass.getName());
+        monitor.outcomeStarted(mainClass.getName() + "#main");
         try {
             if (profiler != null) {
                 profiler.start();
