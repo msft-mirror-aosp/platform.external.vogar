@@ -48,7 +48,6 @@ public class TestRunnerRule implements UndeprecatedMethodRule {
             setProperty(TestProperties.PROFILE_INTERVAL, testRunnerProperties.profileInterval());
             setProperty(TestProperties.PROFILE_THREAD_GROUP,
                     testRunnerProperties.profileThreadGroup());
-            setProperty(TestProperties.QUALIFIED_NAME, testRunnerProperties.qualifiedName());
             String testClassOrPackage = treatEmptyAsNull(testRunnerProperties.testClassOrPackage());
             if (testClassOrPackage == null) {
                 Class<?> testClass = testRunnerProperties.testClass();
