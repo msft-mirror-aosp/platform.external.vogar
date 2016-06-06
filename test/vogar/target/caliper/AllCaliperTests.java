@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,18 @@
  * limitations under the License.
  */
 
-package vogar.target.junit3;
+package vogar.target.caliper;
 
-import junit.framework.TestCase;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+import org.junit.runners.Suite.SuiteClasses;
 
 /**
- * A test case that is used to verify behavior of timeout.
+ * Run the tests in this package.
  */
-public class LongTest extends TestCase {
-    public LongTest(String name) {
-        super(name);
-    }
-
-    public void test() {
-        try {
-            Thread.sleep(2 * 1000);
-        } catch (InterruptedException ignored) {
-        }
-    }
+@SuiteClasses({
+        TestRunnerCaliperTest.class,
+})
+@RunWith(Suite.class)
+public class AllCaliperTests {
 }

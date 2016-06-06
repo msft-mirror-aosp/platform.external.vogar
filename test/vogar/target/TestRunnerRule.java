@@ -18,10 +18,10 @@ package vogar.target;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
-import org.junit.runners.model.FrameworkMethod;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import vogar.TestProperties;
-import vogar.testing.UndeprecatedMethodRule;
 
 /**
  * Creates {@link TestRunner} for tests.
@@ -31,14 +31,14 @@ import vogar.testing.UndeprecatedMethodRule;
  *
  * @see TestRunnerProperties
  */
-public class TestRunnerRule implements UndeprecatedMethodRule {
+public class TestRunnerRule implements TestRule {
 
     private Properties properties;
+    private TestRunnerProperties testRunnerProperties;
 
     @Override
-    public Statement apply(Statement base, FrameworkMethod method, Object target) {
-        TestRunnerProperties testRunnerProperties =
-                method.getAnnotation(TestRunnerProperties.class);
+    public Statement apply(Statement base, Description description) {
+        testRunnerProperties = description.getAnnotation(TestRunnerProperties.class);
         if (testRunnerProperties != null) {
             properties = new Properties();
             setProperty(TestProperties.MONITOR_PORT, testRunnerProperties.monitorPort());
@@ -60,6 +60,10 @@ public class TestRunnerRule implements UndeprecatedMethodRule {
             setProperty(TestProperties.TIMEOUT, testRunnerProperties.timeout());
         }
         return base;
+    }
+
+    public Class<?> testClass() {
+        return testRunnerProperties.testClass();
     }
 
     private void setProperty(String key, String value) {
