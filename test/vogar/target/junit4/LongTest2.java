@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,11 @@
  * limitations under the License.
  */
 
-package vogar.target.junit3;
+package vogar.target.junit4;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
-/**
- * A test case that contains multiple tests that will timeout which is used to verify behavior of
- * timeout that occurs while running tests within a single class.
- */
-public class LongTest2 extends TestCase {
-    public LongTest2(String name) {
-        super(name);
-    }
+public class LongTest2  {
 
     private void sleep() {
         try {
@@ -34,34 +27,42 @@ public class LongTest2 extends TestCase {
         }
     }
 
+    @Test
     public void test1() {
         sleep();
     }
 
+    @Test
     public void test2() {
         sleep();
     }
 
+    @Test
     public void test3() {
         sleep();
     }
 
+    @Test
     public void test4() {
         sleep();
     }
 
+    @Test
     public void test5() {
         sleep();
     }
 
+    @Test
     public void test6() {
         sleep();
     }
 
+    @Test
     public void test7() {
         sleep();
     }
 
+    @Test
     public void test8() {
         sleep();
     }

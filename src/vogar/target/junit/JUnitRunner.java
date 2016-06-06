@@ -155,7 +155,7 @@ public final class JUnitRunner implements Runner {
      *   at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:569)
      *   at java.lang.Thread.run(Thread.java:863)
      */
-    public void prepareForDisplay(Throwable t) {
+    private void prepareForDisplay(Throwable t) {
         StackTraceElement[] stackTraceElements = t.getStackTrace();
         boolean foundVogar = false;
 

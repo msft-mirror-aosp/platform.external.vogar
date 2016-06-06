@@ -23,9 +23,7 @@ import vogar.android.AllAndroidTests;
 import vogar.android.DeviceRuntimeAdbTargetTest;
 import vogar.android.DeviceRuntimeSshTargetTest;
 import vogar.android.HostRuntimeLocalTargetTest;
-import vogar.target.AssertTest;
-import vogar.target.JUnitRunnerTest;
-import vogar.target.TestRunnerTest;
+import vogar.target.AllTargetTests;
 
 /**
  * Run the selection of tests that we know work.
@@ -34,11 +32,9 @@ import vogar.target.TestRunnerTest;
  * we switch over to use standard JUnit.
  */
 @SuiteClasses({
-        AssertTest.class,
         AllAndroidTests.class,
-        JUnitRunnerTest.class,
+        AllTargetTests.class,
         ScriptBuilderEscapingTest.class,
-        TestRunnerTest.class,
 })
 @RunWith(Suite.class)
 public class AllTests {

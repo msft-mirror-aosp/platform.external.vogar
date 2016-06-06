@@ -47,7 +47,7 @@ public final class TestRunner {
     @VisibleForTesting final Integer monitorPort;
 
     /** use an atomic reference so the runner can null it out when it is encountered. */
-    @VisibleForTesting final AtomicReference<String> skipPastReference;
+    private final AtomicReference<String> skipPastReference;
     private final int timeoutSeconds;
 
     private final RunnerFactory runnerFactory;
