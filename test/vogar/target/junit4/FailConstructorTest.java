@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,16 @@
  * limitations under the License.
  */
 
-package vogar.target.junit3;
+package vogar.target.junit4;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
-/**
- * A test case that is used to verify behavior of timeout.
- */
-public class LongTest extends TestCase {
-    public LongTest(String name) {
-        super(name);
+public class FailConstructorTest {
+    public FailConstructorTest() {
+        throw new IllegalStateException("Constructor failed");
     }
 
-    public void test() {
-        try {
-            Thread.sleep(2 * 1000);
-        } catch (InterruptedException ignored) {
-        }
+    @Test
+    public void testSuccess() {
     }
 }

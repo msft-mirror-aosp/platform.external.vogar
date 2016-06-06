@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,18 @@
 
 package vogar.target.junit3;
 
-import junit.framework.TestCase;
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 /**
- * A test case that is used to verify behavior of timeout.
+ * A suite that runs long running tests that are used to verify behavior of timeout.
  */
-public class LongTest extends TestCase {
-    public LongTest(String name) {
-        super(name);
-    }
+public class LongSuite {
 
-    public void test() {
-        try {
-            Thread.sleep(2 * 1000);
-        } catch (InterruptedException ignored) {
-        }
+    public static Test suite() {
+        TestSuite testSuite = new TestSuite(LongSuite.class.getName());
+        testSuite.addTestSuite(LongTest.class);
+        testSuite.addTestSuite(LongTest2.class);
+        return testSuite;
     }
 }
