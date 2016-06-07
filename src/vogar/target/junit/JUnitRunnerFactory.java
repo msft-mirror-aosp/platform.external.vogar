@@ -24,8 +24,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 import junit.framework.AssertionFailedError;
 import vogar.monitor.TargetMonitor;
-import vogar.target.Runner;
 import vogar.target.RunnerFactory;
+import vogar.target.TargetRunner;
 import vogar.target.TestEnvironment;
 
 /**
@@ -34,13 +34,13 @@ import vogar.target.TestEnvironment;
 public class JUnitRunnerFactory implements RunnerFactory {
 
     @Override @Nullable
-    public Runner newRunner(TargetMonitor monitor, String qualification,
+    public TargetRunner newRunner(TargetMonitor monitor, String qualification,
             Class<?> klass, AtomicReference<String> skipPastReference,
             TestEnvironment testEnvironment, int timeoutSeconds, boolean profile,
             String[] args) {
         if (supports(klass)) {
             List<VogarTest> tests = createVogarTests(klass, qualification, args);
-            return new JUnitRunner(monitor, skipPastReference, testEnvironment, timeoutSeconds,
+            return new JUnitTargetRunner(monitor, skipPastReference, testEnvironment, timeoutSeconds,
                     tests);
         } else {
             return null;

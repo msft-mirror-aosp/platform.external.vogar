@@ -28,14 +28,14 @@ import java.util.concurrent.atomic.AtomicReference;
 import vogar.Result;
 import vogar.monitor.TargetMonitor;
 import vogar.target.Profiler;
-import vogar.target.Runner;
+import vogar.target.TargetRunner;
 import vogar.target.TestEnvironment;
 import vogar.util.Threads;
 
 /**
  * Adapts a JUnit3 test for use by vogar.
  */
-public final class JUnitRunner implements Runner {
+public final class JUnitTargetRunner implements TargetRunner {
 
     private final TargetMonitor monitor;
     private final AtomicReference<String> skipPastReference;
@@ -48,8 +48,8 @@ public final class JUnitRunner implements Runner {
     private final ExecutorService executor = Executors.newCachedThreadPool(
             Threads.daemonThreadFactory("testrunner"));
 
-    public JUnitRunner(TargetMonitor monitor, AtomicReference<String> skipPastReference,
-                       TestEnvironment testEnvironment, int timeoutSeconds, List<VogarTest> tests) {
+    public JUnitTargetRunner(TargetMonitor monitor, AtomicReference<String> skipPastReference,
+                             TestEnvironment testEnvironment, int timeoutSeconds, List<VogarTest> tests) {
         this.monitor = monitor;
         this.skipPastReference = skipPastReference;
         this.testEnvironment = testEnvironment;

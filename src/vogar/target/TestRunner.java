@@ -223,9 +223,9 @@ public final class TestRunner {
             profiler.setup(profileThreadGroup, profileDepth, profileInterval);
         }
         for (Class<?> klass : classes) {
-            Runner runner;
+            TargetRunner targetRunner;
             try {
-                runner = runnerFactory.newRunner(monitor, qualification, klass,
+                targetRunner = runnerFactory.newRunner(monitor, qualification, klass,
                         skipPastReference, testEnvironment, timeoutSeconds, profile, args);
             } catch (RuntimeException e) {
                 monitor.outcomeStarted(klass.getName());
@@ -234,7 +234,7 @@ public final class TestRunner {
                 return;
             }
 
-            if (runner == null) {
+            if (targetRunner == null) {
                 monitor.outcomeStarted(klass.getName());
                 System.out.println("Skipping " + klass.getName()
                         + ": no associated runner class");
@@ -242,7 +242,7 @@ public final class TestRunner {
                 continue;
             }
 
-            boolean completedNormally = runner.run(profiler);
+            boolean completedNormally = targetRunner.run(profiler);
             if (!completedNormally) {
                 return; // let the caller start another process
             }
@@ -272,14 +272,14 @@ public final class TestRunner {
         }
 
         @Override @Nullable
-        public Runner newRunner(TargetMonitor monitor, String qualification,
+        public TargetRunner newRunner(TargetMonitor monitor, String qualification,
                 Class<?> klass, AtomicReference<String> skipPastReference,
                 TestEnvironment testEnvironment, int timeoutSeconds, boolean profile, String[] args) {
             for (RunnerFactory runnerFactory : runnerFactories) {
-                Runner runner = runnerFactory.newRunner(monitor, qualification, klass,
+                TargetRunner targetRunner = runnerFactory.newRunner(monitor, qualification, klass,
                         skipPastReference, testEnvironment, timeoutSeconds, profile, args);
-                if (runner != null) {
-                    return runner;
+                if (targetRunner != null) {
+                    return targetRunner;
                 }
             }
 

@@ -20,7 +20,7 @@ package vogar.target;
  * Interface between the generic TestRunner and the more specific
  * backend implementations that know how to run specific types of tests.
  */
-public interface Runner {
+public interface TargetRunner {
 
     /**
      * @return true if this run completed normally. Otherwise the calling
