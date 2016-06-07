@@ -25,16 +25,12 @@ public class SuiteReturnsCustomTest {
     }
 
     static class CustomTest implements Test {
-        // This should be marked as @Override but cannot because Vogar's copy of the JUnit classes
-        // does not include these methods. They do have to be implemented though because otherwise
-        // the tests won't compile as they are compiled against real JUnit.
+        @Override
         public int countTestCases() {
             throw new UnsupportedOperationException();
         }
 
-        // This should be marked as @Override but cannot because Vogar's copy of the JUnit classes
-        // does not include these methods. They do have to be implemented though because otherwise
-        // the tests won't compile as they are compiled against real JUnit.
+        @Override
         public void run(TestResult result) {
             throw new UnsupportedOperationException();
         }
