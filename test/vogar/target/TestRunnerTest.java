@@ -75,7 +75,8 @@ public class TestRunnerTest extends AbstractTestRunnerTest {
 
     /**
      * If this fails with a "No classes in package: vogar.target.mixture;" error then the tests are
-     * not being run from a JAR. This is usually only a problem in IDEs.
+     * not being run from a JAR, add {@code -Dvogar-scan-directories-for-tests=true} to the
+     * command line to get it working properly. This is usually only a problem in IDEs.
      */
     @TestRunnerProperties(testClassOrPackage = "vogar.target.mixture")
     @Test
