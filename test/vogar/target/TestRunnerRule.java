@@ -89,7 +89,7 @@ public class TestRunnerRule implements TestRule {
      * Create the {@link TestRunner} using properties provided by {@link TestRunnerProperties} if
      * available.
      *
-     * @param args the command line arguments for the {@link Runner} instance.
+     * @param args the command line arguments for the {@link TargetRunner} instance.
      */
     public TestRunner createTestRunner(String... args) {
         if (properties == null) {
