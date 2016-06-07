@@ -29,6 +29,7 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
   caliper-host \
   caliper-gson-host \
   guavalib \
+  junit \
   mockito-host \
   vogar-jsr305 \
   vogar-kxml-libcore-20110123
@@ -52,14 +53,11 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_SRC_FILES := $(call all-java-files-under, test/)
 
-# The order of libraries is important as there are overlapping classes.
-# vogar must come first so that it's custom implementation of JUnit classes
-# will be replaced by the standard ones.
 LOCAL_STATIC_JAVA_LIBRARIES := \
-	vogar \
 	junit \
 	mockito-host \
-	objenesis-host
+	objenesis-host \
+	vogar
 
 LOCAL_JAVA_LANGUAGE_VERSION := 1.7
 
