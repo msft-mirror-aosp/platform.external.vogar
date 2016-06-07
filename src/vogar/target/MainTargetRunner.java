@@ -23,14 +23,14 @@ import vogar.monitor.TargetMonitor;
 /**
  * Runs a Java class with a main method. This includes jtreg tests.
  */
-public final class MainRunner implements Runner {
+public final class MainTargetRunner implements TargetRunner {
 
     private final TargetMonitor monitor;
     private final Class<?> mainClass;
     private final String[] args;
     private final Method main;
 
-    public MainRunner(TargetMonitor monitor, Class<?> mainClass, String[] args) {
+    public MainTargetRunner(TargetMonitor monitor, Class<?> mainClass, String[] args) {
         this.monitor = monitor;
         this.mainClass = mainClass;
         this.args = args;
