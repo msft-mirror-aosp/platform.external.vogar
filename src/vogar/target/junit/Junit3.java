@@ -30,6 +30,7 @@ import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.junit.runner.Description;
 import vogar.ClassAnalyzer;
 
 /**
@@ -104,7 +105,7 @@ public final class Junit3 {
                         AssertionFailedError cause = new AssertionFailedError(
                                 "Method \"" + methodName + "\" not found");
                         ConfigurationError error = new ConfigurationError(
-                                testClass.getName() + "#" + methodName,
+                                testClass.getName(), methodName,
                                 cause);
                         out.add(error);
                     }
@@ -123,10 +124,10 @@ public final class Junit3 {
             try {
                 test = (junit.framework.Test) suiteMethod.invoke(null);
             } catch (InvocationTargetException e) {
-                out.add(new ConfigurationError(testClass.getName() + "#suite", e.getCause()));
+                out.add(new ConfigurationError(testClass.getName(), "suite", e.getCause()));
                 return;
             } catch (Throwable e) {
-                out.add(new ConfigurationError(testClass.getName() + "#suite", e));
+                out.add(new ConfigurationError(testClass.getName(), "suite", e));
                 return;
             }
 
@@ -135,14 +136,14 @@ public final class Junit3 {
             } else if (test instanceof TestSuite) {
                 getTestSuiteTests(out, (TestSuite) test, methodNames);
             } else {
-                out.add(new ConfigurationError(testClass.getName() + "#suite",
+                out.add(new ConfigurationError(testClass.getName(), "suite",
                         new IllegalStateException("Unknown suite() result: " + test)));
             }
             return;
         } catch (NoSuchMethodException ignored) {
         }
 
-        out.add(new ConfigurationError(testClass.getName() + "#suite",
+        out.add(new ConfigurationError(testClass.getName(), "suite",
                 new IllegalStateException("Not a test case: " + testClass)));
     }
 
@@ -154,7 +155,7 @@ public final class Junit3 {
           } else if (testsOrSuite instanceof TestSuite) {
               getTestSuiteTests(out, (TestSuite) testsOrSuite, methodNames);
           } else if (testsOrSuite != null) {
-              out.add(new ConfigurationError(testsOrSuite.getClass().getName() + "#getClass",
+              out.add(new ConfigurationError(testsOrSuite.getClass().getName(), "getClass",
                       new IllegalStateException("Unknown test: " + testsOrSuite)));
           }
       }
@@ -242,7 +243,7 @@ public final class Junit3 {
             } catch (NoSuchMethodException ignored) {
             }
             String testClassName = testClass.getName();
-            return new ConfigurationError(testClassName + "#" + method.getName(),
+            return new ConfigurationError(testClassName, method.getName(),
                     new AssertionFailedError("Class " + testClassName
                             + " has no public constructor TestCase(String name) or TestCase()"));
         }
@@ -265,6 +266,11 @@ public final class Junit3 {
         @Override public String toString() {
             return testClass.getName() + "#" + method.getName();
         }
+
+        @Override
+        public Description getDescription() {
+            return Description.createTestDescription(testClass, method.getName());
+        }
     }
 
     /**
@@ -284,6 +290,11 @@ public final class Junit3 {
 
         @Override public String toString() {
             return testCase.getClass().getName() + "#" + testCase.getName();
+        }
+
+        @Override
+        public Description getDescription() {
+            return Description.createTestDescription(testClass, testCase.getName());
         }
     }
 }
