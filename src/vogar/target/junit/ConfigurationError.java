@@ -16,12 +16,18 @@
 
 package vogar.target.junit;
 
+import javax.annotation.Nullable;
+import org.junit.runner.Description;
+
 class ConfigurationError implements VogarTest {
-    private final String name;
+    private final String className;
+    @Nullable
+    private final String methodName;
     private final Throwable cause;
 
-    ConfigurationError(String name, Throwable cause) {
-        this.name = name;
+    ConfigurationError(String className, @Nullable String methodName, Throwable cause) {
+        this.className = className;
+        this.methodName = methodName;
         this.cause = cause;
     }
 
@@ -31,7 +37,17 @@ class ConfigurationError implements VogarTest {
     }
 
     @Override
+    public Description getDescription() {
+        if (methodName == null) {
+            return Description.createSuiteDescription(className);
+        } else {
+            String testName = String.format("%s(%s)", methodName, className);
+            return Description.createSuiteDescription(testName);
+        }
+    }
+
+    @Override
     public String toString() {
-        return name;
+        return methodName == null ? className : className + "#" + methodName;
     }
 }
