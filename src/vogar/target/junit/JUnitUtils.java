@@ -16,11 +16,22 @@
 
 package vogar.target.junit;
 
+import org.junit.runner.Description;
+
 /**
  * Utilities for bridging between JUnit and Vogar.
  */
 public class JUnitUtils {
     private JUnitUtils() {}
+
+    /**
+     * Get the name of the test in {@code <class>(#<method>)?} format.
+     */
+    public static String getTestName(Description description) {
+        String className = description.getClassName();
+        String methodName = description.getMethodName();
+        return getTestName(className, methodName);
+    }
 
     /**
      * Get the name of the test in {@code <class>(#<method>)?} format.
