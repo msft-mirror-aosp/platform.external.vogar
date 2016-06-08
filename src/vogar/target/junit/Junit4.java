@@ -31,6 +31,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -98,8 +99,7 @@ public final class Junit4 {
                         cause = new AssertionFailedError("Method \"" + methodName + "\" not found");
                     }
                     ConfigurationError error = new ConfigurationError(
-                            testClass.getName() + "#" + methodName,
-                            cause);
+                            testClass.getName(), methodName, cause);
                     out.add(error);
 
                     // An error happened so just treat this as a JUnit4 test otherwise it will end
@@ -110,7 +110,7 @@ public final class Junit4 {
         }
 
         if (!isJunit4TestClass) {
-            out.add(new ConfigurationError(testClass.getName(),
+            out.add(new ConfigurationError(testClass.getName(), null,
                     new IllegalStateException("Not a test case: " + testClass)));
         }
     }
@@ -122,7 +122,7 @@ public final class Junit4 {
             addAllParameterizedTests(out, testClass, m, argCollection);
         } else {
             String name = m.getName();
-            out.add(new ConfigurationError(testClass.getName() + "#" + name,
+            out.add(new ConfigurationError(testClass.getName(), name,
                     new Exception("Method " + name + " should have no parameters")));
         }
     }
@@ -323,6 +323,15 @@ public final class Junit4 {
         }
 
         protected abstract Object getTestCase() throws Throwable;
+
+        @Override
+        public Description getDescription() {
+            return Description.createTestDescription(testClass, method.getName());
+        }
+
+        @Override public String toString() {
+            return testClass.getName() + "#" + method.getName();
+        }
     }
 
     /**
@@ -348,7 +357,7 @@ public final class Junit4 {
                     }
                 }
 
-                return new ConfigurationError(testClass.getName() + "#" + method.getName(),
+                return new ConfigurationError(testClass.getName(), method.getName(),
                         new Exception("Parameterized test cases must have "
                                 + constructorArgs.length + " arg constructor"));
             }
@@ -363,7 +372,7 @@ public final class Junit4 {
             } catch (NoSuchMethodException ignored) {
             }
 
-            return new ConfigurationError(testClass.getName() + "#" + method.getName(),
+            return new ConfigurationError(testClass.getName(), method.getName(),
                     new Exception("Test cases must have a no-arg or string constructor."));
         }
 
@@ -373,28 +382,6 @@ public final class Junit4 {
             } catch (InvocationTargetException e) {
                 throw e.getCause();
             }
-        }
-
-        @Override public String toString() {
-            return testClass.getName() + "#" + method.getName();
-        }
-    }
-
-    private static class IgnoredTest extends VogarJUnitTest {
-        private IgnoredTest(Class<?> testClass, Method method) {
-            super(testClass, method);
-        }
-
-        @Override public void run() throws Throwable {
-          System.out.println("@Ignored.");
-        }
-
-        @Override protected Object getTestCase() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override public String toString() {
-            return testClass.getName() + "#" + method.getName();
         }
     }
 }

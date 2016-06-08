@@ -25,6 +25,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import vogar.Result;
+import vogar.target.junit.JUnitUtils;
 import vogar.testing.InterceptOutputStreams;
 import vogar.testing.InterceptOutputStreams.Stream;
 
@@ -191,22 +192,12 @@ public abstract class AbstractTestRunnerTest {
 
         private static String outcome(
                 String testClassName, String methodName, String message, Result result) {
-            String testName = testName(testClassName, methodName);
+            String testName = JUnitUtils.getTestName(testClassName, methodName);
 
             return String.format("//00xx{\"outcome\":\"%s\"}\n"
                             + "%s"
                             + "//00xx{\"result\":\"%s\"}\n",
                     testName, message == null ? "" : message, result);
-        }
-
-        private static String testName(String testClassName, String methodName) {
-            String format;
-            if (methodName == null) {
-                format = "%1$s";
-            } else {
-                format = "%1$s#%2$s";
-            }
-            return String.format(format, testClassName, methodName);
         }
 
         private void checkFilteredOutput(String expected) {
