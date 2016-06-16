@@ -30,8 +30,6 @@ import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.ParentRunner;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
-import vogar.Result;
-import vogar.monitor.TargetMonitor;
 import vogar.target.Profiler;
 import vogar.target.TestEnvironment;
 import vogar.util.Threads;
@@ -42,7 +40,6 @@ import vogar.util.Threads;
 public class VogarTestRunner extends ParentRunner<VogarTest> {
 
     private final List<VogarTest> children;
-    private final TargetMonitor monitor;
 
     private final TestEnvironment testEnvironment;
     private final int timeoutSeconds;
@@ -53,13 +50,11 @@ public class VogarTestRunner extends ParentRunner<VogarTest> {
 
     private boolean vmIsUnstable;
 
-    public VogarTestRunner(List<VogarTest> children, TargetMonitor monitor,
-                           TestEnvironment testEnvironment, int timeoutSeconds,
-                           Profiler profiler)
+    public VogarTestRunner(List<VogarTest> children, TestEnvironment testEnvironment,
+                           int timeoutSeconds, Profiler profiler)
             throws InitializationError {
         super(VogarTestRunner.class);
         this.children = children;
-        this.monitor = monitor;
         this.testEnvironment = testEnvironment;
         this.timeoutSeconds = timeoutSeconds;
         this.profiler = profiler;
@@ -97,9 +92,8 @@ public class VogarTestRunner extends ParentRunner<VogarTest> {
      * this reports the timeout stack trace and begins the process of killing
      * this no-longer-trustworthy process.
      */
-    private void runWithTimeout(final VogarTest test) {
+    private void runWithTimeout(final VogarTest test) throws Throwable {
         testEnvironment.reset();
-        monitor.outcomeStarted(test.toString());
 
         // Start the test on a background thread.
         final AtomicReference<Thread> executingThreadReference = new AtomicReference<>();
@@ -134,16 +128,10 @@ public class VogarTestRunner extends ParentRunner<VogarTest> {
                 e.setStackTrace(executingThread.getStackTrace());
             }
             thrown = e;
-        } catch (Exception e) {
-            thrown = e;
         }
 
         if (thrown != null) {
-            prepareForDisplay(thrown);
-            thrown.printStackTrace(System.out);
-            monitor.outcomeFinished(Result.EXEC_FAILED);
-        } else {
-            monitor.outcomeFinished(Result.SUCCESS);
+            throw thrown;
         }
     }
 
@@ -155,65 +143,5 @@ public class VogarTestRunner extends ParentRunner<VogarTest> {
                 ? result.get()
                 : result.get(timeoutSeconds, TimeUnit.SECONDS);
         return thrown;
-    }
-
-    /**
-     * Strip vogar's lines from the stack trace. For example, we'd strip the
-     * first two Assert lines and everything after the testFoo() line in this
-     * stack trace:
-     *
-     *   at junit.framework.Assert.fail(Assert.java:198)
-     *   at junit.framework.Assert.assertEquals(Assert.java:56)
-     *   at junit.framework.Assert.assertEquals(Assert.java:61)
-     *   at libcore.java.net.FooTest.testFoo(FooTest.java:124)
-     *   at java.lang.reflect.Method.invokeNative(Native Method)
-     *   at java.lang.reflect.Method.invoke(Method.java:491)
-     *   at vogar.target.junit.Junit$JUnitTest.run(Junit.java:214)
-     *   at vogar.target.junit.JUnitRunner$1.call(JUnitRunner.java:112)
-     *   at vogar.target.junit.JUnitRunner$1.call(JUnitRunner.java:105)
-     *   at java.util.concurrent.FutureTask$Sync.innerRun(FutureTask.java:305)
-     *   at java.util.concurrent.FutureTask.run(FutureTask.java:137)
-     *   at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1076)
-     *   at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:569)
-     *   at java.lang.Thread.run(Thread.java:863)
-     */
-    public void prepareForDisplay(Throwable t) {
-        StackTraceElement[] stackTraceElements = t.getStackTrace();
-        boolean foundVogar = false;
-
-        int last = stackTraceElements.length - 1;
-        for (; last >= 0; last--) {
-            String className = stackTraceElements[last].getClassName();
-            if (className.startsWith("vogar.target")) {
-                foundVogar = true;
-            } else if (foundVogar
-                    && !className.startsWith("java.lang.reflect")
-                    && !className.startsWith("sun.reflect")
-                    && !className.startsWith("junit.framework")) {
-                if (last < stackTraceElements.length) {
-                    last++;
-                }
-                break;
-            }
-        }
-
-        int first = 0;
-        for (; first < last; first++) {
-            String className = stackTraceElements[first].getClassName();
-            if (!className.startsWith("junit.framework")) {
-                break;
-            }
-        }
-
-        if (first > 0) {
-            first--; // retain one assertSomething() line in the trace
-        }
-
-        if (first < last) {
-            // Arrays.copyOfRange() didn't exist on Froyo
-            StackTraceElement[] copyOfRange = new StackTraceElement[last - first];
-            System.arraycopy(stackTraceElements, first, copyOfRange, 0, last - first);
-            t.setStackTrace(copyOfRange);
-        }
     }
 }
