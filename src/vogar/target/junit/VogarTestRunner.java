@@ -30,7 +30,6 @@ import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.ParentRunner;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
-import vogar.target.Profiler;
 import vogar.target.TestEnvironment;
 import vogar.util.Threads;
 
@@ -46,18 +45,16 @@ public class VogarTestRunner extends ParentRunner<VogarTest> {
 
     private final ExecutorService executor = Executors.newCachedThreadPool(
             Threads.daemonThreadFactory("testrunner"));
-    private final Profiler profiler;
 
     private boolean vmIsUnstable;
 
     public VogarTestRunner(List<VogarTest> children, TestEnvironment testEnvironment,
-                           int timeoutSeconds, Profiler profiler)
+                           int timeoutSeconds)
             throws InitializationError {
         super(VogarTestRunner.class);
         this.children = children;
         this.testEnvironment = testEnvironment;
         this.timeoutSeconds = timeoutSeconds;
-        this.profiler = profiler;
     }
 
     @Override
@@ -101,17 +98,10 @@ public class VogarTestRunner extends ParentRunner<VogarTest> {
             public Throwable call() throws Exception {
                 executingThreadReference.set(Thread.currentThread());
                 try {
-                    if (profiler != null) {
-                        profiler.start();
-                    }
                     test.run();
                     return null;
                 } catch (Throwable throwable) {
                     return throwable;
-                } finally {
-                    if (profiler != null) {
-                        profiler.stop();
-                    }
                 }
             }
         });
