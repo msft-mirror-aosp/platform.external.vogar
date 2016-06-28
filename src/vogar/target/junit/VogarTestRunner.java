@@ -30,7 +30,6 @@ import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.ParentRunner;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
-import vogar.target.TestEnvironment;
 import vogar.util.Threads;
 
 /**
@@ -40,7 +39,6 @@ public class VogarTestRunner extends ParentRunner<VogarTest> {
 
     private final List<VogarTest> children;
 
-    private final TestEnvironment testEnvironment;
     private final int timeoutSeconds;
 
     private final ExecutorService executor = Executors.newCachedThreadPool(
@@ -48,12 +46,10 @@ public class VogarTestRunner extends ParentRunner<VogarTest> {
 
     private boolean vmIsUnstable;
 
-    public VogarTestRunner(List<VogarTest> children, TestEnvironment testEnvironment,
-                           int timeoutSeconds)
+    public VogarTestRunner(List<VogarTest> children, int timeoutSeconds)
             throws InitializationError {
         super(VogarTestRunner.class);
         this.children = children;
-        this.testEnvironment = testEnvironment;
         this.timeoutSeconds = timeoutSeconds;
     }
 
@@ -90,8 +86,6 @@ public class VogarTestRunner extends ParentRunner<VogarTest> {
      * this no-longer-trustworthy process.
      */
     private void runWithTimeout(final VogarTest test) throws Throwable {
-        testEnvironment.reset();
-
         // Start the test on a background thread.
         final AtomicReference<Thread> executingThreadReference = new AtomicReference<>();
         Future<Throwable> result = executor.submit(new Callable<Throwable>() {
