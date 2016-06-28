@@ -29,6 +29,7 @@ import vogar.target.SkipPastFilter;
 import vogar.target.TargetMonitorRunListener;
 import vogar.target.TargetRunner;
 import vogar.target.TestEnvironment;
+import vogar.target.TestEnvironmentRunListener;
 
 /**
  * Adapts a JUnit3 test for use by vogar.
@@ -55,7 +56,7 @@ public final class JUnitTargetRunner implements TargetRunner {
         // Use JUnit infrastructure to run the tests.
         Runner runner;
         try {
-            runner = new VogarTestRunner(tests, testEnvironment, timeoutSeconds);
+            runner = new VogarTestRunner(tests, timeoutSeconds);
         } catch (InitializationError e) {
             throw new IllegalStateException("Could not create VogarTestRunner", e);
         }
@@ -71,8 +72,14 @@ public final class JUnitTargetRunner implements TargetRunner {
 
         try {
             JUnitCore core = new JUnitCore();
+            // The TestEnvironmentRunListener resets static state between tests.
+            core.addListener(new TestEnvironmentRunListener(testEnvironment));
+            // The TargetMonitorRunListener sends the result of the tests back to the main Vogar
+            // process.
             core.addListener(new TargetMonitorRunListener(monitor));
             if (profiler != null) {
+                // The ProfilerRunListener starts the Profiler before the test starts and
+                // stops it afterwards.
                 core.addListener(new ProfilerRunListener(profiler));
             }
             core.run(runner);
