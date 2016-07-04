@@ -16,6 +16,10 @@
 
 package vogar.target.junit;
 
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import javax.annotation.Nullable;
 import org.junit.runner.Description;
 
 /**
@@ -42,5 +46,20 @@ public class JUnitUtils {
         } else {
             return className + "#" + methodName;
         }
+    }
+
+    /**
+     * Merge the qualification and list of method names into a single set.
+     * @param qualification the qualification applied to a class name, i.e. the part after the #
+     * @param args the list of method names
+     * @return The set of method names, possibly empty.
+     */
+    public static Set<String> mergeQualificationAndArgs(@Nullable String qualification, String[] args) {
+        Set<String> methodNames = new LinkedHashSet<>();
+        if (qualification != null) {
+            methodNames.add(qualification);
+        }
+        Collections.addAll(methodNames, args);
+        return methodNames;
     }
 }
