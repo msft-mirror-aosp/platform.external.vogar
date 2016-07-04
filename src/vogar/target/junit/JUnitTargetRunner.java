@@ -16,12 +16,11 @@
 
 package vogar.target.junit;
 
-import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Runner;
 import org.junit.runner.manipulation.NoTestsRemainException;
-import org.junit.runners.model.InitializationError;
+import org.junit.runners.model.RunnerBuilder;
 import vogar.monitor.TargetMonitor;
 import vogar.target.Profiler;
 import vogar.target.ProfilerRunListener;
@@ -40,25 +39,27 @@ public final class JUnitTargetRunner implements TargetRunner {
     private final AtomicReference<String> skipPastReference;
 
     private final TestEnvironment testEnvironment;
-    private final int timeoutSeconds;
-    private final List<VogarTest> tests;
+    private final Class<?> testClass;
+    private final RunnerParams runnerParams;
 
     public JUnitTargetRunner(TargetMonitor monitor, AtomicReference<String> skipPastReference,
-                             TestEnvironment testEnvironment, int timeoutSeconds, List<VogarTest> tests) {
+                             TestEnvironment testEnvironment,
+                             int timeoutSeconds, Class<?> testClass,
+                             String qualification, String[] args) {
         this.monitor = monitor;
         this.skipPastReference = skipPastReference;
         this.testEnvironment = testEnvironment;
-        this.timeoutSeconds = timeoutSeconds;
-        this.tests = tests;
+        this.testClass = testClass;
+
+        runnerParams = new RunnerParams(qualification, args, timeoutSeconds);
     }
 
     public boolean run(Profiler profiler) {
         // Use JUnit infrastructure to run the tests.
-        Runner runner;
-        try {
-            runner = new VogarTestRunner(tests, timeoutSeconds);
-        } catch (InitializationError e) {
-            throw new IllegalStateException("Could not create VogarTestRunner", e);
+        RunnerBuilder builder = new VogarTestRunnerBuilder(runnerParams);
+        Runner runner = builder.safeRunnerForClass(testClass);
+        if (runner == null) {
+            throw new IllegalStateException("Cannot create runner for: " + testClass.getName());
         }
 
         String skipPast = skipPastReference.get();
