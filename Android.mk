@@ -30,7 +30,6 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
   caliper-gson-host \
   guavalib \
   junit \
-  mockito-host \
   vogar-jsr305 \
   vogar-kxml-libcore-20110123
 
