@@ -27,7 +27,7 @@ import org.junit.runners.model.RunnerBuilder;
  * A {@link RunnerBuilder} that will create a {@link VogarTestRunner} for a JUnit3 or JUnit4 based
  * test class.
  */
-public class VogarTestRunnerBuilder extends RunnerBuilder {
+public abstract class VogarTestRunnerBuilder extends RunnerBuilder {
 
     private final RunnerParams runnerParams;
 
@@ -39,12 +39,9 @@ public class VogarTestRunnerBuilder extends RunnerBuilder {
     public Runner runnerForClass(Class<?> testClass) throws Throwable {
         Set<String> methodNames = JUnitUtils.mergeQualificationAndArgs(
                 runnerParams.getQualification(), runnerParams.getArgs());
-        final List<VogarTest> tests;
-        if (Junit3.isJunit3Test(testClass)) {
-            tests = Junit3.classToVogarTests(testClass, methodNames);
-        } else if (Junit4.isJunit4Test(testClass)) {
-            tests = Junit4.classToVogarTests(testClass, methodNames);
-        } else {
+        List<VogarTest> tests = getVogarTests(testClass, methodNames);
+
+        if (tests == null) {
             return null;
         }
 
@@ -58,4 +55,6 @@ public class VogarTestRunnerBuilder extends RunnerBuilder {
 
         return new VogarTestRunner(tests, runnerParams.getTimeoutSeconds());
     }
+
+    public abstract List<VogarTest> getVogarTests(Class<?> testClass, Set<String> methodNames);
 }
