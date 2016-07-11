@@ -18,7 +18,7 @@ package vogar.target.junit4;
 import org.junit.Test;
 import org.mockito.Mock;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Test that fields annotated with {@link Mock @Mock} are correctly initialized with a mock object.
@@ -30,6 +30,6 @@ public class MockitoFieldTest {
 
     @Test
     public void test() {
-        assertTrue("Runnable field was not mocked", runnable != null);
+        assertNotNull("Runnable field was not mocked", runnable);
     }
 }
