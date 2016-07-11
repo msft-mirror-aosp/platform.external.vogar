@@ -329,4 +329,15 @@ public class TestRunnerJUnit4Test extends AbstractTestRunnerTest {
                 .success("working")
                 .completedNormally();
     }
+
+    @TestRunnerProperties(testClass = MockitoFieldTest.class)
+    @Test
+    public void testRunner_MockitoFieldTest() throws Exception {
+        TestRunner runner = testRunnerRule.createTestRunner();
+        runner.run();
+
+        expectedResults()
+                .success("test")
+                .completedNormally();
+    }
 }
