@@ -53,7 +53,7 @@ public abstract class VogarTestRunnerBuilder extends RunnerBuilder {
             }
         });
 
-        return new VogarTestRunner(tests, runnerParams.getTimeoutSeconds());
+        return new VogarTestRunner(tests, runnerParams.getTestRule());
     }
 
     public abstract List<VogarTest> getVogarTests(Class<?> testClass, Set<String> methodNames);
