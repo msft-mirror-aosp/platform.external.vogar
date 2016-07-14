@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Runner;
 import org.junit.runner.manipulation.NoTestsRemainException;
+import org.junit.runner.manipulation.Sorter;
 import org.junit.runners.model.RunnerBuilder;
 import vogar.monitor.TargetMonitor;
 import vogar.target.Profiler;
@@ -34,6 +35,9 @@ import vogar.target.TestEnvironmentRunListener;
  * Adapts a JUnit3 test for use by vogar.
  */
 public final class JUnitTargetRunner implements TargetRunner {
+
+    private static final Sorter DESCRIPTION_SORTER =
+            new Sorter(DescriptionComparator.getInstance());
 
     private final TargetMonitor monitor;
     private final AtomicReference<String> skipPastReference;
@@ -51,7 +55,8 @@ public final class JUnitTargetRunner implements TargetRunner {
         this.testEnvironment = testEnvironment;
         this.testClass = testClass;
 
-        runnerParams = new RunnerParams(qualification, args, timeoutSeconds);
+        TimeoutAndAbortRunRule timeoutRule = new TimeoutAndAbortRunRule(timeoutSeconds);
+        runnerParams = new RunnerParams(qualification, args, timeoutRule);
     }
 
     public boolean run(Profiler profiler) {
@@ -61,6 +66,10 @@ public final class JUnitTargetRunner implements TargetRunner {
         if (runner == null) {
             throw new IllegalStateException("Cannot create runner for: " + testClass.getName());
         }
+
+        // Sort to ensure consistent ordering, that is done before applying any filters as the
+        // SkipPastFilter requires a consistent ordering across runs in order to work properly.
+        DESCRIPTION_SORTER.apply(runner);
 
         String skipPast = skipPastReference.get();
         if (skipPast != null) {
