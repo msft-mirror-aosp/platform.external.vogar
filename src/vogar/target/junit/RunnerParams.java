@@ -16,6 +16,7 @@
 
 package vogar.target.junit;
 
+import org.junit.rules.TestRule;
 import org.junit.runner.Runner;
 import org.junit.runners.model.RunnerBuilder;
 
@@ -30,12 +31,12 @@ public class RunnerParams {
 
     private final String qualification;
     private final String[] args;
-    private final int timeoutSeconds;
+    private final TestRule testRule;
 
-    public RunnerParams(String qualification, String[] args, int timeoutSeconds) {
+    public RunnerParams(String qualification, String[] args, TestRule testRule) {
         this.qualification = qualification;
         this.args = args;
-        this.timeoutSeconds = timeoutSeconds;
+        this.testRule = testRule;
     }
 
     public String getQualification() {
@@ -46,7 +47,7 @@ public class RunnerParams {
         return args;
     }
 
-    public int getTimeoutSeconds() {
-        return timeoutSeconds;
+    public TestRule getTestRule() {
+        return testRule;
     }
 }
