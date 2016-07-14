@@ -13,26 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package vogar.target.junit4;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+package vogar.target.junit;
 
-import static org.junit.Assert.assertNotNull;
+import org.junit.runner.Runner;
+import org.junit.runners.model.RunnerBuilder;
 
 /**
- * Test that fields annotated with {@link Mock @Mock} are correctly initialized with a mock object.
+ * A {@link RunnerBuilder} that always returns a {@link VogarBlockJUnit4ClassRunner}.
  */
-@RunWith(MockitoJUnitRunner.class)
-public class MockitoFieldTest {
+class VogarJUnit4Builder extends RunnerBuilder {
+    private final VogarRunnerBuilder topRunnerBuilder;
 
-    @Mock
-    private Runnable runnable;
+    public VogarJUnit4Builder(VogarRunnerBuilder topRunnerBuilder) {
+        this.topRunnerBuilder = topRunnerBuilder;
+    }
 
-    @Test
-    public void test() {
-        assertNotNull("Runnable field was not mocked", runnable);
+    @Override
+    public Runner runnerForClass(Class<?> testClass) throws Throwable {
+        return new VogarBlockJUnit4ClassRunner(testClass, topRunnerBuilder);
     }
 }

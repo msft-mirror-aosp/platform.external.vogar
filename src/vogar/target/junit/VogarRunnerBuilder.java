@@ -16,11 +16,14 @@
 
 package vogar.target.junit;
 
+import com.google.common.base.Function;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import org.junit.runner.Runner;
+import org.junit.runners.BlockJUnit4ClassRunner;
+import org.junit.runners.JUnit4;
 import org.junit.runners.model.RunnerBuilder;
 
 /**
@@ -29,10 +32,15 @@ import org.junit.runners.model.RunnerBuilder;
  */
 public class VogarRunnerBuilder extends RunnerBuilder {
 
+    private static final ReplaceRunnerFunction MAPPING_FUNCTION = new ReplaceRunnerFunction();
+
+    private final RunnerParams runnerParams;
     private final Collection<RunnerBuilder> builders;
 
     public VogarRunnerBuilder(RunnerParams runnerParams) {
+        this.runnerParams = runnerParams;
         builders = new ArrayList<>();
+        builders.add(new MappingAnnotatedBuilder(this, MAPPING_FUNCTION));
         builders.add(new VogarTestRunnerBuilder(runnerParams) {
             @Override
             public List<VogarTest> getVogarTests(Class<?> testClass, Set<String> methodNames) {
@@ -43,16 +51,11 @@ public class VogarRunnerBuilder extends RunnerBuilder {
                 }
             }
         });
-        builders.add(new VogarTestRunnerBuilder(runnerParams) {
-            @Override
-            public List<VogarTest> getVogarTests(Class<?> testClass, Set<String> methodNames) {
-                if (Junit4.isJunit4Test(testClass)) {
-                    return Junit4.classToVogarTests(testClass, methodNames);
-                } else {
-                    return null;
-                }
-            }
-        });
+        builders.add(new VogarJUnit4Builder(this));
+    }
+
+    public RunnerParams getRunnerParams() {
+        return runnerParams;
     }
 
     @Override
@@ -67,4 +70,15 @@ public class VogarRunnerBuilder extends RunnerBuilder {
         return null;
     }
 
+    private static class ReplaceRunnerFunction
+            implements Function<Class<? extends Runner>, Class<? extends Runner>> {
+        @Override
+        public Class<? extends Runner> apply(Class<? extends Runner> runnerClass) {
+            if (runnerClass == JUnit4.class || runnerClass == BlockJUnit4ClassRunner.class) {
+                return VogarBlockJUnit4ClassRunner.class;
+            } else {
+                return runnerClass;
+            }
+        }
+    }
 }

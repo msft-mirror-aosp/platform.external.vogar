@@ -17,20 +17,12 @@
 package vogar.target.junit;
 
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicReference;
+import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.ParentRunner;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
-import vogar.util.Threads;
 
 /**
  * A {@link org.junit.runner.Runner} that can run a list of {@link VogarTest} instances.
@@ -39,18 +31,13 @@ public class VogarTestRunner extends ParentRunner<VogarTest> {
 
     private final List<VogarTest> children;
 
-    private final int timeoutSeconds;
+    private final TestRule testRule;
 
-    private final ExecutorService executor = Executors.newCachedThreadPool(
-            Threads.daemonThreadFactory("testrunner"));
-
-    private boolean vmIsUnstable;
-
-    public VogarTestRunner(List<VogarTest> children, int timeoutSeconds)
+    public VogarTestRunner(List<VogarTest> children, TestRule testRule)
             throws InitializationError {
         super(VogarTestRunner.class);
         this.children = children;
-        this.timeoutSeconds = timeoutSeconds;
+        this.testRule = testRule;
     }
 
     @Override
@@ -65,67 +52,14 @@ public class VogarTestRunner extends ParentRunner<VogarTest> {
 
     @Override
     protected void runChild(final VogarTest child, RunNotifier notifier) {
-        runLeaf(new Statement() {
+        Description description = describeChild(child);
+        Statement statement = new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                runWithTimeout(child);
+                child.run();
             }
-        }, describeChild(child), notifier);
-
-        // Abort the test run if the VM is deemed unstable, i.e. the previous test timed out.
-        // Throw this after the results of the previous test have been reported.
-        if (vmIsUnstable) {
-            throw new VmIsUnstableException();
-        }
-    }
-
-    /**
-     * Runs the test on another thread. If the test completes before the
-     * timeout, this reports the result normally. But if the test times out,
-     * this reports the timeout stack trace and begins the process of killing
-     * this no-longer-trustworthy process.
-     */
-    private void runWithTimeout(final VogarTest test) throws Throwable {
-        // Start the test on a background thread.
-        final AtomicReference<Thread> executingThreadReference = new AtomicReference<>();
-        Future<Throwable> result = executor.submit(new Callable<Throwable>() {
-            public Throwable call() throws Exception {
-                executingThreadReference.set(Thread.currentThread());
-                try {
-                    test.run();
-                    return null;
-                } catch (Throwable throwable) {
-                    return throwable;
-                }
-            }
-        });
-
-        // Wait until either the result arrives or the test times out.
-        Throwable thrown;
-        try {
-            thrown = getThrowable(result);
-        } catch (TimeoutException e) {
-            vmIsUnstable = true;
-            Thread executingThread = executingThreadReference.get();
-            if (executingThread != null) {
-                executingThread.interrupt();
-                e.setStackTrace(executingThread.getStackTrace());
-            }
-            thrown = e;
-        }
-
-        if (thrown != null) {
-            throw thrown;
-        }
-    }
-
-    @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
-    private Throwable getThrowable(Future<Throwable> result)
-            throws InterruptedException, ExecutionException, TimeoutException {
-        Throwable thrown;
-        thrown = timeoutSeconds == 0
-                ? result.get()
-                : result.get(timeoutSeconds, TimeUnit.SECONDS);
-        return thrown;
+        };
+        statement = testRule.apply(statement, description);
+        ParentRunnerHelper.abortingRunLeaf(statement, description, notifier);
     }
 }

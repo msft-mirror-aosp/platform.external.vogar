@@ -22,4 +22,8 @@ import org.junit.runner.notification.StoppedByUserException;
  * A special exception used to abort a test run due to the VM becoming unstable.
  */
 public class VmIsUnstableException extends StoppedByUserException {
+
+    public VmIsUnstableException(Throwable cause) {
+        initCause(cause);
+    }
 }
