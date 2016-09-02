@@ -360,4 +360,16 @@ public class TestRunnerJUnit4Test extends AbstractTestRunnerTest {
                 .success("test")
                 .completedNormally();
     }
+
+    @TestRunnerProperties(testClass = AssumeTest.class)
+    @Test
+    public void testRunner_AssumeTest() throws Exception {
+        TestRunner runner = testRunnerRule.createTestRunner();
+        runner.run();
+
+        expectedResults()
+                .success("assumesCorrectly", "Assumption was correct\n")
+                .success("assumesIncorrectly")
+                .completedNormally();
+    }
 }
