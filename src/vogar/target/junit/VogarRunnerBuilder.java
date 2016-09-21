@@ -19,12 +19,11 @@ package vogar.target.junit;
 import com.google.common.base.Function;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-import java.util.Set;
 import org.junit.runner.Runner;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.JUnit4;
 import org.junit.runners.model.RunnerBuilder;
+import vogar.target.junit.junit3.AlternateSuiteMethodBuilder;
 
 /**
  * A composite {@link RunnerBuilder} that will ask each of its list of {@link RunnerBuilder} to
@@ -41,16 +40,8 @@ public class VogarRunnerBuilder extends RunnerBuilder {
         this.runnerParams = runnerParams;
         builders = new ArrayList<>();
         builders.add(new MappingAnnotatedBuilder(this, MAPPING_FUNCTION));
-        builders.add(new VogarTestRunnerBuilder(runnerParams) {
-            @Override
-            public List<VogarTest> getVogarTests(Class<?> testClass, Set<String> methodNames) {
-                if (Junit3.isJunit3Test(testClass)) {
-                    return Junit3.classToVogarTests(testClass, methodNames);
-                } else {
-                    return null;
-                }
-            }
-        });
+        builders.add(new AlternateSuiteMethodBuilder(runnerParams));
+        builders.add(new VogarTestCaseBuilder(runnerParams));
         builders.add(new VogarJUnit4Builder(this));
     }
 
