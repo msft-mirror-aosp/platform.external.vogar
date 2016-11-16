@@ -71,7 +71,7 @@ public final class Junit4 {
         //     @Test
         //     public void example() { ... }
         // }
-        for (Method m : klass.getDeclaredMethods()) {
+        for (Method m : klass.getMethods()) {
             for (Annotation a : m.getAnnotations()) {
                 if (org.junit.Test.class.isAssignableFrom(a.annotationType())) {
                     return true;
