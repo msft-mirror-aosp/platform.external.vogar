@@ -29,7 +29,7 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
   caliper-host \
   caliper-gson-host \
   guavalib \
-  junit \
+  junit-host \
   vogar-jsr305 \
   vogar-kxml-libcore-20110123
 
@@ -53,7 +53,7 @@ LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_SRC_FILES := $(call all-java-files-under, test/)
 
 LOCAL_STATIC_JAVA_LIBRARIES := \
-	junit \
+	junit-host \
 	mockito-host \
 	objenesis-host \
 	vogar
