@@ -163,6 +163,7 @@ public final class BuildActionTask extends Task {
 
         compiler.outputJack(jackFile.getPath())
                 .importResource(resourcesDir.getPath())
+                .extra(run.jackArgs)
                 .compile(sourceFiles);
     }
 
