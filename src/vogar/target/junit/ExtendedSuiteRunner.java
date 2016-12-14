@@ -34,7 +34,10 @@ public class ExtendedSuiteRunner extends Suite {
         this.name = name;
     }
 
-    private static class Dummy {
+    /**
+     * ParentRunner requires that the class be public.
+     */
+    public static class Dummy {
     }
 
     @Override
