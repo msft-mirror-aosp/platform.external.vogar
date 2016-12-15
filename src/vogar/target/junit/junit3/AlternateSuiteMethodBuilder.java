@@ -24,6 +24,7 @@ import org.junit.internal.runners.SuiteMethod;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
 import org.junit.runners.Suite;
+import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
 import vogar.ClassAnalyzer;
 import vogar.target.junit.ErrorRunner;
@@ -71,8 +72,18 @@ public class AlternateSuiteMethodBuilder extends RunnerBuilder {
                 return new ErrorRunner(description, t);
             }
 
-            return new TestSuiteTransformer<>(new TestSuiteRunnerFactory(runnerParams))
-                    .transform(testClass, test);
+            try {
+                return new TestSuiteTransformer<>(new TestSuiteRunnerFactory(runnerParams))
+                        .transform(testClass, test);
+            } catch (IllegalStateException e) {
+                // Unwrap the cause if it is an InitializationError so that meaningful errors are
+                // reported.
+                Throwable cause = e.getCause();
+                if (cause instanceof InitializationError) {
+                    throw (InitializationError) cause;
+                }
+                throw e;
+            }
         }
 
         return null;

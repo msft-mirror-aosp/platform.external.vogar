@@ -103,10 +103,14 @@ public class VogarBlockJUnit4ClassRunner
      */
     private static class MissingFrameworkMethod extends FrameworkMethod {
         private static final Annotation[] NO_ANNOTATIONS = new Annotation[0];
+        private static final Method DUMMY_METHOD;
+        static {
+            DUMMY_METHOD = Object.class.getMethods()[0];
+        }
         private final String name;
 
         public MissingFrameworkMethod(String name) {
-            super(null);
+            super(DUMMY_METHOD);
             this.name = name;
         }
 

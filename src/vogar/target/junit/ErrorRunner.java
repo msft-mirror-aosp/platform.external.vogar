@@ -23,6 +23,7 @@ import org.junit.runner.manipulation.Sortable;
 import org.junit.runner.manipulation.Sorter;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunNotifier;
+import org.junit.runners.model.InitializationError;
 
 /**
  * A {@link Runner} that will report a failure, used to defer error reporting until tests are run.
@@ -40,6 +41,15 @@ public class ErrorRunner extends Runner implements Sortable {
     public ErrorRunner(Description description, Throwable throwable) {
         this.description = description;
         this.throwable = throwable;
+
+        // If the throwable is an InitializationError then add any of its causes as suppressed
+        // exceptions.
+        if (throwable instanceof InitializationError) {
+            InitializationError error = (InitializationError) throwable;
+            for (Throwable cause : error.getCauses()) {
+                throwable.addSuppressed(cause);
+            }
+        }
     }
 
     @Override
