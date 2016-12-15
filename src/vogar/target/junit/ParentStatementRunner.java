@@ -72,6 +72,9 @@ public class ParentStatementRunner extends ParentRunner<DescribableStatement> {
         ParentRunnerHelper.abortingRunLeaf(statement, description, notifier);
     }
 
-    private static class Dummy {
+    /**
+     * ParentRunner requires that the class be public.
+     */
+    public static class Dummy {
     }
 }
