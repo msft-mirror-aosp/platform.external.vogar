@@ -561,6 +561,17 @@ public final class Vogar {
             return false;
         }
 
+        // When using --benchmark,
+        // caliper will spawn each benchmark as a new process (default dalvikvm).
+        //
+        // When using also --mode app_process, we want that new process to be app_process.
+        //
+        // Pass --vm app_process to it so that it knows not to use dalvikvm.
+        if ("app_process".equals(vmCommand) && benchmark) {
+          targetArgs.add("--vm");
+          targetArgs.add("app_process");
+        }
+
         return true;
     }
 
