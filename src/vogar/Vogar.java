@@ -252,7 +252,7 @@ public final class Vogar {
         System.out.println("  --toolchain <jdk|jack>: Which toolchain to use.");
         System.out.println("      Default is: " + toolchain);
         System.out.println();
-        System.out.println("  --language <J17|JN>: Which language level to use.");
+        System.out.println("  --language <J17|JN|JO>: Which language level to use.");
         System.out.println("      Default is: " + language);
         System.out.println();
         System.out.println("  --ssh <host:port>: target a remote machine via SSH.");
