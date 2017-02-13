@@ -210,7 +210,7 @@ public final class Vogar {
     private String toolchain = "jack";
 
     @Option(names = { "--language" })
-    Language language = Language.JN;
+    Language language = Language.JO;
 
     @Option(names = { "--check-jni" })
     boolean checkJni = true;
