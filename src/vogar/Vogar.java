@@ -143,6 +143,9 @@ public final class Vogar {
     @Option(names = { "--jack-arg" })
     List<String> jackArgs = new ArrayList<String>();
 
+    @Option(names = { "--multidex" })
+    boolean multidex = true;
+
     @Option(names = { "--use-bootclasspath" })
     boolean useBootClasspath = false;
 
