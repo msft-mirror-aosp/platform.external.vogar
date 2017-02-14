@@ -144,7 +144,7 @@ public final class DeviceRuntime implements Mode {
                     action, localDex);
         } else {
             dex = new DexTask(run.androidSdk, classpath, run.benchmark, name, classpathElement,
-                    action, localDex);
+                    action, localDex, run.multidex);
         }
         return dex;
     }
