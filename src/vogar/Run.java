@@ -82,6 +82,7 @@ public final class Run {
     public final Language language;
     public final List<String> javacArgs;
     public final List<String> jackArgs;
+    public final boolean multidex;
     public final boolean benchmark;
     public final File runnerDir;
     public final boolean cleanBefore;
@@ -142,6 +143,7 @@ public final class Run {
         this.language = vogar.language;
         this.javacArgs = vogar.javacArgs;
         this.jackArgs = vogar.jackArgs;
+        this.multidex = vogar.multidex;
         this.javaHome = vogar.javaHome;
         this.largeTimeoutSeconds = vogar.timeoutSeconds * Vogar.LARGE_TIMEOUT_MULTIPLIER;
         this.maxConcurrentActions = (vogar.stream || vogar.modeId == ModeId.ACTIVITY)
