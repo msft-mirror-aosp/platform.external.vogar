@@ -152,9 +152,20 @@ public class RunActionTask extends Task implements HostMonitor.Handler {
             vmCommandBuilder.args("--skipPast", skipPast);
         }
 
-        // Forward timeout value to Caliper which has its own separate timeout.
+        // Forward specific parameters to Caliper.
         if (run.runnerType.supportsCaliper()) {
+          // Forward timeout value to Caliper which has its own separate timeout.
           vmCommandBuilder.args("--time-limit", String.format("%ds", timeoutSeconds));
+
+          // This configuration runs about 15x faster than not having this configuration.
+          vmCommandBuilder.args(
+                  // Don't run GC before each measurement. That will take forever.
+                  "-Cinstrument.runtime.options.gcBeforeEach=false",
+                  // Warmup super-quick, don't take more than 1sec.
+                  "-Cinstrument.runtime.options.warmup=1s",
+                  // Don't measure things 9 times (default) because microbenchmark already
+                  // measure themselves millions of times.
+                  "-Cinstrument.runtime.options.measurements=1");
         }
         return vmCommandBuilder
                 .temp(workingDirectory)
