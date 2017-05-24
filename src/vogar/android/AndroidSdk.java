@@ -45,13 +45,7 @@ public class AndroidSdk {
     private final Md5Cache dexCache;
 
     public static Collection<File> defaultExpectations() {
-        File[] files = new File("libcore/expectations").listFiles(new FilenameFilter() {
-            // ignore obviously temporary files
-            public boolean accept(File dir, String name) {
-                return !name.endsWith("~") && !name.startsWith(".");
-            }
-        });
-        return (files != null) ? Arrays.asList(files) : Collections.<File>emptyList();
+        return Collections.singletonList(new File("libcore/expectations/knownfailures.txt"));
     }
 
     /**
