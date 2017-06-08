@@ -416,6 +416,10 @@ public final class Vogar {
         System.out.println("  --jack-arg <argument>: include the specified argument when invoking");
         System.out.println("      jack. Examples: --jack-arg -D --jack-arg jack.assert.policy=always");
         System.out.println();
+        System.out.println("  --multidex: whether to use native multidex support");
+        System.out.println("      Disable with --no-multidex.");
+        System.out.println("      Default is: " + multidex);
+        System.out.println();
         System.out.println("  --dalvik-cache <argument>: override default dalvik-cache location.");
         System.out.println("      Default is: " + dalvikCache);
         System.out.println();
