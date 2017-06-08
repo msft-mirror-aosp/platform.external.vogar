@@ -188,24 +188,6 @@ public final class Vogar {
     @Option(names = { "--open-bugs-command" })
     String openBugsCommand;
 
-    @Option(names = { "--profile" })
-    boolean profile = false;
-
-    @Option(names = { "--profile-binary" })
-    boolean profileBinary = false;
-
-    @Option(names = { "--profile-file" })
-    File profileFile;
-
-    @Option(names = { "--profile-depth" })
-    int profileDepth = 4;
-
-    @Option(names = { "--profile-interval" })
-    int profileInterval = 10;
-
-    @Option(names = { "--profile-thread-group" })
-    boolean profileThreadGroup = false;
-
     @Option(names = { "--test-only" })
     boolean testOnly = false;
 
@@ -271,23 +253,6 @@ public final class Vogar {
         System.out.println("      If you specify this without specifying --runner-type then it");
         System.out.println("      assumes --runner-type="
                 + RunnerType.CALIPER.name().toLowerCase());
-        System.out.println();
-        System.out.println("  --profile: run with a profiler to produce an hprof file.");
-        System.out.println();
-        System.out.println("  --profile-binary: produce a binary hprof file instead of the default ASCII.");
-        System.out.println();
-        System.out.println("  --profile-file <filename>: filename for hprof profile data.");
-        System.out.println("      Default is java.hprof.txt in ASCII mode and java.hprof in binary mode.");
-        System.out.println();
-        System.out.println("  --profile-depth <count>: number of frames in profile stack traces.");
-        System.out.println("      Default is: " + profileDepth);
-        System.out.println();
-        System.out.println("  --profile-interval <milliseconds>: interval between profile samples.");
-        System.out.println("      Default is: " + profileInterval);
-        System.out.println();
-        System.out.println("  --profile-thread-group: profile thread group instead of single thread in dalvikvms");
-        System.out.println("      Note --mode jvm only supports full VM profiling.");
-        System.out.println("      Default is: " + profileThreadGroup);
         System.out.println();
         System.out.println("  --invoke-with: provide a command to invoke the VM with. Examples:");
         System.out.println("      --mode host --invoke-with \"valgrind --leak-check=full\"");
@@ -509,10 +474,6 @@ public final class Vogar {
 
         if (firstMonitorPort == -1) {
             firstMonitorPort = modeId.isLocal() ? 8788 : 8787;
-        }
-
-        if (profileFile == null) {
-            profileFile = new File(profileBinary ? "java.hprof" : "java.hprof.txt");
         }
 
         // separate the actions and the target args
