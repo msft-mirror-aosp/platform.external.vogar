@@ -215,6 +215,16 @@ public final class Run {
         return new File(localTemp + "/" + Strings.join("/", path));
     }
 
+    public final File localDir(Object... path) {
+      String joinedPath = localTemp + "/" + Strings.join("/", path);
+      File f = new File(joinedPath);
+      f.mkdirs();
+      if (!f.exists()) {
+        throw new AssertionError("Failed to mkdirs: " + joinedPath);
+      }
+      return f;
+    }
+
     private File vogarJar() {
         URL jarUrl = Vogar.class.getResource(VOGAR_CLASS_RESOURCE_PATH);
         if (jarUrl == null) {
