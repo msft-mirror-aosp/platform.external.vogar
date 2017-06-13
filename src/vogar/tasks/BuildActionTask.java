@@ -137,7 +137,7 @@ public final class BuildActionTask extends Task {
             compiler.setDebug();
         }
         compiler.sourceVersion(run.language.getJackSourceVersion());
-        compiler.minApiLevel(String.valueOf(run.language.getJackMinApilevel()));
+        compiler.minApiLevel(String.valueOf(run.language.getMinApiLevel()));
         Set<File> sourceFiles = Sets.newHashSet();
 
         // Add the source files to be compiled.
