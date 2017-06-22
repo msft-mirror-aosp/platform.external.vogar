@@ -20,19 +20,22 @@ package vogar;
  * An enum for the different language variants supported by vogar.
  */
 public enum Language {
-  J17("1.7", "1.7", "21"),
-  JN("1.8", "1.8", "24"),
-  JO("1.8", "1.8", "o-b1"),
+  J17("1.7", "1.7",  "21", "21"),
+  JN("1.8", "1.8", "24", "24"),
+  JO("1.8", "1.8", "o-b1", "26"),
   // Latest platform version.
-  CUR("1.8", "1.8", "10000");
+  CUR("1.8", "1.8", "o-b1", "10000");
 
   private final String javacSourceAndTarget;
   private final String jackSourceVersion;
+  private final String jackMinApiLevel;
   private final String minApiLevel;
 
-  Language(String javacSourceAndTarget, String jackSourceVersion, String minApiLevel) {
+  Language(String javacSourceAndTarget, String jackSourceVersion, String jackMinApiLevel,
+          String minApiLevel) {
     this.javacSourceAndTarget = javacSourceAndTarget;
     this.jackSourceVersion = jackSourceVersion;
+    this.jackMinApiLevel = jackMinApiLevel;
     this.minApiLevel = minApiLevel;
   }
 
@@ -42,6 +45,10 @@ public enum Language {
 
   public String getJackSourceVersion() {
     return jackSourceVersion;
+  }
+
+  public String getJackMinApiLevel() {
+    return jackMinApiLevel;
   }
 
   public String getMinApiLevel() {
