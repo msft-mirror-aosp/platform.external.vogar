@@ -192,7 +192,7 @@ public final class Vogar {
     boolean testOnly = false;
 
     @Option(names = { "--toolchain" })
-    private String toolchain = "jack";
+    private String toolchain = "jdk";
 
     @Option(names = { "--language" })
     Language language = Language.CUR;
