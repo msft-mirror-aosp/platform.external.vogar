@@ -153,10 +153,18 @@ public class AndroidSdk {
                 outDir += "/";
             }
 
+            String hostOutDir = System.getenv("ANDROID_HOST_OUT");
+            if (!Strings.isNullOrEmpty(hostOutDir)) {
+                log.verbose("Using ANDROID_HOST_OUT to find host libraries.");
+            } else {
+                // Handle the case where lunch hasn't been run. Guess the architecture.
+                log.warn("ANDROID_HOST_OUT not set. Assuming linux-x86");
+                hostOutDir = outDir + "/host/linux-x86";
+            }
+
             if (!useJack) {
-                File desugarJar = null;
-                String desugarPattern = outDir + "host/linux-x86/framework/desugar.jar";
-                desugarJar = new File(desugarPattern);
+                String desugarPattern = hostOutDir + "/framework/desugar.jar";
+                File desugarJar = new File(desugarPattern);
 
                 if (!desugarJar.exists()) {
                     throw new RuntimeException("Could not find " + desugarPattern);
