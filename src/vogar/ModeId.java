@@ -38,13 +38,10 @@ public enum ModeId {
     // See PRODUCT_BOOT_JARS in build/make/target/product/core_tiny.mk
     private static final String[] APP_JARS = new String[] {
             "legacy-test",
-            "bouncycastle",
             "framework",
             "telephony-common",
             "voip-common",
             "ims-common",
-            "apache-xml",
-            "nullwebview",
             "org.apache.http.legacy.boot",
             "android.hidl.base-V1.0-java",
             "android.hidl.manager-V1.0-java"
@@ -53,10 +50,10 @@ public enum ModeId {
 
     // $BOOTCLASSPATH for art+libcore only.
     // (Intended for use with dalvikvm only.)
-    // See TARGET_CORE_JARS in art/build/Android.common_path.mk
+    // See TARGET_CORE_JARS in android/build/make/core/envsetup.mk
     private static final String[] DEVICE_JARS = new String[] {
-            "core-libart",
             "core-oj",
+            "core-libart",
             "conscrypt",
             "okhttp",
             "bouncycastle",
@@ -66,10 +63,10 @@ public enum ModeId {
     // $BOOTCLASSPATH for art+libcore only (host version).
     // - Must be same as DEVICE_JARS + "hostdex" suffix.
     // (Intended for use with dalvikvm only.)
-    // See HOST_CORE_JARS in art/build/Android.common_path.mk
+    // See HOST_CORE_JARS in android/build/make/core/envsetup.mk
     private static final String[] HOST_JARS = new String[] {
-            "core-libart-hostdex",
             "core-oj-hostdex",
+            "core-libart-hostdex",
             "conscrypt-hostdex",
             "okhttp-hostdex",
             "bouncycastle-hostdex",
