@@ -152,7 +152,7 @@ public final class Driver {
         Expectation expectation = run.expectationStore.get(action.getName());
         boolean useLargeTimeout = expectation.getTags().contains("large");
         File jar;
-        if (run.useJack) {
+        if (run.toolchain == Toolchain.JACK) {
             jar = run.hostJack(action);
         } else {
             jar = run.hostJar(action);
