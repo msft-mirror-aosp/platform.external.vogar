@@ -21,15 +21,15 @@ import java.util.Arrays;
 import java.util.List;
 
 public enum ModeId {
-    /** ART (works >= L) */
+    /** (Target) dalvikvm */
     DEVICE,
-    /** ART (works >= L) */
+    /** (Host) dalvikvm */
     HOST,
-    /** Local Java */
+    /** (Host) java */
     JVM,
-    /** Device, execution as an Android app with Zygote */
+    /** (Target), execution as an Android app with Zygote */
     ACTIVITY,
-    /** Device using app_process binary */
+    /** (Target) app_process */
     APP_PROCESS;
 
     // $BOOTCLASSPATH defined by system/core/rootdir/init.rc
@@ -104,6 +104,11 @@ public enum ModeId {
                 || ((this == HOST || this == DEVICE) && (variant == Variant.X64));
     }
 
+    public boolean supportsToolchain(Toolchain toolchain) {
+        return (this == JVM && toolchain == Toolchain.JAVAC)
+                || (this != JVM && toolchain != Toolchain.JAVAC);
+    }
+
     /** The default command to use for the mode unless overridden by --vm-command */
     public String defaultVmCommand(Variant variant) {
         if (!supportsVariant(variant)) {
@@ -152,5 +157,15 @@ public enum ModeId {
                 throw new IllegalArgumentException("Unsupported mode: " + this);
         }
         return jarNames.toArray(new String[jarNames.size()]);
+    }
+
+    /** Returns the default toolchain to use with the mode if not overriden. */
+    public Toolchain defaultToolchain() {
+        switch (this) {
+            case JVM:
+                return Toolchain.JAVAC;
+            default:
+                return Toolchain.DX;
+        }
     }
 }

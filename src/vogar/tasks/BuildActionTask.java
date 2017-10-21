@@ -36,6 +36,7 @@ import vogar.Outcome;
 import vogar.Result;
 import vogar.Run;
 import vogar.TestProperties;
+import vogar.Toolchain;
 import vogar.commands.Command;
 import vogar.commands.CommandFailedException;
 import vogar.commands.Jack;
@@ -62,7 +63,7 @@ public final class BuildActionTask extends Task {
 
     @Override protected Result execute() throws Exception {
         try {
-            if (run.useJack) {
+            if (run.toolchain == Toolchain.JACK) {
                 compileWithJack(action, outputFile);
             } else {
                 compile(action, outputFile);

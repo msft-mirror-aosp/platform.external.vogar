@@ -103,12 +103,12 @@ public final class Run {
     public final OutcomeStore outcomeStore;
     public final TaskQueue taskQueue;
     public final RunnerType runnerType;
-    public final boolean useJack;
+    public final Toolchain toolchain;
     public final boolean checkJni;
     public final boolean debugging;
     public final Md5Cache jackCache;
 
-    public Run(Vogar vogar, boolean useJack, Console console, Mkdir mkdir, AndroidSdk androidSdk,
+    public Run(Vogar vogar, Toolchain toolchain, Console console, Mkdir mkdir, AndroidSdk androidSdk,
             Rm rm, Target target, File runnerDir)
             throws IOException {
         this.console = console;
@@ -118,8 +118,9 @@ public final class Run {
 
         this.target = target;
 
-        this.useJack = useJack;
-        this.jackCache = useJack ? new Md5Cache(log, "jack", new HostFileCache(log, mkdir)) : null;
+        this.toolchain = toolchain;
+        this.jackCache = toolchain == Toolchain.JACK
+                ? new Md5Cache(log, "jack", new HostFileCache(log, mkdir)) : null;
         this.vmCommand = vogar.vmCommand;
         this.dalvikCache = vogar.dalvikCache;
         this.additionalVmArgs = vogar.vmArgs;
