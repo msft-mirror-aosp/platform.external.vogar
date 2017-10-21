@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import vogar.Action;
+import vogar.Toolchain;
 import vogar.Variant;
 import vogar.Classpath;
 import vogar.Mode;
@@ -141,7 +142,7 @@ public final class DeviceRuntime implements Mode {
     private Task newCreateDexJarTask(Classpath classpath, File classpathElement, String name,
             Action action, File localDex, File localTempDir) {
         Task dex;
-        if (run.useJack) {
+        if (run.toolchain == Toolchain.JACK) {
             dex = new JackDexTask(run, classpath, run.benchmark, name, classpathElement,
                     action, localDex);
         } else {
