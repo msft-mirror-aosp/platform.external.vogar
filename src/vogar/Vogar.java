@@ -50,8 +50,6 @@ public final class Vogar {
     private String[] configArgs;
     public final static Console console = new Console.StreamingConsole();
 
-    private boolean useJack;
-
     public static File dotFile (String name) {
         return new File(System.getProperty("user.home", "."), name);
     }
@@ -192,7 +190,7 @@ public final class Vogar {
     boolean testOnly = false;
 
     @Option(names = { "--toolchain" })
-    private String toolchain = "jdk";
+    Toolchain toolchain = null;
 
     @Option(names = { "--language" })
     Language language = Language.CUR;
@@ -218,24 +216,27 @@ public final class Vogar {
         System.out.println("      When passing in a JUnit test class, it may have \"#method_name\"");
         System.out.println("      appended to it, to specify a single test method.");
         System.out.println();
-        System.out.println("  [args]: arguments passed to the target process. This is only useful when");
+        System.out.println("  [target args]: arguments passed to the target process. This is only useful when");
         System.out.println("      the target process is a Caliper benchmark or main method.");
         System.out.println();
         System.out.println("GENERAL OPTIONS");
         System.out.println();
-        System.out.println("  --mode <activity|device|host|jvm>: specify which environment to run in.");
-        System.out.println("      activity: runs in an Android application on a device or emulator");
-        System.out.println("      device: runs in an ART runtime on a device or emulator");
-        System.out.println("      host: runs in an ART runtime on the local desktop built with any lunch combo.");
-        System.out.println("      jvm: runs in a Java VM on the local desktop");
+        System.out.println("  --mode <ACTIVITY|APP_PROCESS|DEVICE|HOST|JVM>: specify which environment to run in.");
+        System.out.println("      ACTIVITY: runs in an Android application on a device or emulator");
+        System.out.println("      APP_PROCESS: runs in an app_process runtime on a device or emulator");
+        System.out.println("      DEVICE: runs in an ART runtime on a device or emulator");
+        System.out.println("      HOST: runs in an ART runtime on the local desktop built with any lunch combo.");
+        System.out.println("      JVM: runs in a Java VM on the local desktop");
         System.out.println("      Default is: " + modeId);
         System.out.println();
-        System.out.println("  --variant <x32>: specify which architecture variant to execute with.");
-        System.out.println("      x32: 32-bit");
+        System.out.println("  --variant <X32|X64>: specify which dalvikvm variant to execute with");
+        System.out.println("      Used with --mode <host|device> only, not applicable for all devices.");
+        System.out.println("      x32: 32-bit, x64: 64-bit");
         System.out.println("      Default is: " + variant);
         System.out.println();
-        System.out.println("  --toolchain <jdk|jack>: Which toolchain to use.");
-        System.out.println("      Default is: " + toolchain);
+        System.out.println("  --toolchain <DX|JACK|JAVAC>: Which toolchain to use.");
+        System.out.println("      Default depends on --mode value (currently "
+                + modeId.defaultToolchain() + " for --mode=" + modeId + ")");
         System.out.println();
         System.out.println("  --language <J17|JN|JO|CUR>: Which language level to use.");
         System.out.println("      Default is: " + language);
@@ -449,6 +450,14 @@ public final class Vogar {
             return false;
         }
 
+        if (toolchain == null) {
+            toolchain = modeId.defaultToolchain();
+            System.out.println("Defaulting --toolchain to " + toolchain);
+        } else if (!modeId.supportsToolchain(toolchain)) {
+            System.out.println("Toolchain " + toolchain + " not supported for mode " + modeId);
+            return false;
+        }
+
         if (xmlReportsDirectory != null && !xmlReportsDirectory.isDirectory()) {
             System.out.println("Invalid XML reports directory: " + xmlReportsDirectory);
             return false;
@@ -508,14 +517,6 @@ public final class Vogar {
 
         if (!modeId.acceptsVmArgs() && !targetArgs.isEmpty()) {
             System.out.println("Target args " + targetArgs + " should not be specified for mode " + modeId);
-            return false;
-        }
-
-        // Check that jack is setup correctly & check compatibility
-        if (toolchain.toLowerCase().equals("jack")) {
-            useJack = true;
-        } else if (!toolchain.toLowerCase().equals("jdk")) {
-            System.out.println("The options for toolchain are either jack or jdk.");
             return false;
         }
 
@@ -615,7 +616,8 @@ public final class Vogar {
 
         AndroidSdk androidSdk = null;
         if (modeId.requiresAndroidSdk()) {
-            androidSdk = AndroidSdk.createAndroidSdk(console, mkdir, modeId, useJack, language);
+            androidSdk = AndroidSdk.createAndroidSdk(console, mkdir, modeId,
+                    (toolchain == Toolchain.JACK), language);
         }
 
         if (runnerType == null) {
@@ -652,7 +654,8 @@ public final class Vogar {
             }
         }
 
-        Run run = new Run(this, useJack, console, mkdir, androidSdk, rm, target, runnerDir);
+        Run run = new Run(this, toolchain, console, mkdir, androidSdk, rm,
+                target, runnerDir);
         if (configArgs.length > 0) {
             run.console.verbose("loaded arguments from .vogarconfig: " +
                                 Strings.join(" ", (Object)configArgs));
