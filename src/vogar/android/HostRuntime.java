@@ -30,6 +30,7 @@ import vogar.Classpath;
 import vogar.Mode;
 import vogar.ModeId;
 import vogar.Run;
+import vogar.Toolchain;
 import vogar.Variant;
 import vogar.commands.VmCommandBuilder;
 import vogar.tasks.MkdirTask;
@@ -158,7 +159,7 @@ public final class HostRuntime implements Mode {
     private Task createCreateDexJarTask(Classpath classpath, File classpathElement, String name,
             Action action, File localDex, File localTempDir) {
         Task dex;
-        if (run.useJack) {
+        if (run.toolchain == Toolchain.JACK) {
             dex = new JackDexTask(run, classpath, run.benchmark, name, classpathElement, action,
                     localDex);
         } else {
