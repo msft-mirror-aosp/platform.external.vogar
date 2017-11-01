@@ -104,6 +104,12 @@ public enum ModeId {
                 || ((this == HOST || this == DEVICE) && (variant == Variant.X64));
     }
 
+    /** Does this mode support chroot-based execution? */
+    public boolean supportsChroot() {
+        // We only support execution from a chroot directory in device mode for now.
+        return this == ModeId.DEVICE;
+    }
+
     public boolean supportsToolchain(Toolchain toolchain) {
         return (this == JVM && toolchain == Toolchain.JAVAC)
                 || (this != JVM && toolchain != Toolchain.JAVAC);
