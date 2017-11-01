@@ -36,6 +36,7 @@ import vogar.Outcome;
 import vogar.Result;
 import vogar.Run;
 import vogar.TestProperties;
+import vogar.Toolchain;
 import vogar.commands.Command;
 import vogar.commands.CommandFailedException;
 import vogar.commands.Jack;
@@ -62,7 +63,7 @@ public final class BuildActionTask extends Task {
 
     @Override protected Result execute() throws Exception {
         try {
-            if (run.useJack) {
+            if (run.toolchain == Toolchain.JACK) {
                 compileWithJack(action, outputFile);
             } else {
                 compile(action, outputFile);
@@ -137,7 +138,7 @@ public final class BuildActionTask extends Task {
             compiler.setDebug();
         }
         compiler.sourceVersion(run.language.getJackSourceVersion());
-        compiler.minApiLevel(String.valueOf(run.language.getJackMinApilevel()));
+        compiler.minApiLevel(String.valueOf(run.language.getJackMinApiLevel()));
         Set<File> sourceFiles = Sets.newHashSet();
 
         // Add the source files to be compiled.
@@ -187,13 +188,6 @@ public final class BuildActionTask extends Task {
         properties.setProperty(TestProperties.TEST_CLASS_OR_PACKAGE, action.getTargetClass());
         properties.setProperty(TestProperties.MONITOR_PORT, Integer.toString(run.firstMonitorPort));
         properties.setProperty(TestProperties.TIMEOUT, Integer.toString(run.timeoutSeconds));
-        properties.setProperty(TestProperties.PROFILE, Boolean.toString(run.profile));
-        properties.setProperty(TestProperties.PROFILE_DEPTH, Integer.toString(run.profileDepth));
-        properties.setProperty(TestProperties.PROFILE_INTERVAL,
-                Integer.toString(run.profileInterval));
-        properties.setProperty(TestProperties.PROFILE_FILE, run.profileFile.getName());
-        properties.setProperty(TestProperties.PROFILE_THREAD_GROUP,
-                Boolean.toString(run.profileThreadGroup));
         properties.setProperty(TestProperties.RUNNER_TYPE, run.runnerType.toString());
     }
 }

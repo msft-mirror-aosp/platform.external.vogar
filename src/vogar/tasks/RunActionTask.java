@@ -45,7 +45,7 @@ public class RunActionTask extends Task implements HostMonitor.Handler {
     };
 
     protected final Run run;
-    private final boolean useLargeTimeout;
+    private final int timeoutSeconds;
     private final Action action;
     private final String actionName;
     private Command currentCommand;
@@ -57,7 +57,10 @@ public class RunActionTask extends Task implements HostMonitor.Handler {
         this.run = run;
         this.action = action;
         this.actionName = action.getName();
-        this.useLargeTimeout = useLargeTimeout;
+
+        this.timeoutSeconds = useLargeTimeout
+                ? run.largeTimeoutSeconds
+                : run.smallTimeoutSeconds;
     }
 
     @Override public boolean isAction() {
@@ -80,9 +83,6 @@ public class RunActionTask extends Task implements HostMonitor.Handler {
             try {
                 currentCommand.start();
 
-                int timeoutSeconds = useLargeTimeout
-                        ? run.largeTimeoutSeconds
-                        : run.smallTimeoutSeconds;
                 if (timeoutSeconds != 0) {
                     currentCommand.scheduleTimeout(timeoutSeconds);
                 }
@@ -151,6 +151,22 @@ public class RunActionTask extends Task implements HostMonitor.Handler {
         if (skipPast != null) {
             vmCommandBuilder.args("--skipPast", skipPast);
         }
+
+        // Forward specific parameters to Caliper.
+        if (run.runnerType.supportsCaliper()) {
+          // Forward timeout value to Caliper which has its own separate timeout.
+          vmCommandBuilder.args("--time-limit", String.format("%ds", timeoutSeconds));
+
+          // This configuration runs about 15x faster than not having this configuration.
+          vmCommandBuilder.args(
+                  // Don't run GC before each measurement. That will take forever.
+                  "-Cinstrument.runtime.options.gcBeforeEach=false",
+                  // Warmup super-quick, don't take more than 1sec.
+                  "-Cinstrument.runtime.options.warmup=1s",
+                  // Don't measure things 9 times (default) because microbenchmark already
+                  // measure themselves millions of times.
+                  "-Cinstrument.runtime.options.measurements=1");
+        }
         return vmCommandBuilder
                 .temp(workingDirectory)
                 .debugPort(run.debugPort)
@@ -181,8 +197,8 @@ public class RunActionTask extends Task implements HostMonitor.Handler {
         if (run.runnerType.supportsCaliper()) {
             run.console.verbose("running " + outcomeName + " with unlimited timeout");
             Command command = currentCommand;
-            if (command != null && run.smallTimeoutSeconds != 0) {
-                command.scheduleTimeout(run.smallTimeoutSeconds);
+            if (command != null && timeoutSeconds != 0) {
+                command.scheduleTimeout(timeoutSeconds);
             }
             run.driver.recordResults = false;
         } else {
@@ -198,8 +214,8 @@ public class RunActionTask extends Task implements HostMonitor.Handler {
 
     @Override public void finish(Outcome outcome) {
         Command command = currentCommand;
-        if (command != null && run.smallTimeoutSeconds != 0) {
-            command.scheduleTimeout(run.smallTimeoutSeconds);
+        if (command != null && timeoutSeconds != 0) {
+            command.scheduleTimeout(timeoutSeconds);
         }
         lastFinishedOutcome = toQualifiedOutcomeName(outcome.getName());
         // TODO: support flexible timeouts for JUnit tests

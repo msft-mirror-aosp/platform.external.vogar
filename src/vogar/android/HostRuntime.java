@@ -30,6 +30,7 @@ import vogar.Classpath;
 import vogar.Mode;
 import vogar.ModeId;
 import vogar.Run;
+import vogar.Toolchain;
 import vogar.Variant;
 import vogar.commands.VmCommandBuilder;
 import vogar.tasks.MkdirTask;
@@ -68,8 +69,9 @@ public final class HostRuntime implements Mode {
             // Libraries need to be dex'ed and put in the temporary directory.
             String name = run.basenameOfJar(classpathElement);
             File localDex = run.localDexFile(name);
+            File localTempDir = run.localDir(name);
             result.add(createCreateDexJarTask(run.classpath, classpathElement, name,
-                    null /* action */, localDex));
+                    null /* action */, localDex, localTempDir));
         }
         result.add(new MkdirTask(run.mkdir, dalvikCache()));
         return result;
@@ -81,8 +83,9 @@ public final class HostRuntime implements Mode {
 
     @Override public Set<Task> installActionTasks(Action action, File jar) {
         File localDexFile = run.localDexFile(action.getName());
+        File localTempDir = run.localDir(action.getName());
         Task createDexJarTask = createCreateDexJarTask(Classpath.of(jar), jar, action.getName(),
-                action, localDexFile);
+                action, localDexFile, localTempDir);
         return Collections.singleton(createDexJarTask);
     }
 
@@ -154,14 +157,14 @@ public final class HostRuntime implements Mode {
     }
 
     private Task createCreateDexJarTask(Classpath classpath, File classpathElement, String name,
-            Action action, File localDex) {
+            Action action, File localDex, File localTempDir) {
         Task dex;
-        if (run.useJack) {
+        if (run.toolchain == Toolchain.JACK) {
             dex = new JackDexTask(run, classpath, run.benchmark, name, classpathElement, action,
                     localDex);
         } else {
             dex = new DexTask(run.androidSdk, classpath, run.benchmark, name, classpathElement,
-                    action, localDex);
+                    action, localDex, localTempDir, run.multidex);
         }
         return dex;
     }

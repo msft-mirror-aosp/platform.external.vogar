@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,13 @@
  * limitations under the License.
  */
 
-package vogar.target;
+package vogar;
 
-import java.io.File;
-import vogar.android.AndroidProfiler;
-
-public abstract class Profiler {
-    public static Profiler getInstance() throws Exception {
-        return new AndroidProfiler();
-    }
-    public abstract void setup(boolean profileThreadGroup, int depth, int interval);
-    public abstract void start();
-    public abstract void stop();
-    public abstract void shutdown(File file);
+public enum Toolchain {
+    // .dex: Jack
+    JACK,
+    // .dex: desugar + javac + dx
+    DX,
+    // .class: javac
+    JAVAC,
 }

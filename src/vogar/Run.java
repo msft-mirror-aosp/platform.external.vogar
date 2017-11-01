@@ -71,17 +71,12 @@ public final class Run {
     public final Rm rm;
     public final int firstMonitorPort;
     public final int timeoutSeconds;
-    public final boolean profile;
-    public final boolean profileBinary;
-    public final int profileDepth;
-    public final int profileInterval;
-    public final boolean profileThreadGroup;
-    public final File profileFile;
     public final File javaHome;
     public final Integer debugPort;
     public final Language language;
     public final List<String> javacArgs;
     public final List<String> jackArgs;
+    public final boolean multidex;
     public final boolean benchmark;
     public final File runnerDir;
     public final boolean cleanBefore;
@@ -108,12 +103,12 @@ public final class Run {
     public final OutcomeStore outcomeStore;
     public final TaskQueue taskQueue;
     public final RunnerType runnerType;
-    public final boolean useJack;
+    public final Toolchain toolchain;
     public final boolean checkJni;
     public final boolean debugging;
     public final Md5Cache jackCache;
 
-    public Run(Vogar vogar, boolean useJack, Console console, Mkdir mkdir, AndroidSdk androidSdk,
+    public Run(Vogar vogar, Toolchain toolchain, Console console, Mkdir mkdir, AndroidSdk androidSdk,
             Rm rm, Target target, File runnerDir)
             throws IOException {
         this.console = console;
@@ -123,8 +118,9 @@ public final class Run {
 
         this.target = target;
 
-        this.useJack = useJack;
-        this.jackCache = useJack ? new Md5Cache(log, "jack", new HostFileCache(log, mkdir)) : null;
+        this.toolchain = toolchain;
+        this.jackCache = toolchain == Toolchain.JACK
+                ? new Md5Cache(log, "jack", new HostFileCache(log, mkdir)) : null;
         this.vmCommand = vogar.vmCommand;
         this.dalvikCache = vogar.dalvikCache;
         this.additionalVmArgs = vogar.vmArgs;
@@ -142,6 +138,7 @@ public final class Run {
         this.language = vogar.language;
         this.javacArgs = vogar.javacArgs;
         this.jackArgs = vogar.jackArgs;
+        this.multidex = vogar.multidex;
         this.javaHome = vogar.javaHome;
         this.largeTimeoutSeconds = vogar.timeoutSeconds * Vogar.LARGE_TIMEOUT_MULTIPLIER;
         this.maxConcurrentActions = (vogar.stream || vogar.modeId == ModeId.ACTIVITY)
@@ -154,12 +151,6 @@ public final class Run {
         this.useBootClasspath = vogar.useBootClasspath;
         this.targetArgs = vogar.targetArgs;
         this.xmlReportsDirectory = vogar.xmlReportsDirectory;
-        this.profile = vogar.profile;
-        this.profileBinary = vogar.profileBinary;
-        this.profileFile = vogar.profileFile;
-        this.profileDepth = vogar.profileDepth;
-        this.profileInterval = vogar.profileInterval;
-        this.profileThreadGroup = vogar.profileThreadGroup;
         this.recordResults = vogar.recordResults;
         this.resultsDir = vogar.resultsDir == null
                 ? new File(vogar.vogarDir, "results")
@@ -189,7 +180,7 @@ public final class Run {
             classFileIndex.createIndex();
         }
 
-        this.retrievedFiles = new RetrievedFilesFilter(profile, profileFile);
+        this.retrievedFiles = new RetrievedFilesFilter();
         this.reportPrinter = new XmlReportPrinter(xmlReportsDirectory, expectationStore, date);
         this.jarSuggestions = new JarSuggestions();
         this.outcomeStore = new OutcomeStore(log, mkdir, rm, resultsDir, recordResults,
@@ -223,6 +214,16 @@ public final class Run {
 
     public final File localFile(Object... path) {
         return new File(localTemp + "/" + Strings.join("/", path));
+    }
+
+    public final File localDir(Object... path) {
+      String joinedPath = localTemp + "/" + Strings.join("/", path);
+      File f = new File(joinedPath);
+      f.mkdirs();
+      if (!f.exists()) {
+        throw new AssertionError("Failed to mkdirs: " + joinedPath);
+      }
+      return f;
     }
 
     private File vogarJar() {

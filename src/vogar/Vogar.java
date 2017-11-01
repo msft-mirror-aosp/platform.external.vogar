@@ -50,8 +50,6 @@ public final class Vogar {
     private String[] configArgs;
     public final static Console console = new Console.StreamingConsole();
 
-    private boolean useJack;
-
     public static File dotFile (String name) {
         return new File(System.getProperty("user.home", "."), name);
     }
@@ -143,6 +141,9 @@ public final class Vogar {
     @Option(names = { "--jack-arg" })
     List<String> jackArgs = new ArrayList<String>();
 
+    @Option(names = { "--multidex" })
+    boolean multidex = true;
+
     @Option(names = { "--use-bootclasspath" })
     boolean useBootClasspath = false;
 
@@ -185,32 +186,14 @@ public final class Vogar {
     @Option(names = { "--open-bugs-command" })
     String openBugsCommand;
 
-    @Option(names = { "--profile" })
-    boolean profile = false;
-
-    @Option(names = { "--profile-binary" })
-    boolean profileBinary = false;
-
-    @Option(names = { "--profile-file" })
-    File profileFile;
-
-    @Option(names = { "--profile-depth" })
-    int profileDepth = 4;
-
-    @Option(names = { "--profile-interval" })
-    int profileInterval = 10;
-
-    @Option(names = { "--profile-thread-group" })
-    boolean profileThreadGroup = false;
-
     @Option(names = { "--test-only" })
     boolean testOnly = false;
 
     @Option(names = { "--toolchain" })
-    private String toolchain = "jack";
+    Toolchain toolchain = null;
 
     @Option(names = { "--language" })
-    Language language = Language.JN;
+    Language language = Language.CUR;
 
     @Option(names = { "--check-jni" })
     boolean checkJni = true;
@@ -233,26 +216,29 @@ public final class Vogar {
         System.out.println("      When passing in a JUnit test class, it may have \"#method_name\"");
         System.out.println("      appended to it, to specify a single test method.");
         System.out.println();
-        System.out.println("  [args]: arguments passed to the target process. This is only useful when");
+        System.out.println("  [target args]: arguments passed to the target process. This is only useful when");
         System.out.println("      the target process is a Caliper benchmark or main method.");
         System.out.println();
         System.out.println("GENERAL OPTIONS");
         System.out.println();
-        System.out.println("  --mode <activity|device|host|jvm>: specify which environment to run in.");
-        System.out.println("      activity: runs in an Android application on a device or emulator");
-        System.out.println("      device: runs in an ART runtime on a device or emulator");
-        System.out.println("      host: runs in an ART runtime on the local desktop built with any lunch combo.");
-        System.out.println("      jvm: runs in a Java VM on the local desktop");
+        System.out.println("  --mode <ACTIVITY|APP_PROCESS|DEVICE|HOST|JVM>: specify which environment to run in.");
+        System.out.println("      ACTIVITY: runs in an Android application on a device or emulator");
+        System.out.println("      APP_PROCESS: runs in an app_process runtime on a device or emulator");
+        System.out.println("      DEVICE: runs in an ART runtime on a device or emulator");
+        System.out.println("      HOST: runs in an ART runtime on the local desktop built with any lunch combo.");
+        System.out.println("      JVM: runs in a Java VM on the local desktop");
         System.out.println("      Default is: " + modeId);
         System.out.println();
-        System.out.println("  --variant <x32>: specify which architecture variant to execute with.");
-        System.out.println("      x32: 32-bit");
+        System.out.println("  --variant <X32|X64>: specify which dalvikvm variant to execute with");
+        System.out.println("      Used with --mode <host|device> only, not applicable for all devices.");
+        System.out.println("      x32: 32-bit, x64: 64-bit");
         System.out.println("      Default is: " + variant);
         System.out.println();
-        System.out.println("  --toolchain <jdk|jack>: Which toolchain to use.");
-        System.out.println("      Default is: " + toolchain);
+        System.out.println("  --toolchain <DX|JACK|JAVAC>: Which toolchain to use.");
+        System.out.println("      Default depends on --mode value (currently "
+                + modeId.defaultToolchain() + " for --mode=" + modeId + ")");
         System.out.println();
-        System.out.println("  --language <J17|JN>: Which language level to use.");
+        System.out.println("  --language <J17|JN|JO|CUR>: Which language level to use.");
         System.out.println("      Default is: " + language);
         System.out.println();
         System.out.println("  --ssh <host:port>: target a remote machine via SSH.");
@@ -268,23 +254,6 @@ public final class Vogar {
         System.out.println("      If you specify this without specifying --runner-type then it");
         System.out.println("      assumes --runner-type="
                 + RunnerType.CALIPER.name().toLowerCase());
-        System.out.println();
-        System.out.println("  --profile: run with a profiler to produce an hprof file.");
-        System.out.println();
-        System.out.println("  --profile-binary: produce a binary hprof file instead of the default ASCII.");
-        System.out.println();
-        System.out.println("  --profile-file <filename>: filename for hprof profile data.");
-        System.out.println("      Default is java.hprof.txt in ASCII mode and java.hprof in binary mode.");
-        System.out.println();
-        System.out.println("  --profile-depth <count>: number of frames in profile stack traces.");
-        System.out.println("      Default is: " + profileDepth);
-        System.out.println();
-        System.out.println("  --profile-interval <milliseconds>: interval between profile samples.");
-        System.out.println("      Default is: " + profileInterval);
-        System.out.println();
-        System.out.println("  --profile-thread-group: profile thread group instead of single thread in dalvikvms");
-        System.out.println("      Note --mode jvm only supports full VM profiling.");
-        System.out.println("      Default is: " + profileThreadGroup);
         System.out.println();
         System.out.println("  --invoke-with: provide a command to invoke the VM with. Examples:");
         System.out.println("      --mode host --invoke-with \"valgrind --leak-check=full\"");
@@ -413,6 +382,10 @@ public final class Vogar {
         System.out.println("  --jack-arg <argument>: include the specified argument when invoking");
         System.out.println("      jack. Examples: --jack-arg -D --jack-arg jack.assert.policy=always");
         System.out.println();
+        System.out.println("  --multidex: whether to use native multidex support");
+        System.out.println("      Disable with --no-multidex.");
+        System.out.println("      Default is: " + multidex);
+        System.out.println();
         System.out.println("  --dalvik-cache <argument>: override default dalvik-cache location.");
         System.out.println("      Default is: " + dalvikCache);
         System.out.println();
@@ -477,6 +450,14 @@ public final class Vogar {
             return false;
         }
 
+        if (toolchain == null) {
+            toolchain = modeId.defaultToolchain();
+            System.out.println("Defaulting --toolchain to " + toolchain);
+        } else if (!modeId.supportsToolchain(toolchain)) {
+            System.out.println("Toolchain " + toolchain + " not supported for mode " + modeId);
+            return false;
+        }
+
         if (xmlReportsDirectory != null && !xmlReportsDirectory.isDirectory()) {
             System.out.println("Invalid XML reports directory: " + xmlReportsDirectory);
             return false;
@@ -502,10 +483,6 @@ public final class Vogar {
 
         if (firstMonitorPort == -1) {
             firstMonitorPort = modeId.isLocal() ? 8788 : 8787;
-        }
-
-        if (profileFile == null) {
-            profileFile = new File(profileBinary ? "java.hprof" : "java.hprof.txt");
         }
 
         // separate the actions and the target args
@@ -540,14 +517,6 @@ public final class Vogar {
 
         if (!modeId.acceptsVmArgs() && !targetArgs.isEmpty()) {
             System.out.println("Target args " + targetArgs + " should not be specified for mode " + modeId);
-            return false;
-        }
-
-        // Check that jack is setup correctly & check compatibility
-        if (toolchain.toLowerCase().equals("jack")) {
-            useJack = true;
-        } else if (!toolchain.toLowerCase().equals("jdk")) {
-            System.out.println("The options for toolchain are either jack or jdk.");
             return false;
         }
 
@@ -647,7 +616,8 @@ public final class Vogar {
 
         AndroidSdk androidSdk = null;
         if (modeId.requiresAndroidSdk()) {
-            androidSdk = AndroidSdk.createAndroidSdk(console, mkdir, modeId, useJack);
+            androidSdk = AndroidSdk.createAndroidSdk(console, mkdir, modeId,
+                    (toolchain == Toolchain.JACK), language);
         }
 
         if (runnerType == null) {
@@ -684,7 +654,8 @@ public final class Vogar {
             }
         }
 
-        Run run = new Run(this, useJack, console, mkdir, androidSdk, rm, target, runnerDir);
+        Run run = new Run(this, toolchain, console, mkdir, androidSdk, rm,
+                target, runnerDir);
         if (configArgs.length > 0) {
             run.console.verbose("loaded arguments from .vogarconfig: " +
                                 Strings.join(" ", (Object)configArgs));

@@ -28,9 +28,11 @@ import vogar.Action;
 import vogar.Classpath;
 import vogar.Console;
 import vogar.HostFileCache;
+import vogar.Language;
 import vogar.Mode;
 import vogar.Run;
 import vogar.Target;
+import vogar.Toolchain;
 import vogar.Vogar;
 import vogar.commands.Mkdir;
 import vogar.commands.Rm;
@@ -69,8 +71,9 @@ public abstract class AbstractModeTest {
         rm = new Rm(console);
 
         androidSdk = new AndroidSdk(console, mkdir,
-                new File[] {new File("classpath")}, "android.jar",
-                new HostFileCache(console, mkdir));
+                new File[] {new File("classpath")}, "android.jar", "desugar.jar",
+                new HostFileCache(console, mkdir),
+                Language.CUR);
         Target target = createTarget();
 
         final Vogar vogar = new Vogar();
@@ -80,7 +83,7 @@ public abstract class AbstractModeTest {
                     + ". Please check stdout.");
         }
 
-        run = new Run(vogar, false, console, mkdir, androidSdk, new Rm(console), target,
+        run = new Run(vogar, Toolchain.DX, console, mkdir, androidSdk, new Rm(console), target,
                 new File("runner/dir"));
 
         classpath = new Classpath();
