@@ -329,7 +329,7 @@ public class AndroidSdk {
                 builder.args("dx");
                 break;
             case D8:
-                builder.args("d8");
+                builder.args("d8-compat-dx");
                 break;
         }
         builder.args("-JXms16M")
