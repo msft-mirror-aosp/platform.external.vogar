@@ -65,7 +65,7 @@ public class AndroidSdk {
      * compilation class path and android jar path.
      */
     public static AndroidSdk createAndroidSdk(
-            Log log, Mkdir mkdir, ModeId modeId, boolean useJack, Language language) {
+            Log log, Mkdir mkdir, ModeId modeId, Language language) {
         List<String> path = new Command.Builder(log).args("which", "dx")
                 .permitNonZeroExitStatus(true)
                 .execute();
@@ -124,14 +124,12 @@ public class AndroidSdk {
                     .getAbsolutePath();
             log.verbose("using android sdk: " + sdkRoot);
 
-            if (!useJack) {
-              // There must be a desugar.jar in the same directory as dx.
-              String dxParentFileName = getParentFileNOrLast(dx, 1).getName();
-              desugarJarPath = dxParentFileName + "/desugar.jar";
-              File desugarJarFile = new File(desugarJarPath);
-              if (!desugarJarFile.exists()) {
-                  throw new RuntimeException("Could not find " + desugarJarPath);
-              }
+            // There must be a desugar.jar in the same directory as dx.
+            String dxParentFileName = getParentFileNOrLast(dx, 1).getName();
+            desugarJarPath = dxParentFileName + "/desugar.jar";
+            File desugarJarFile = new File(desugarJarPath);
+            if (!desugarJarFile.exists()) {
+                throw new RuntimeException("Could not find " + desugarJarPath);
             }
         } else if ("bin".equals(parentFileName)) {
             log.verbose("Using android source build mode to find dependencies.");
@@ -168,22 +166,20 @@ public class AndroidSdk {
                 hostOutDir = outDir + "/host/linux-x86";
             }
 
-            if (!useJack) {
-                String desugarPattern = hostOutDir + "/framework/desugar.jar";
-                File desugarJar = new File(desugarPattern);
+            String desugarPattern = hostOutDir + "/framework/desugar.jar";
+            File desugarJar = new File(desugarPattern);
 
-                if (!desugarJar.exists()) {
-                    throw new RuntimeException("Could not find " + desugarPattern);
-                }
-
-                desugarJarPath = desugarJar.getPath();
+            if (!desugarJar.exists()) {
+                throw new RuntimeException("Could not find " + desugarPattern);
             }
+
+            desugarJarPath = desugarJar.getPath();
 
             String pattern = outDir + "target/common/obj/JAVA_LIBRARIES/%s_intermediates/classes";
             if (modeId.isHost()) {
                 pattern = outDir + "host/common/obj/JAVA_LIBRARIES/%s_intermediates/classes";
             }
-            pattern += ((useJack) ? ".jack" : ".jar");
+            pattern += ".jar";
 
             String[] jarNames = modeId.getJarNames();
             compilationClasspath = new File[jarNames.length];
