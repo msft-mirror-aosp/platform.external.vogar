@@ -40,7 +40,7 @@ LOCAL_ADDITIONAL_DEPENDENCIES := \
   $(HOST_OUT_JAVA_LIBRARIES)/desugar.jar
 
 # Vogar uses android.jar.
-LOCAL_CLASSPATH := prebuilts/sdk/9/android.jar
+LOCAL_CLASSPATH := $(call resolve-prebuilt-sdk-jar-path,current)
 LOCAL_JAVA_LANGUAGE_VERSION := 1.7
 
 include $(BUILD_HOST_JAVA_LIBRARY)
