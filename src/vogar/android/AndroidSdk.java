@@ -132,10 +132,10 @@ public class AndroidSdk {
             }
         } else if ("bin".equals(buildToolDirString)) {
             log.verbose("Using android source build mode to find dependencies.");
-            String tmpJarPath = "prebuilts/sdk/current/android.jar";
+            String tmpJarPath = "prebuilts/sdk/current/public/android.jar";
             String androidBuildTop = System.getenv("ANDROID_BUILD_TOP");
             if (!com.google.common.base.Strings.isNullOrEmpty(androidBuildTop)) {
-                tmpJarPath = androidBuildTop + "/prebuilts/sdk/current/android.jar";
+                tmpJarPath = androidBuildTop + "/prebuilts/sdk/current/public/android.jar";
             } else {
                 log.warn("Assuming current directory is android build tree root.");
             }
