@@ -47,9 +47,11 @@ include $(BUILD_HOST_JAVA_LIBRARY)
 
 # build vogar tests jar
 # ============================================================
-# Run the tests using the following command:
-# java -cp ${ANDROID_BUILD_TOP}/out/host/linux-x86/framework/vogar-tests.jar \
-       org.junit.runner.JUnitCore vogar.AllTests
+# Run the tests using using the following target.
+.PHONY: run-vogar-tests
+run-vogar-tests: vogar-tests
+	java -cp ./out/host/linux-x86/framework/vogar-tests.jar \
+	  org.junit.runner.JUnitCore vogar.AllTests
 
 include $(CLEAR_VARS)
 
