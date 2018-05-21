@@ -136,7 +136,10 @@ public final class HostRuntime implements Mode {
                 .vmArgs("-Duser.language=en")
                 .vmArgs("-Duser.region=US");
         if (run.debugPort != null) {
-            builder.vmArgs("-Xcompiler-option", "--debuggable");
+            builder.vmArgs(
+                    "-Xcompiler-option", "--debuggable", "-Xplugin:libopenjdkjvmti.so",
+                    "-agentpath:libjdwp.so=transport=dt_socket,address=" + run.debugPort
+                            + ",server=y,suspend=y");
         }
         if (!run.benchmark && run.checkJni) {
             builder.vmArgs("-Xcheck:jni");
@@ -158,14 +161,7 @@ public final class HostRuntime implements Mode {
 
     private Task createCreateDexJarTask(Classpath classpath, File classpathElement, String name,
             Action action, File localDex, File localTempDir) {
-        Task dex;
-        if (run.toolchain == Toolchain.JACK) {
-            dex = new JackDexTask(run, classpath, run.benchmark, name, classpathElement, action,
-                    localDex);
-        } else {
-            dex = new DexTask(run.toolchain.getDexer(), run.androidSdk, classpath, run.benchmark, name,
-                    classpathElement, action, localDex, localTempDir, run.multidex);
-        }
-        return dex;
+        return new DexTask(run.toolchain.getDexer(), run.androidSdk, classpath, run.benchmark, name,
+                classpathElement, action, localDex, localTempDir, run.multidex);
     }
 }

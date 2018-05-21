@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.LinkedHashSet;
 
+import vogar.android.AdbChrootTarget;
 import vogar.android.AdbTarget;
 import vogar.android.AndroidSdk;
 import vogar.android.DeviceFileCache;
@@ -68,6 +69,9 @@ public final class Vogar {
 
     @Option(names = { "--ssh" })
     private String sshHost;
+
+    @Option(names = { "--chroot" })
+    private String chrootDir;
 
     @Option(names = { "--timeout" })
     int timeoutSeconds = 60; // default is one minute;
@@ -137,9 +141,6 @@ public final class Vogar {
 
     @Option(names = { "--javac-arg" })
     List<String> javacArgs = new ArrayList<String>();
-
-    @Option(names = { "--jack-arg" })
-    List<String> jackArgs = new ArrayList<String>();
 
     @Option(names = { "--multidex" })
     boolean multidex = true;
@@ -234,7 +235,7 @@ public final class Vogar {
         System.out.println("      x32: 32-bit, x64: 64-bit");
         System.out.println("      Default is: " + variant);
         System.out.println();
-        System.out.println("  --toolchain <DX|D8|JACK|JAVAC>: Which toolchain to use.");
+        System.out.println("  --toolchain <DX|D8|JAVAC>: Which toolchain to use.");
         System.out.println("      Default depends on --mode value (currently "
                 + modeId.defaultToolchain() + " for --mode=" + modeId + ")");
         System.out.println();
@@ -242,6 +243,9 @@ public final class Vogar {
         System.out.println("      Default is: " + language);
         System.out.println();
         System.out.println("  --ssh <host:port>: target a remote machine via SSH.");
+        System.out.println();
+        System.out.println("  --chroot <dir>: target a chroot dir on device");
+        System.out.println("      Only works with --mode device.");
         System.out.println();
         System.out.println("  --clean: synonym for --clean-before and --clean-after (default).");
         System.out.println("      Disable with --no-clean if you want no files removed.");
@@ -379,9 +383,6 @@ public final class Vogar {
         System.out.println("  --javac-arg <argument>: include the specified argument when invoking");
         System.out.println("      javac. Examples: --javac-arg -Xmaxerrs --javac-arg 1");
         System.out.println();
-        System.out.println("  --jack-arg <argument>: include the specified argument when invoking");
-        System.out.println("      jack. Examples: --jack-arg -D --jack-arg jack.assert.policy=always");
-        System.out.println();
         System.out.println("  --multidex: whether to use native multidex support");
         System.out.println("      Disable with --no-multidex.");
         System.out.println("      Default is: " + multidex);
@@ -455,6 +456,11 @@ public final class Vogar {
             System.out.println("Defaulting --toolchain to " + toolchain);
         } else if (!modeId.supportsToolchain(toolchain)) {
             System.out.println("Toolchain " + toolchain + " not supported for mode " + modeId);
+            return false;
+        }
+
+        if (chrootDir != null && !modeId.supportsChroot()) {
+            System.out.println("Chroot-based execution not supported for mode " + modeId);
             return false;
         }
 
@@ -549,6 +555,7 @@ public final class Vogar {
      */
     private enum TargetType {
         ADB(AdbTarget.defaultDeviceDir()),
+        ADB_CHROOT(AdbChrootTarget.defaultDeviceDir()),
         LOCAL(LocalTarget.defaultDeviceDir()),
         SSH(SshTarget.defaultDeviceDir());
 
@@ -586,6 +593,8 @@ public final class Vogar {
             targetType = TargetType.SSH;
         } else if (modeId.isLocal()) {
             targetType = TargetType.LOCAL;
+        } else if (chrootDir != null) {
+            targetType = TargetType.ADB_CHROOT;
         } else {
             targetType = TargetType.ADB;
         }
@@ -597,12 +606,27 @@ public final class Vogar {
         // Create the target.
         Target target;
         switch (targetType) {
-            case ADB:
-                DeviceFilesystem deviceFilesystem =
-                        new DeviceFilesystem(console, ImmutableList.of("adb", "shell"));
-                DeviceFileCache deviceFileCache =
-                        new DeviceFileCache(console, runnerDir, deviceFilesystem);
-                target = new AdbTarget(console, deviceFilesystem, deviceFileCache);
+            case ADB: {
+                    ImmutableList<String> targetProcessPrefix = ImmutableList.of("adb", "shell");
+                    DeviceFilesystem deviceFilesystem =
+                            new DeviceFilesystem(console, targetProcessPrefix);
+                    DeviceFileCache deviceFileCache =
+                            new DeviceFileCache(console, runnerDir, deviceFilesystem);
+                    target = new AdbTarget(console, deviceFilesystem, deviceFileCache);
+                }
+                break;
+            case ADB_CHROOT: {
+                    ImmutableList<String> targetProcessPrefix = ImmutableList.of("adb", "shell");
+                    DeviceFilesystem deviceFilesystem =
+                            new DeviceFilesystem(console, targetProcessPrefix);
+                    // Directory `runnerDir` is relative to the chroot; `runnerDirInRoot` is its
+                    // counterpart relative to the device's filesystem "absolute" root.
+                    File runnerDirInRoot = new File(chrootDir + "/" + runnerDir.getPath());
+                    DeviceFileCache deviceFileCache =
+                            new DeviceFileCache(console, runnerDirInRoot, deviceFilesystem);
+                    target =
+                        new AdbChrootTarget(console, deviceFilesystem, deviceFileCache, chrootDir);
+                }
                 break;
             case SSH:
                 target = new SshTarget(console, sshHost);
@@ -616,8 +640,7 @@ public final class Vogar {
 
         AndroidSdk androidSdk = null;
         if (modeId.requiresAndroidSdk()) {
-            androidSdk = AndroidSdk.createAndroidSdk(console, mkdir, modeId,
-                    (toolchain == Toolchain.JACK), language);
+            androidSdk = AndroidSdk.createAndroidSdk(console, mkdir, modeId, language);
         }
 
         if (runnerType == null) {
