@@ -42,7 +42,7 @@ public enum ModeId {
             "telephony-common",
             "voip-common",
             "ims-common",
-            "org.apache.http.legacy.boot",
+            "org.apache.http.legacy.impl",
             "android.hidl.base-V1.0-java",
             "android.hidl.manager-V1.0-java"
             // TODO: get this list programatically
