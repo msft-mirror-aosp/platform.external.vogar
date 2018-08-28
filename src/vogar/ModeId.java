@@ -54,6 +54,7 @@ public enum ModeId {
     private static final String[] DEVICE_JARS = new String[] {
             "core-oj",
             "core-libart",
+            "core-simple",
             "conscrypt",
             "okhttp",
             "bouncycastle",
@@ -67,6 +68,7 @@ public enum ModeId {
     private static final String[] HOST_JARS = new String[] {
             "core-oj-hostdex",
             "core-libart-hostdex",
+            "core-simple-hostdex",
             "conscrypt-hostdex",
             "okhttp-hostdex",
             "bouncycastle-hostdex",
