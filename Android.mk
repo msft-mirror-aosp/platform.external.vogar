@@ -26,10 +26,10 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src/)
 LOCAL_JAVA_RESOURCE_DIRS := resources
 
 LOCAL_STATIC_JAVA_LIBRARIES := \
-  caliper-host \
-  caliper-gson-host \
+  caliper \
+  caliper-gson \
   guavalib \
-  junit-host \
+  junit \
   vogar-jsr305 \
   vogar-kxml-libcore-20110123
 
@@ -60,9 +60,9 @@ LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_SRC_FILES := $(call all-java-files-under, test/)
 
 LOCAL_STATIC_JAVA_LIBRARIES := \
-	junit-host \
-	mockito-host \
-	objenesis-host \
+	junit \
+	mockito \
+	objenesis \
 	vogar
 
 LOCAL_JAVA_LANGUAGE_VERSION := 1.7
