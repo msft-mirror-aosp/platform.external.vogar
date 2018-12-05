@@ -75,6 +75,12 @@ public final class DeviceRuntime implements Mode {
     }
 
     @Override public VmCommandBuilder newVmCommandBuilder(Action action, File workingDirectory) {
+        List<File> jars = new ArrayList<File>();
+        for (String jar : modeId.getJarNames()) {
+            jars.add(new File("/system", "framework/" + jar + ".jar"));
+        }
+        Classpath bootClasspath = Classpath.of(jars);
+
         List<String> vmCommand = new ArrayList<String>();
         Iterables.addAll(vmCommand, run.invokeWith());
         vmCommand.add(run.vmCommand);
@@ -84,6 +90,7 @@ public final class DeviceRuntime implements Mode {
                 .env("ANDROID_DATA", run.getAndroidDataPath())
                 .workingDirectory(workingDirectory)
                 .vmCommand(vmCommand)
+                .vmArgs("-Xbootclasspath:" + bootClasspath.toString())
                 .vmArgs("-Duser.home=" + run.deviceUserHome)
                 // Use the same command line limit (4096) as adb (see
                 // _adb_connect in system/core/adb/adb_client.cpp).
