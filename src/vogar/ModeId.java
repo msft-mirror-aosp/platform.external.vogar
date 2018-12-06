@@ -33,16 +33,10 @@ public enum ModeId {
     APP_PROCESS;
 
     // $BOOTCLASSPATH defined by system/core/rootdir/init.rc
+    // - DEVICE_JARS are prepended automatically.
     // (Intended for use with app_process and activities.)
     // See PRODUCT_BOOT_JARS in build/make/target/product/core_tiny.mk
     private static final String[] APP_JARS = new String[] {
-            "core-oj",
-            "core-libart",
-            "core-simple",
-            "conscrypt",
-            "okhttp",
-            "bouncycastle",
-            "apache-xml",
             "legacy-test",
             "framework",
             "telephony-common",
@@ -58,12 +52,13 @@ public enum ModeId {
     // (Intended for use with dalvikvm only.)
     // See TARGET_TEST_CORE_JARS in android/art/build/Android.common_path.mk
     private static final String[] DEVICE_JARS = new String[] {
-            "core-oj-testdex",
-            "core-libart-testdex",
-            "core-simple-testdex",
-            "conscrypt-testdex",
-            "okhttp-testdex",
-            "bouncycastle-testdex"
+            "core-oj",
+            "core-libart",
+            "core-simple",
+            "conscrypt",
+            "okhttp",
+            "bouncycastle",
+            "apache-xml",
     };
 
     // $BOOTCLASSPATH for art+libcore only (host version).
@@ -75,7 +70,7 @@ public enum ModeId {
             "core-simple-hostdex",
             "conscrypt-hostdex",
             "okhttp-hostdex",
-            "bouncycastle-hostdex"
+            "bouncycastle-hostdex",
     };
 
     public boolean acceptsVmArgs() {
@@ -154,6 +149,8 @@ public enum ModeId {
         switch (this) {
             case ACTIVITY:
             case APP_PROCESS:
+                // Order matters. Add device-jars before app-jars.
+                jarNames.addAll(Arrays.asList(DEVICE_JARS));
                 jarNames.addAll(Arrays.asList(APP_JARS));
                 break;
             case DEVICE:
