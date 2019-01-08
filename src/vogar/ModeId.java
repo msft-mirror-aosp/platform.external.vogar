@@ -21,9 +21,11 @@ import java.util.Arrays;
 import java.util.List;
 
 public enum ModeId {
-    /** (Target) dalvikvm */
+    /** (Target) dalvikvm with "normal" jars */
     DEVICE,
-    /** (Host) dalvikvm */
+    /** (Target) dalvikvm with -testdex jars */
+    DEVICE_TESTDEX,
+    /** (Host) dalvikvm with -hostdex jars */
     HOST,
     /** (Host) java */
     JVM,
@@ -104,7 +106,7 @@ public enum ModeId {
 
     /** Returns {@code true} if execution takes place with a device-mode Android runtime */
     public boolean isDevice() {
-        return this == ModeId.DEVICE || this == ModeId.APP_PROCESS;
+        return this == ModeId.DEVICE || this == ModeId.DEVICE_TESTDEX || this == ModeId.APP_PROCESS;
     }
 
     public boolean requiresAndroidSdk() {
@@ -112,14 +114,19 @@ public enum ModeId {
     }
 
     public boolean supportsVariant(Variant variant) {
-        return (variant == Variant.X32)
-                || ((this == HOST || this == DEVICE) && (variant == Variant.X64));
+        if (variant == Variant.DEFAULT) {
+            return true;
+        } else if (variant == Variant.X64 || variant == Variant.X32) {
+            return this == HOST || this == DEVICE || this == DEVICE_TESTDEX || this == APP_PROCESS;
+        }
+        // Unknown variant.
+        return false;
     }
 
     /** Does this mode support chroot-based execution? */
     public boolean supportsChroot() {
         // We only support execution from a chroot directory in device mode for now.
-        return this == ModeId.DEVICE;
+        return this == ModeId.DEVICE || this == ModeId.DEVICE_TESTDEX;
     }
 
     public boolean supportsToolchain(Toolchain toolchain) {
@@ -134,22 +141,43 @@ public enum ModeId {
         }
         switch (this) {
             case DEVICE:
+            case DEVICE_TESTDEX:
             case HOST:
-                if (variant == Variant.X32) {
+                if (variant == Variant.DEFAULT) {
+                    return "dalvikvm";
+                } else if (variant == Variant.X32) {
                     return "dalvikvm32";
-                } else {
+                } else if (variant == Variant.X64) {
                     return "dalvikvm64";
                 }
-
+                throw throwInvalidVariant(variant);
             case JVM:
-                return "java";
+                if (variant == Variant.DEFAULT) {
+                    return "java";
+                }
+                throw throwInvalidVariant(variant);
             case APP_PROCESS:
-                return "app_process";
+                if (variant == Variant.DEFAULT) {
+                    return "app_process";
+                } else if (variant == Variant.X32) {
+                    return "app_process32";
+                } else if (variant == Variant.X64) {
+                    return "app_process64";
+                }
+                throw throwInvalidVariant(variant);
             case ACTIVITY:
-                return null;
+                if (variant == Variant.DEFAULT) {
+                    return null;
+                }
+                throw throwInvalidVariant(variant);
             default:
                 throw new IllegalArgumentException("Unknown mode: " + this);
         }
+    }
+
+    private IllegalArgumentException throwInvalidVariant(Variant variant) {
+        throw new IllegalArgumentException(
+                "Unknown variant " + variant + " for mode " + this);
     }
 
     /**
@@ -168,6 +196,12 @@ public enum ModeId {
             case DEVICE:
                 jarNames.addAll(Arrays.asList(DEVICE_JARS));
                 break;
+            case DEVICE_TESTDEX: {
+                for (String deviceJarName : Arrays.asList(DEVICE_JARS)) {
+                    jarNames.add(deviceJarName + "-testdex");
+                }
+                break;
+            }
             case HOST:
                 jarNames.addAll(Arrays.asList(HOST_JARS));
                 break;
