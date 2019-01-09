@@ -110,7 +110,7 @@ public final class HostRuntime implements Mode {
         String libDir = hostOut;
         if (variant == Variant.X32) {
             libDir += "/lib";
-        } else if (variant == Variant.X64) {
+        } else if (variant == Variant.DEFAULT || variant == Variant.X64) {
             libDir += "/lib64";
         } else {
             throw new AssertionError("Unsupported variant:" + variant);
