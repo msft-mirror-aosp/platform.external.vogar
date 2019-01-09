@@ -65,7 +65,7 @@ public final class Vogar {
     ModeId modeId = ModeId.DEVICE;
 
     @Option(names = { "--variant" })
-    Variant variant = Variant.X32;
+    Variant variant = Variant.DEFAULT;
 
     @Option(names = { "--ssh" })
     private String sshHost;
@@ -222,17 +222,18 @@ public final class Vogar {
         System.out.println();
         System.out.println("GENERAL OPTIONS");
         System.out.println();
-        System.out.println("  --mode <ACTIVITY|APP_PROCESS|DEVICE|HOST|JVM>: specify which environment to run in.");
+        System.out.println("  --mode <ACTIVITY|APP_PROCESS|DEVICE|DEVICE_TESTDEX|HOST|JVM>: specify which environment to run in.");
         System.out.println("      ACTIVITY: runs in an Android application on a device or emulator");
         System.out.println("      APP_PROCESS: runs in an app_process runtime on a device or emulator");
         System.out.println("      DEVICE: runs in an ART runtime on a device or emulator");
+        System.out.println("      DEVICE_TESTDEX: like DEVICE but compiles with -testdex bootclasspath jars");
         System.out.println("      HOST: runs in an ART runtime on the local desktop built with any lunch combo.");
         System.out.println("      JVM: runs in a Java VM on the local desktop");
         System.out.println("      Default is: " + modeId);
         System.out.println();
-        System.out.println("  --variant <X32|X64>: specify which dalvikvm variant to execute with");
-        System.out.println("      Used with --mode <host|device> only, not applicable for all devices.");
-        System.out.println("      x32: 32-bit, x64: 64-bit");
+        System.out.println("  --variant <DEFAULT|X32|X64>: specify which dalvikvm (or other) variant to execute with");
+        System.out.println("      Used with --mode <HOST|DEVICE|DEVICE_TESTDEX> only, not applicable for all devices.");
+        System.out.println("      DEFAULT: default (or N/A), X32: 32-bit, X64: 64-bit");
         System.out.println("      Default is: " + variant);
         System.out.println();
         System.out.println("  --toolchain <DX|D8|JAVAC>: Which toolchain to use.");
