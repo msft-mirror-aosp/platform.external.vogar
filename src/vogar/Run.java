@@ -193,6 +193,7 @@ public final class Run {
             case HOST:
                 return new HostRuntime(this, modeId, variant);
             case DEVICE:
+            case DEVICE_TESTDEX:
             case APP_PROCESS:
                 return new DeviceRuntime(this, modeId, variant, new Supplier<String>() {
                     @Override
