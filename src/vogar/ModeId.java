@@ -80,8 +80,7 @@ public enum ModeId {
             "telephony-common",
             "voip-common",
             "ims-common",
-            "framework-oahl-backward-compatibility",
-            "android.test.base.impl",
+            "android.test.base",
             // TODO: get this list programatically
     };
 
