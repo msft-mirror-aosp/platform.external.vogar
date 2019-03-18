@@ -127,6 +127,7 @@ public final class HostRuntime implements Mode {
                 .env("ANDROID_DATA", dalvikCache().getParent())
                 .env("ANDROID_ROOT", hostOut)
                 .env("ANDROID_RUNTIME_ROOT", hostOut + "/com.android.runtime")
+                .env("ANDROID_TZDATA_ROOT", hostOut + "/com.android.tzdata")
                 .env("LD_LIBRARY_PATH", libDir)
                 .env("DYLD_LIBRARY_PATH", libDir)
                 // This is needed on the host so that the linker loads core.oat at the necessary
