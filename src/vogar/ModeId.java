@@ -75,8 +75,8 @@ public enum ModeId {
      * generation.
      */
     private static final String[] APP_JARS = new String[] {
-            "ext",
             "framework",
+            "ext",
             "telephony-common",
             "voip-common",
             "ims-common",
