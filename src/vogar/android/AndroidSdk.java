@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
+
 import vogar.Classpath;
 import vogar.Dexer;
 import vogar.HostFileCache;
@@ -387,7 +388,14 @@ public class AndroidSdk {
                 if (entry.getName().endsWith(".class")) {
                     continue;
                 }
+
+                // Skip directories as they can cause duplicates.
+                if (entry.isDirectory()) {
+                    continue;
+                }
+
                 outputJar.putNextEntry(entry);
+
                 int length;
                 while ((length = inputJar.read(buffer)) >= 0) {
                     if (length > 0) {
