@@ -73,6 +73,8 @@ public class HostRuntimeLocalTargetTest extends AbstractModeTest {
                 + " ANDROID_LOG_TAGS=*:i"
                 + " ANDROID_DATA=" + run.localFile("android-data")
                 + " ANDROID_ROOT=${ANDROID_BUILD_TOP}/out/host/linux-x86"
+                + " ANDROID_I18N_ROOT="
+                + "${ANDROID_BUILD_TOP}/out/host/linux-x86/com.android.i18n"
                 + " ANDROID_RUNTIME_ROOT="
                 + "${ANDROID_BUILD_TOP}/out/host/linux-x86/com.android.runtime"
                 + " ANDROID_TZDATA_ROOT="
@@ -132,6 +134,8 @@ public class HostRuntimeLocalTargetTest extends AbstractModeTest {
                 + " ANDROID_LOG_TAGS=*:i"
                 + " ANDROID_DATA=" + run.localFile("android-data")
                 + " ANDROID_ROOT=${ANDROID_BUILD_TOP}/out/host/linux-x86"
+                + " ANDROID_I18N_ROOT="
+                + "${ANDROID_BUILD_TOP}/out/host/linux-x86/com.android.i18n"
                 + " ANDROID_RUNTIME_ROOT="
                 + "${ANDROID_BUILD_TOP}/out/host/linux-x86/com.android.runtime"
                 + " ANDROID_TZDATA_ROOT="
