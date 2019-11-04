@@ -40,7 +40,6 @@ LOCAL_ADDITIONAL_DEPENDENCIES := \
 
 # Vogar uses android.jar.
 LOCAL_CLASSPATH := $(call resolve-prebuilt-sdk-jar-path,current)
-LOCAL_JAVA_LANGUAGE_VERSION := 1.7
 
 include $(BUILD_HOST_JAVA_LIBRARY)
 
@@ -64,8 +63,6 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
 	mockito \
 	objenesis \
 	vogar
-
-LOCAL_JAVA_LANGUAGE_VERSION := 1.7
 
 include $(BUILD_HOST_JAVA_LIBRARY)
 
