@@ -49,7 +49,8 @@ include $(BUILD_HOST_JAVA_LIBRARY)
 # Run the tests using using the following target.
 .PHONY: run-vogar-tests
 run-vogar-tests: vogar-tests
-	java -cp ./out/host/linux-x86/framework/vogar-tests.jar \
+	ANDROID_BUILD_TOP=$$(pwd) \
+	  java -cp ./out/host/linux-x86/framework/vogar-tests.jar \
 	  org.junit.runner.JUnitCore vogar.AllTests
 
 include $(CLEAR_VARS)
