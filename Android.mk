@@ -40,7 +40,6 @@ LOCAL_ADDITIONAL_DEPENDENCIES := \
 
 # Vogar uses android.jar.
 LOCAL_CLASSPATH := $(call resolve-prebuilt-sdk-jar-path,current)
-LOCAL_JAVA_LANGUAGE_VERSION := 1.7
 
 include $(BUILD_HOST_JAVA_LIBRARY)
 
@@ -49,7 +48,8 @@ include $(BUILD_HOST_JAVA_LIBRARY)
 # Run the tests using using the following target.
 .PHONY: run-vogar-tests
 run-vogar-tests: vogar-tests
-	java -cp ./out/host/linux-x86/framework/vogar-tests.jar \
+	ANDROID_BUILD_TOP=$$(pwd) \
+	  java -cp ./out/host/linux-x86/framework/vogar-tests.jar \
 	  org.junit.runner.JUnitCore vogar.AllTests
 
 include $(CLEAR_VARS)
@@ -64,8 +64,6 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
 	mockito \
 	objenesis \
 	vogar
-
-LOCAL_JAVA_LANGUAGE_VERSION := 1.7
 
 include $(BUILD_HOST_JAVA_LIBRARY)
 
