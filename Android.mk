@@ -67,16 +67,6 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
 
 include $(BUILD_HOST_JAVA_LIBRARY)
 
-# Build dependencies.
-# ============================================================
-include $(CLEAR_VARS)
-
-LOCAL_PREBUILT_JAVA_LIBRARIES := \
-    vogar-jsr305:lib/jsr305$(COMMON_JAVA_PACKAGE_SUFFIX) \
-    vogar-kxml-libcore-20110123:lib/kxml-libcore-20110123$(COMMON_JAVA_PACKAGE_SUFFIX)
-
-include $(BUILD_HOST_PREBUILT)
-
 # copy vogar script
 # ============================================================
 include $(CLEAR_VARS)
