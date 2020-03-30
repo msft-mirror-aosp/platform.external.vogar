@@ -175,7 +175,8 @@ public class AndroidSdk {
 
             desugarJarPath = desugarJar.getPath();
 
-            String pattern = outDir + "target/common/obj/JAVA_LIBRARIES/%s_intermediates/classes";
+            String pattern = outDir +
+                    "target/common/obj/JAVA_LIBRARIES/%s.com.android.%s_intermediates/classes";
             if (modeId.isHost()) {
                 pattern = outDir + "host/common/obj/JAVA_LIBRARIES/%s_intermediates/classes";
             }
@@ -185,7 +186,8 @@ public class AndroidSdk {
             compilationClasspath = new File[jarNames.length];
             for (int i = 0; i < jarNames.length; i++) {
                 String jar = jarNames[i];
-                compilationClasspath[i] = new File(String.format(pattern, jar));
+                String apexSuffix = jar.equals("conscrypt") ? jar : "art.testing";
+                compilationClasspath[i] = new File(String.format(pattern, jar, apexSuffix));
             }
         } else {
             throw new RuntimeException("Couldn't derive Android home from "
