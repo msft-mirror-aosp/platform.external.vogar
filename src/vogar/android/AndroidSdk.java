@@ -186,8 +186,13 @@ public class AndroidSdk {
             compilationClasspath = new File[jarNames.length];
             for (int i = 0; i < jarNames.length; i++) {
                 String jar = jarNames[i];
-                String apexSuffix = jar.equals("conscrypt") ? jar : "art.testing";
-                compilationClasspath[i] = new File(String.format(pattern, jar, apexSuffix));
+                if (modeId.isHost()) {
+                    jar = jar.equals("conscrypt-hostdex") ? "conscrypt-host-hostdex" : jar;
+                    compilationClasspath[i] = new File(String.format(pattern, jar));
+                } else {
+                    String apexSuffix = jar.equals("conscrypt") ? jar : "art.testing";
+                    compilationClasspath[i] = new File(String.format(pattern, jar, apexSuffix));
+                }
             }
         } else {
             throw new RuntimeException("Couldn't derive Android home from "
