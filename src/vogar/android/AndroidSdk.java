@@ -176,7 +176,7 @@ public class AndroidSdk {
             desugarJarPath = desugarJar.getPath();
 
             String pattern = outDir +
-                    "target/common/obj/JAVA_LIBRARIES/%s.com.android.%s_intermediates/classes";
+                    "target/common/obj/JAVA_LIBRARIES/%s_intermediates/classes";
             if (modeId.isHost()) {
                 pattern = outDir + "host/common/obj/JAVA_LIBRARIES/%s_intermediates/classes";
             }
@@ -186,13 +186,22 @@ public class AndroidSdk {
             compilationClasspath = new File[jarNames.length];
             for (int i = 0; i < jarNames.length; i++) {
                 String jar = jarNames[i];
+                File file;
                 if (modeId.isHost()) {
                     jar = jar.equals("conscrypt-hostdex") ? "conscrypt-host-hostdex" : jar;
-                    compilationClasspath[i] = new File(String.format(pattern, jar));
+                    file = new File(String.format(pattern, jar));
                 } else {
-                    String apexSuffix = jar.equals("conscrypt") ? jar : "art.testing";
-                    compilationClasspath[i] = new File(String.format(pattern, jar, apexSuffix));
+                    if (jar.equals("conscrypt")) {
+                        file = new File(String.format(pattern, jar + ".com.android.conscrypt"));
+                        if (!file.exists()) {
+                          // With unbundled ART, the intermediate directory is under conscrypt.
+                          file = new File(String.format(pattern, jar));
+                        }
+                    } else {
+                        file = new File(String.format(pattern, jar + ".com.android.art.testing"));
+                    }
                 }
+                compilationClasspath[i] = file;
             }
         } else {
             throw new RuntimeException("Couldn't derive Android home from "
