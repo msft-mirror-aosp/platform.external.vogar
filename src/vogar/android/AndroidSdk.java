@@ -188,31 +188,17 @@ public class AndroidSdk {
                 String jar = jarNames[i];
                 File file;
                 if (modeId.isHost()) {
-                    if  ("conscrypt-hostdex".equals(jar)) {
-                        jar = "conscrypt-host-hostdex";
-                    } else if ("core-icu4j-hostdex".equals(jar)) {
-                        jar = "core-icu4j-host-hostdex";
-                    }
+                    jar = jar.equals("conscrypt-hostdex") ? "conscrypt-host-hostdex" : jar;
                     file = new File(String.format(pattern, jar));
                 } else {
-                    final String apexPackage;
-                    // With unbundled ART, the intermediate directory storing the jar file
-                    // outside ART APEX doesn't contain the apex package name.
-                    final boolean tryNonApexIntermediate;
-                    if ("conscrypt".equals(jar)) {
-                        apexPackage = "com.android.conscrypt";
-                        tryNonApexIntermediate = true;
-                    } else if ("core-icu4j".equals(jar)) {
-                        apexPackage = "com.android.i18n";
-                        tryNonApexIntermediate = true;
+                    if (jar.equals("conscrypt")) {
+                        file = new File(String.format(pattern, jar + ".com.android.conscrypt"));
+                        if (!file.exists()) {
+                          // With unbundled ART, the intermediate directory is under conscrypt.
+                          file = new File(String.format(pattern, jar));
+                        }
                     } else {
-                        apexPackage = "com.android.art.testing";
-                        tryNonApexIntermediate = false;
-                    }
-
-                    file = new File(String.format(pattern, jar + "." + apexPackage));
-                    if (tryNonApexIntermediate && !file.exists()) {
-                        file = new File(String.format(pattern, jar));
+                        file = new File(String.format(pattern, jar + ".com.android.art.testing"));
                     }
                 }
                 compilationClasspath[i] = file;
