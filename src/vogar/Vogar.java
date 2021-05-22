@@ -40,7 +40,7 @@ import vogar.util.Strings;
  * Command line interface for running benchmarks and tests on dalvik.
  */
 public final class Vogar {
-    static final int LARGE_TIMEOUT_MULTIPLIER = 10;
+    static final int LARGE_TIMEOUT_MULTIPLIER = 20;
     public static final int NUM_PROCESSORS = Runtime.getRuntime().availableProcessors();
 
     private final List<File> actionFiles = new ArrayList<File>();
