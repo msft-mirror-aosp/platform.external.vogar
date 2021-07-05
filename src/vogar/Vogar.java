@@ -218,6 +218,9 @@ public final class Vogar {
     @Option(names = {"--runner-type"})
     RunnerType runnerType;
 
+    @Option(names = {"--sdk-version"})
+    Integer sdkVersion = 28;
+
     @VisibleForTesting public Vogar() {}
 
     private void printUsage() {
@@ -402,6 +405,11 @@ public final class Vogar {
         System.out.println("  --multidex: whether to use native multidex support");
         System.out.println("      Disable with --no-multidex.");
         System.out.println("      Default is: " + multidex);
+        System.out.println();
+        System.out.println("  --sdk-version <argument>: min and target sdk version.");
+        System.out.println("      Used in the app manifest for ACTIVITY mode");
+        System.out.println("      to prevent warning popups about old applications");
+        System.out.println("      Default is: " + sdkVersion);
         System.out.println();
         System.out.println("  --dalvik-cache <argument>: override default dalvik-cache location.");
         System.out.println("      Default is: " + dalvikCache);
