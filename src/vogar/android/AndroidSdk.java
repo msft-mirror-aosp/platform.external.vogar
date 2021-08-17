@@ -240,7 +240,8 @@ public class AndroidSdk {
 
     /**
      * Depending on the build setup, jars might be located in the intermediates directory
-     * for their APEX or not, so look in both places.  Return null if not found.
+     * for their APEX or not, so look in both places. Returns the last path searched, so
+     * always non-null but possibly non-existent and so the caller should check.
      */
     private static File findApexJar(String jar, String filePattern) {
         File file = new File(String.format(filePattern, jar + "." + apexForJar(jar)));
