@@ -184,6 +184,7 @@ public class AndroidSdk {
 
             String[] jarNames = modeId.getJarNames();
             compilationClasspath = new File[jarNames.length];
+            List<String> missingJars = new ArrayList<>();
             for (int i = 0; i < jarNames.length; i++) {
                 String jar = jarNames[i];
                 File file;
@@ -195,27 +196,18 @@ public class AndroidSdk {
                     }
                     file = new File(String.format(pattern, jar));
                 } else {
-                    final String apexPackage;
-                    // With unbundled ART, the intermediate directory storing the jar file
-                    // outside ART APEX doesn't contain the apex package name.
-                    final boolean tryNonApexIntermediate;
-                    if ("conscrypt".equals(jar)) {
-                        apexPackage = "com.android.conscrypt";
-                        tryNonApexIntermediate = true;
-                    } else if ("core-icu4j".equals(jar)) {
-                        apexPackage = "com.android.i18n";
-                        tryNonApexIntermediate = true;
+                    file = findApexJar(jar, pattern);
+                    if (file.exists()) {
+                        log.verbose("Using jar " + jar + " from " + file);
                     } else {
-                        apexPackage = "com.android.art.testing";
-                        tryNonApexIntermediate = false;
-                    }
-
-                    file = new File(String.format(pattern, jar + "." + apexPackage));
-                    if (tryNonApexIntermediate && !file.exists()) {
-                        file = new File(String.format(pattern, jar));
+                        missingJars.add(jar);
                     }
                 }
                 compilationClasspath[i] = file;
+            }
+            if (!missingJars.isEmpty()) {
+                logMissingJars(log, missingJars);
+                throw new RuntimeException("Unable to locate all jars needed for compilation");
             }
         } else {
             throw new RuntimeException("Couldn't derive Android home from "
@@ -224,6 +216,39 @@ public class AndroidSdk {
 
         return new AndroidSdk(log, mkdir, compilationClasspath, androidJarPath, desugarJarPath,
                 new HostFileCache(log, mkdir), language);
+    }
+
+    /** Logs jars that couldn't be found ands suggests a command for building them */
+    private static void logMissingJars(Log log, List<String> missingJars) {
+        StringBuilder makeCommand = new StringBuilder().append("m ");
+        for (String jarName : missingJars) {
+            log.warn("Missing compilation jar " + jarName + " from APEX " + apexForJar(jarName));
+            makeCommand.append(jarName).append(" ");
+        }
+        log.info("Suggested make command: " + makeCommand);
+    }
+
+    /** Returns the name of the APEX a particular jar might be located in */
+    private static String apexForJar(String jar) {
+        if ("conscrypt".equals(jar)) {
+            return "com.android.conscrypt";
+        } else if ("core-icu4j".equals(jar)) {
+            return "com.android.i18n";
+        }
+        return "com.android.art.testing";
+    }
+
+    /**
+     * Depending on the build setup, jars might be located in the intermediates directory
+     * for their APEX or not, so look in both places. Returns the last path searched, so
+     * always non-null but possibly non-existent and so the caller should check.
+     */
+    private static File findApexJar(String jar, String filePattern) {
+        File file = new File(String.format(filePattern, jar + "." + apexForJar(jar)));
+        if (file.exists()) {
+            return file;
+        }
+        return new File(String.format(filePattern, jar));
     }
 
     @VisibleForTesting
@@ -371,11 +396,27 @@ public class AndroidSdk {
                 }
                 builder.args(D8_COMMAND_NAME);
                 builder.args("-JXms16M").args("-JXmx1536M");
+
+                // d8 will not allow compiling with a single dex file as the target, but if given
+                // a directory name will start its output in classes.dex but may overflow into
+                // multiple dex files. See b/189327238
+                String outputPath = output.toString();
+                String dexOverflowPath = null;
+                if (outputPath.endsWith("/classes.dex")) {
+                    dexOverflowPath = outputPath.replace("classes.dex", "classes2.dex");
+                    outputPath = output.getParentFile().toString();
+                }
                 builder
                     .args("--min-api").args(language.getMinApiLevel())
-                    .args("--output").args(output)
+                    .args("--output").args(outputPath)
                     .args(sanitizedDesugarOutputFilePaths);
                 builder.execute();
+                if (dexOverflowPath != null && new File(dexOverflowPath).exists()) {
+                    // If we were expecting a single dex file and d8 overflows into two
+                    // or more files than fail.
+                    throw new RuntimeException("Dex file overflow " + dexOverflowPath
+                        + ", try --multidex");
+                }
                 if (output.toString().endsWith(".jar")) {
                     try {
                         fixD8JarOutput(output, desugarOutputFilePaths);
