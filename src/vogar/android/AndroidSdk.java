@@ -389,6 +389,12 @@ public class AndroidSdk {
                 builder.execute();
                 break;
             case D8:
+                List<String> sanitizedOutputFilePaths;
+                try {
+                    sanitizedOutputFilePaths = removeDexFilesForD8(filePaths);
+                } catch (IOException e) {
+                    throw new RuntimeException("Error while removing dex files from archive", e);
+                }
                 builder.args(D8_COMMAND_NAME);
                 builder.args("-JXms16M").args("-JXmx1536M");
 
@@ -404,7 +410,7 @@ public class AndroidSdk {
                 builder
                     .args("--min-api").args(language.getMinApiLevel())
                     .args("--output").args(outputPath)
-                    .args(filePaths);
+                    .args(sanitizedOutputFilePaths);
                 builder.execute();
                 if (dexOverflowPath != null && new File(dexOverflowPath).exists()) {
                     // If we were expecting a single dex file and d8 overflows into two
@@ -414,7 +420,7 @@ public class AndroidSdk {
                 }
                 if (output.toString().endsWith(".jar")) {
                     try {
-                        fixD8JarOutput(output, filePaths);
+                        fixD8JarOutput(output, sanitizedOutputFilePaths);
                     } catch (IOException e) {
                         throw new RuntimeException("Error while fixing d8 output", e);
                     }
@@ -456,6 +462,31 @@ public class AndroidSdk {
                 outputCopy.delete();
             }
         }
+    }
+
+    /**
+      * Removes DEX files from an archive and preserves the rest.
+      */
+    private List<String> removeDexFilesForD8(List<String> fileNames) throws IOException {
+        byte[] buffer = new byte[4096];
+        List<String> processedFiles = new ArrayList<>(fileNames.size());
+        for (String inputFileName : fileNames) {
+            String jarExtension = ".jar";
+            String outputFileName;
+            if (inputFileName.endsWith(jarExtension)) {
+                outputFileName =
+                    inputFileName.substring(0, inputFileName.length() - jarExtension.length())
+                    + "-d8" + jarExtension;
+            } else {
+                outputFileName = inputFileName + "-d8" + jarExtension;
+            }
+            try (JarOutputStream outputJar =
+                    new JarOutputStream(new FileOutputStream(outputFileName))) {
+                copyJarContentExcludingFiles(buffer, inputFileName, outputJar, ".dex");
+            }
+            processedFiles.add(outputFileName);
+        }
+        return processedFiles;
     }
 
     private static void copyJarContentExcludingClassFiles(byte[] buffer, String inputJarName,
