@@ -356,9 +356,10 @@ public class AndroidSdk {
             }
         }
 
-        // Call desugar first to remove invoke-dynamic LambdaMetaFactory usage,
-        // which ART doesn't support.
-        List<String> desugarOutputFilePaths = desugar(outputTempDir, classpath, dependentCp);
+        List<String> filePaths = new ArrayList<String>();
+        for (File file : classpath.getElements()) {
+          filePaths.add(file.getPath());
+        }
 
         /*
          * We pass --core-library so that we can write tests in the
@@ -384,16 +385,10 @@ public class AndroidSdk {
                 builder.args("--dex")
                     .args("--output=" + output)
                     .args("--core-library")
-                    .args(desugarOutputFilePaths);
+                    .args(filePaths);
                 builder.execute();
                 break;
             case D8:
-                List<String> sanitizedDesugarOutputFilePaths;
-                try {
-                    sanitizedDesugarOutputFilePaths = removeDexFilesForD8(desugarOutputFilePaths);
-                } catch (IOException e) {
-                    throw new RuntimeException("Error while removing dex files from archive", e);
-                }
                 builder.args(D8_COMMAND_NAME);
                 builder.args("-JXms16M").args("-JXmx1536M");
 
@@ -409,7 +404,7 @@ public class AndroidSdk {
                 builder
                     .args("--min-api").args(language.getMinApiLevel())
                     .args("--output").args(outputPath)
-                    .args(sanitizedDesugarOutputFilePaths);
+                    .args(filePaths);
                 builder.execute();
                 if (dexOverflowPath != null && new File(dexOverflowPath).exists()) {
                     // If we were expecting a single dex file and d8 overflows into two
@@ -419,7 +414,7 @@ public class AndroidSdk {
                 }
                 if (output.toString().endsWith(".jar")) {
                     try {
-                        fixD8JarOutput(output, desugarOutputFilePaths);
+                        fixD8JarOutput(output, filePaths);
                     } catch (IOException e) {
                         throw new RuntimeException("Error while fixing d8 output", e);
                     }
@@ -463,31 +458,6 @@ public class AndroidSdk {
         }
     }
 
-    /**
-      * Removes DEX files from an archive and preserve the rest.
-      */
-    private List<String> removeDexFilesForD8(List<String> fileNames) throws IOException {
-        byte[] buffer = new byte[4096];
-        List<String> processedFiles = new ArrayList<>(fileNames.size());
-        for (String inputFileName : fileNames) {
-            String jarExtension = ".jar";
-            String outputFileName;
-            if (inputFileName.endsWith(jarExtension)) {
-                outputFileName =
-                    inputFileName.substring(0, inputFileName.length() - jarExtension.length())
-                    + "-d8" + jarExtension;
-            } else {
-              outputFileName = inputFileName + "-d8" + jarExtension;
-            }
-            try (JarOutputStream outputJar =
-                    new JarOutputStream(new FileOutputStream(outputFileName))) {
-                copyJarContentExcludingFiles(buffer, inputFileName, outputJar, ".dex");
-            }
-            processedFiles.add(outputFileName);
-        }
-        return processedFiles;
-    }
-
     private static void copyJarContentExcludingClassFiles(byte[] buffer, String inputJarName,
             JarOutputStream outputJar) throws IOException {
         copyJarContentExcludingFiles(buffer, inputJarName, outputJar, ".class");
@@ -520,73 +490,6 @@ public class AndroidSdk {
                 outputJar.closeEntry();
             }
         }
-    }
-
-    // Runs desugar on classpath as the input with dependentCp as the classpath_entry.
-    // Returns the generated output list of files.
-    private List<String> desugar(File outputTempDir, Classpath classpath, Classpath dependentCp) {
-        Command.Builder builder = new Command.Builder(log)
-                .args("java", "-jar", desugarJarPath);
-
-        // Ensure that libcore is on the bootclasspath for desugar,
-        // otherwise it tries to use the java command's bootclasspath.
-        for (File f : compilationClasspath) {
-            builder.args("--bootclasspath_entry", f.getPath());
-        }
-
-        // Desugar needs to actively resolve classes that the original inputs
-        // were compiled against. Dx does not; so it doesn't use dependentCp.
-        for (File f : dependentCp.getElements()) {
-            builder.args("--classpath_entry", f.getPath());
-        }
-
-        builder.args("--core_library")
-                .args("--min_sdk_version", language.getMinApiLevel());
-
-        // Build the -i (input) and -o (output) arguments.
-        // Every input from classpath corresponds to a new output temp file into
-        // desugarTempDir.
-        File desugarTempDir;
-        {
-            // Generate a temporary list of files that correspond to the 'classpath';
-            // desugar will then convert the files in 'classpath' into 'desugarClasspath'.
-            if (!outputTempDir.isDirectory()) {
-                throw new AssertionError(
-                        "outputTempDir must be a directory: " + outputTempDir.getPath());
-            }
-
-            String desugarTempDirPath = outputTempDir.getPath() + "/desugar";
-            desugarTempDir = new File(desugarTempDirPath);
-            desugarTempDir.mkdirs();
-            if (!desugarTempDir.exists()) {
-                throw new AssertionError(
-                        "desugarTempDir; failed to create " + desugarTempDirPath);
-            }
-        }
-
-        // Create unique file names to support non-unique classpath base names.
-        //
-        // For example:
-        //
-        // Classpath("/x/y.jar:/z/y.jar:/a/b.jar") ->
-        // Output Files("${tmp}/0y.jar:${tmp}/1y.jar:${tmp}/2b.jar")
-        int uniqueCounter = 0;
-        List<String> desugarOutputFilePaths = new ArrayList<String>();
-
-        for (File desugarInput : classpath.getElements()) {
-            String tmpName = uniqueCounter + desugarInput.getName();
-            ++uniqueCounter;
-
-            String desugarOutputPath = desugarTempDir.getPath() + "/" + tmpName;
-            desugarOutputFilePaths.add(desugarOutputPath);
-
-            builder.args("-i", desugarInput.getPath())
-                    .args("-o", desugarOutputPath);
-        }
-
-        builder.execute();
-
-        return desugarOutputFilePaths;
     }
 
     public void packageApk(File apk, File manifest) {
