@@ -420,7 +420,7 @@ public class AndroidSdk {
                 }
                 if (output.toString().endsWith(".jar")) {
                     try {
-                        fixD8JarOutput(output, sanitizedOutputFilePaths);
+                        fixD8JarOutput(output, filePaths);
                     } catch (IOException e) {
                         throw new RuntimeException("Error while fixing d8 output", e);
                     }
