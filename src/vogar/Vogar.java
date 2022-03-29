@@ -311,11 +311,12 @@ public final class Vogar {
         System.out.println("  --results-dir <directory>: read and write (if --record-results used)");
         System.out.println("      results from and to this directory.");
         System.out.println();
-        System.out.println("  --runner-type <default|caliper|main|junit>: specify which runner to use.");
-        System.out.println("      default: runs both JUnit tests and main() classes");
+        System.out.println("  --runner-type <default|caliper|main|junit|testng>: specify which runner to use.");
+        System.out.println("      default: runs JUnit tests, TestNG tests and main() classes");
         System.out.println("      caliper: runs Caliper benchmarks only");
         System.out.println("      main: runs main() classes only");
         System.out.println("      junit: runs JUnit tests only");
+        System.out.println("      testng: runs TestNG tests only");
         System.out.println("      Default is determined by --benchmark and --testonly, if they are");
         System.out.println("      not specified then defaults to: default");
         System.out.println();
