@@ -28,7 +28,9 @@ public class TestNgTargetRunner implements TargetRunner {
     private final TargetMonitor monitor;
     private final Class<?> testClass;
     private final TestEnvironment testEnvironment;
+    private final String qualification;
     private final TestNgAnnotationTransformer transformer;
+    private final String[] args;
 
     public TestNgTargetRunner(
             TargetMonitor monitor,
@@ -41,20 +43,24 @@ public class TestNgTargetRunner implements TargetRunner {
         this.monitor = monitor;
         this.testClass = testClass;
         this.testEnvironment = testEnvironment;
-        this.transformer = new TestNgAnnotationTransformer(timeoutSeconds, skipPastReference);
+        this.qualification = qualification;
+        this.args = args;
+        this.transformer =
+                new TestNgAnnotationTransformer(
+                        timeoutSeconds, skipPastReference, qualification, args);
     }
 
     @Override
     public boolean run() {
         // Set up TestNg core infrastructure.
-        TestNG testng = new TestNG();
+        TestNG testng = new TestNG(false);
 
         // This transformer handles test timeout and overrides it if vogar was run
         // with specific timeout parameter (see  --timeout option).
         testng.setAnnotationTransformer(transformer);
 
-        // Default listeners attempt to create html/xml reports. Disable them all completely.
-        testng.setUseDefaultListeners(false);
+        // Make TestNG less noisy.
+        testng.setVerbose(0);
         // Proxy to pass TestNg test lifecycle calls to vogar.
         TestNgListenerAdapter adapter = new TestNgListenerAdapter(monitor);
         testng.addListener(adapter);

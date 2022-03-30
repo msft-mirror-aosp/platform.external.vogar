@@ -230,10 +230,10 @@ public final class Vogar {
         System.out.println("Usage: Vogar [options]... <actions>... [-- target args]...");
         System.out.println();
         System.out.println("  <actions>: .java files, directories, or class names.");
-        System.out.println("      These should be JUnit tests, jtreg tests, Caliper benchmarks");
+        System.out.println("      These should be JUnit tests, TestNG tests, jtreg tests, Caliper benchmarks");
         System.out.println("      or executable Java classes.");
         System.out.println();
-        System.out.println("      When passing in a JUnit test class, it may have \"#method_name\"");
+        System.out.println("      When passing in a JUnit or TestNG test class, it may have \"#method_name\"");
         System.out.println("      appended to it, to specify a single test method.");
         System.out.println();
         System.out.println("  [target args]: arguments passed to the target process. This is only useful when");

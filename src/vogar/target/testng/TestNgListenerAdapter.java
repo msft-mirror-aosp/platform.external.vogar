@@ -51,11 +51,11 @@ public class TestNgListenerAdapter implements ITestListener {
     @Override
     public void onTestFailure(ITestResult result) {
         Throwable thrown = result.getThrowable();
-        monitor.outcomeFinished(Result.ERROR);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         PrintStream stackTrace = new PrintStream(out);
         thrown.printStackTrace(stackTrace);
         monitor.output(out.toString());
+        monitor.outcomeFinished(Result.ERROR);
     }
 
     @Override

@@ -20,6 +20,8 @@ import org.testng.annotations.ITestAnnotation;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -42,10 +44,19 @@ public class TestNgAnnotationTransformer implements IAnnotationTransformer {
 
     private final long timeoutMillis;
     private final AtomicReference<String> skipReference;
+    private final String qualification;
+    private final HashSet<String> args;
 
-    public TestNgAnnotationTransformer(int timeoutSeconds, AtomicReference<String> skipReference) {
+    public TestNgAnnotationTransformer(
+            int timeoutSeconds,
+            AtomicReference<String> skipReference,
+            String qualification,
+            String[] vogarArgs) {
         this.timeoutMillis = 1000L * timeoutSeconds;
         this.skipReference = skipReference;
+        this.qualification = qualification;
+        this.args = new HashSet<>();
+        this.args.addAll(List.of(vogarArgs));
     }
 
     @Override
@@ -62,7 +73,7 @@ public class TestNgAnnotationTransformer implements IAnnotationTransformer {
             }
         }
 
-        // Skip up to and including given test name.
+        // Skip up to and including given test name if --skipPast provided.
         final String skipPast = skipReference.get();
         if (skipPast != null && testClass == null && testMethod != null) {
             String name = testMethod.getName();
@@ -70,6 +81,18 @@ public class TestNgAnnotationTransformer implements IAnnotationTransformer {
                 skipReference.set(null);
             }
             annotation.setEnabled(false);
+        }
+
+        // Disable all but specified tests if qualified test name provided (package.class#method).
+        if (qualification != null && testMethod != null) {
+            if (!qualification.equals(testMethod.getName())) {
+                annotation.setEnabled(false);
+            }
+        }
+        if (!args.isEmpty() && testMethod != null) {
+            if (!args.contains(testMethod.getName())) {
+                annotation.setEnabled(false);
+            }
         }
     }
 }
