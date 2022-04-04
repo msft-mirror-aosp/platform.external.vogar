@@ -59,6 +59,17 @@ public class TestNgTargetRunner implements TargetRunner {
         // with specific timeout parameter (see  --timeout option).
         testng.setAnnotationTransformer(transformer);
 
+        // Disable parallel execution of tests using @DataProvider's.
+        // If parallel execution is enabled with @DataProvider(..., parallel = true) then it
+        // would break vogar.monitor.HostMonitor#followProcess protocol which relies on receiving
+        // control messages in specific order. It expects "{outcome: ...}" json-object
+        // followed by another "{result: ...}" json-object for each test run; whereas with parallel
+        // execution enabled for @DataProvider, HostMonitor#followProcess would receive all
+        // "outcome" objects, and then all "result" objects, in random order.
+        // The easiest way of preventing this behavior would be to disable parallel execution
+        // for data providers.
+        testng.setDataProviderThreadCount(1);
+
         // Make TestNG less noisy.
         testng.setVerbose(0);
         // Proxy to pass TestNg test lifecycle calls to vogar.
