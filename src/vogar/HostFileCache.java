@@ -17,7 +17,6 @@
 package vogar;
 
 import java.io.File;
-import java.lang.ProcessHandle;
 import java.util.List;
 import vogar.commands.Command;
 import vogar.commands.Mkdir;
@@ -45,8 +44,7 @@ public class HostFileCache implements FileCache {
     private void mv(File source, File destination) {
         List<String> rawResult = new Command.Builder(log).args("mv", source, destination).execute();
         // A successful move returns no results.
-        // Note that other process might have moved the file to the destination at the same time.
-        if (!rawResult.isEmpty() && !destination.exists()) {
+        if (!rawResult.isEmpty()) {
             throw new RuntimeException("Couldn't move " + source + " to " + destination
                     + ": " + rawResult.get(0));
         }
@@ -62,7 +60,7 @@ public class HostFileCache implements FileCache {
         mkdir.mkdirs(CACHE_ROOT);
         // Copy it onto the same file system first, then atomically move it into place.
         // That way, if we fail, we don't leave anything dangerous lying around.
-        File temporary = new File(cachedFile + ".tmp" + String.valueOf(ProcessHandle.current().pid()));
+        File temporary = new File(cachedFile + ".tmp");
         cp(source, temporary);
         mv(temporary, cachedFile);
     }
