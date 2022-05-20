@@ -227,7 +227,9 @@ public class AndroidSdk {
     private static void logMissingJars(Log log, List<String> missingJars) {
         StringBuilder makeCommand = new StringBuilder().append("m ");
         for (String jarName : missingJars) {
-            log.warn("Missing compilation jar " + jarName + " from APEX " + apexForJar(jarName));
+            String apex = apexForJar(jarName);
+            log.warn("Missing compilation jar " + jarName +
+                    (apex != null ? " from APEX " + apex : ""));
             makeCommand.append(jarName).append(" ");
         }
         log.info("Suggested make command: " + makeCommand);
@@ -235,10 +237,8 @@ public class AndroidSdk {
 
     /** Returns the name of the APEX a particular jar might be located in */
     private static String apexForJar(String jar) {
-        if ("conscrypt".equals(jar)) {
-            return "com.android.conscrypt";
-        } else if ("core-icu4j".equals(jar)) {
-            return "com.android.i18n";
+        if (jar.endsWith(".api.stubs")) {
+            return null;  // API stubs aren't in any APEX.
         }
         return "com.android.art.testing";
     }
@@ -249,9 +249,12 @@ public class AndroidSdk {
      * always non-null but possibly non-existent and so the caller should check.
      */
     private static File findApexJar(String jar, String filePattern) {
-        File file = new File(String.format(filePattern, jar + "." + apexForJar(jar)));
-        if (file.exists()) {
-            return file;
+        String apex = apexForJar(jar);
+        if (apex != null) {
+            File file = new File(String.format(filePattern, jar + "." + apex));
+            if (file.exists()) {
+                return file;
+            }
         }
         return new File(String.format(filePattern, jar));
     }
