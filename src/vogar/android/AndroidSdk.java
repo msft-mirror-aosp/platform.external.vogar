@@ -70,7 +70,8 @@ public class AndroidSdk {
      * compilation class path and android jar path.
      */
     public static AndroidSdk createAndroidSdk(
-            Log log, Mkdir mkdir, ModeId modeId, Language language) {
+            Log log, Mkdir mkdir, ModeId modeId, Language language,
+            boolean supportBuildFromSource) {
         List<String> path = new Command.Builder(log).args("which", ARBITRARY_BUILD_TOOL_NAME)
                 .permitNonZeroExitStatus(true)
                 .execute();
@@ -175,39 +176,43 @@ public class AndroidSdk {
 
             desugarJarPath = desugarJar.getPath();
 
-            String pattern = outDir +
-                    "target/common/obj/JAVA_LIBRARIES/%s_intermediates/classes";
-            if (modeId.isHost()) {
-                pattern = outDir + "host/common/obj/JAVA_LIBRARIES/%s_intermediates/classes";
-            }
-            pattern += ".jar";
-
-            String[] jarNames = modeId.getJarNames();
-            compilationClasspath = new File[jarNames.length];
-            List<String> missingJars = new ArrayList<>();
-            for (int i = 0; i < jarNames.length; i++) {
-                String jar = jarNames[i];
-                File file;
+            if (!supportBuildFromSource) {
+                compilationClasspath = new File[]{};
+            } else {
+                String pattern = outDir +
+                        "target/common/obj/JAVA_LIBRARIES/%s_intermediates/classes";
                 if (modeId.isHost()) {
-                    if  ("conscrypt-hostdex".equals(jar)) {
-                        jar = "conscrypt-host-hostdex";
-                    } else if ("core-icu4j-hostdex".equals(jar)) {
-                        jar = "core-icu4j-host-hostdex";
-                    }
-                    file = new File(String.format(pattern, jar));
-                } else {
-                    file = findApexJar(jar, pattern);
-                    if (file.exists()) {
-                        log.verbose("Using jar " + jar + " from " + file);
-                    } else {
-                        missingJars.add(jar);
-                    }
+                    pattern = outDir + "host/common/obj/JAVA_LIBRARIES/%s_intermediates/classes";
                 }
-                compilationClasspath[i] = file;
-            }
-            if (!missingJars.isEmpty()) {
-                logMissingJars(log, missingJars);
-                throw new RuntimeException("Unable to locate all jars needed for compilation");
+                pattern += ".jar";
+
+                String[] jarNames = modeId.getJarNames();
+                compilationClasspath = new File[jarNames.length];
+                List<String> missingJars = new ArrayList<>();
+                for (int i = 0; i < jarNames.length; i++) {
+                    String jar = jarNames[i];
+                    File file;
+                    if (modeId.isHost()) {
+                        if  ("conscrypt-hostdex".equals(jar)) {
+                            jar = "conscrypt-host-hostdex";
+                        } else if ("core-icu4j-hostdex".equals(jar)) {
+                            jar = "core-icu4j-host-hostdex";
+                        }
+                        file = new File(String.format(pattern, jar));
+                    } else {
+                        file = findApexJar(jar, pattern);
+                        if (file.exists()) {
+                            log.verbose("Using jar " + jar + " from " + file);
+                        } else {
+                            missingJars.add(jar);
+                        }
+                    }
+                    compilationClasspath[i] = file;
+                }
+                if (!missingJars.isEmpty()) {
+                    logMissingJars(log, missingJars);
+                    throw new RuntimeException("Unable to locate all jars needed for compilation");
+                }
             }
         } else {
             throw new RuntimeException("Couldn't derive Android home from "
