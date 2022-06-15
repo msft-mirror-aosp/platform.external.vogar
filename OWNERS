@@ -1,2 +1,5 @@
-# Bug component: 24949
-include platform/libcore:/OWNERS
+android-libcore-team+review@google.com
+dsrbecky@google.com
+ngeoffray@google.com
+paulduffin@google.com
+rpl@google.com
