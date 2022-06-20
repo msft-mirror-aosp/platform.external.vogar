@@ -665,7 +665,8 @@ public final class Vogar {
 
         AndroidSdk androidSdk = null;
         if (modeId.requiresAndroidSdk()) {
-            androidSdk = AndroidSdk.createAndroidSdk(console, mkdir, modeId, language);
+            androidSdk = AndroidSdk.createAndroidSdk(console, mkdir, modeId, language,
+                    !actionFiles.isEmpty());
         }
 
         if (runnerType == null) {
