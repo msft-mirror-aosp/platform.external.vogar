@@ -230,10 +230,10 @@ public final class Vogar {
         System.out.println("Usage: Vogar [options]... <actions>... [-- target args]...");
         System.out.println();
         System.out.println("  <actions>: .java files, directories, or class names.");
-        System.out.println("      These should be JUnit tests, jtreg tests, Caliper benchmarks");
+        System.out.println("      These should be JUnit tests, TestNG tests, jtreg tests, Caliper benchmarks");
         System.out.println("      or executable Java classes.");
         System.out.println();
-        System.out.println("      When passing in a JUnit test class, it may have \"#method_name\"");
+        System.out.println("      When passing in a JUnit or TestNG test class, it may have \"#method_name\"");
         System.out.println("      appended to it, to specify a single test method.");
         System.out.println();
         System.out.println("  [target args]: arguments passed to the target process. This is only useful when");
@@ -311,11 +311,12 @@ public final class Vogar {
         System.out.println("  --results-dir <directory>: read and write (if --record-results used)");
         System.out.println("      results from and to this directory.");
         System.out.println();
-        System.out.println("  --runner-type <default|caliper|main|junit>: specify which runner to use.");
-        System.out.println("      default: runs both JUnit tests and main() classes");
+        System.out.println("  --runner-type <default|caliper|main|junit|testng>: specify which runner to use.");
+        System.out.println("      default: runs JUnit tests, TestNG tests and main() classes");
         System.out.println("      caliper: runs Caliper benchmarks only");
         System.out.println("      main: runs main() classes only");
         System.out.println("      junit: runs JUnit tests only");
+        System.out.println("      testng: runs TestNG tests only");
         System.out.println("      Default is determined by --benchmark and --testonly, if they are");
         System.out.println("      not specified then defaults to: default");
         System.out.println();
@@ -664,7 +665,8 @@ public final class Vogar {
 
         AndroidSdk androidSdk = null;
         if (modeId.requiresAndroidSdk()) {
-            androidSdk = AndroidSdk.createAndroidSdk(console, mkdir, modeId, language);
+            androidSdk = AndroidSdk.createAndroidSdk(console, mkdir, modeId, language,
+                    !actionFiles.isEmpty());
         }
 
         if (runnerType == null) {
