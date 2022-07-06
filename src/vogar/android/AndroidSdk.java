@@ -385,7 +385,7 @@ public class AndroidSdk {
         switch (dexer) {
             case DX:
                 builder.args(DX_COMMAND_NAME);
-                builder.args("-JXms16M").args("-JXmx1536M");
+                builder.args("-JXms16M").args("-JXmx2G");
                 builder.args("--min-sdk-version=" + language.getMinApiLevel());
                 if (multidex) {
                     builder.args("--multi-dex");
@@ -404,7 +404,7 @@ public class AndroidSdk {
                     throw new RuntimeException("Error while removing dex files from archive", e);
                 }
                 builder.args(D8_COMMAND_NAME);
-                builder.args("-JXms16M").args("-JXmx1536M");
+                builder.args("-JXms16M").args("-JXmx2G");
 
                 // d8 will not allow compiling with a single dex file as the target, but if given
                 // a directory name will start its output in classes.dex but may overflow into
