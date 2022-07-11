@@ -407,6 +407,7 @@ public class AndroidSdk {
                 builder.args(D8_COMMAND_NAME);
                 builder.args("-JXms16M").args("-JXmx1536M");
                 builder.args("-JXX:+TieredCompilation").args("-JXX:TieredStopAtLevel=1");
+                builder.args("--thread-count").args("1");
 
                 // d8 will not allow compiling with a single dex file as the target, but if given
                 // a directory name will start its output in classes.dex but may overflow into
