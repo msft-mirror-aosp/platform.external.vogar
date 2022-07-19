@@ -58,6 +58,8 @@ public class AndroidSdk {
     private final String desugarJarPath;
     private final Md5Cache dexCache;
     private final Language language;
+    private final boolean serialDexing;
+    private final boolean verboseDexStats;
 
     public static Collection<File> defaultExpectations() {
         return Collections.singletonList(new File("libcore/expectations/knownfailures.txt"));
@@ -71,7 +73,7 @@ public class AndroidSdk {
      */
     public static AndroidSdk createAndroidSdk(
             Log log, Mkdir mkdir, ModeId modeId, Language language,
-            boolean supportBuildFromSource) {
+            boolean supportBuildFromSource, boolean serialDexing, boolean verboseDexStats) {
         List<String> path = new Command.Builder(log).args("which", ARBITRARY_BUILD_TOOL_NAME)
                 .permitNonZeroExitStatus(true)
                 .execute();
@@ -220,7 +222,7 @@ public class AndroidSdk {
         }
 
         return new AndroidSdk(log, mkdir, compilationClasspath, androidJarPath, desugarJarPath,
-                new HostFileCache(log, mkdir), language);
+                new HostFileCache(log, mkdir), language, serialDexing, verboseDexStats);
     }
 
     /** Logs jars that couldn't be found ands suggests a command for building them */
@@ -261,7 +263,8 @@ public class AndroidSdk {
 
     @VisibleForTesting
     AndroidSdk(Log log, Mkdir mkdir, File[] compilationClasspath, String androidJarPath,
-               String desugarJarPath, HostFileCache hostFileCache, Language language) {
+               String desugarJarPath, HostFileCache hostFileCache, Language language,
+               boolean serialDexing, boolean verboseDexStats) {
         this.log = log;
         this.mkdir = mkdir;
         this.compilationClasspath = compilationClasspath;
@@ -269,6 +272,8 @@ public class AndroidSdk {
         this.desugarJarPath = desugarJarPath;
         this.dexCache = new Md5Cache(log, "dex", hostFileCache);
         this.language = language;
+        this.serialDexing = serialDexing;
+        this.verboseDexStats = verboseDexStats;
     }
 
     // Goes up N levels in the filesystem hierarchy. Return the last file that exists if this goes
@@ -382,6 +387,9 @@ public class AndroidSdk {
          */
 
         Command.Builder builder = new Command.Builder(log);
+        if (verboseDexStats) {
+            builder.args("/usr/bin/time").args("-v");
+        }
         switch (dexer) {
             case DX:
                 builder.args(DX_COMMAND_NAME);
