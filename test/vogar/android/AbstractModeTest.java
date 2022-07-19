@@ -73,7 +73,7 @@ public abstract class AbstractModeTest {
         androidSdk = new AndroidSdk(console, mkdir,
                 new File[] {new File("classpath")}, "android.jar", "desugar.jar",
                 new HostFileCache(console, mkdir),
-                Language.CUR);
+                Language.CUR, false, false);
         Target target = createTarget();
 
         final Vogar vogar = new Vogar();
