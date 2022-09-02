@@ -221,6 +221,12 @@ public final class Vogar {
     @Option(names = {"--sdk-version"})
     Integer sdkVersion = 28;
 
+    @Option(names = {"--serial-dexing"})
+    boolean serialDexing = false;
+
+    @Option(names = {"--verbose-dex-stats"})
+    boolean verboseDexStats = false;
+
     @VisibleForTesting public Vogar() {}
 
     private void printUsage() {
@@ -230,10 +236,10 @@ public final class Vogar {
         System.out.println("Usage: Vogar [options]... <actions>... [-- target args]...");
         System.out.println();
         System.out.println("  <actions>: .java files, directories, or class names.");
-        System.out.println("      These should be JUnit tests, jtreg tests, Caliper benchmarks");
+        System.out.println("      These should be JUnit tests, TestNG tests, jtreg tests, Caliper benchmarks");
         System.out.println("      or executable Java classes.");
         System.out.println();
-        System.out.println("      When passing in a JUnit test class, it may have \"#method_name\"");
+        System.out.println("      When passing in a JUnit or TestNG test class, it may have \"#method_name\"");
         System.out.println("      appended to it, to specify a single test method.");
         System.out.println();
         System.out.println("  [target args]: arguments passed to the target process. This is only useful when");
@@ -311,11 +317,12 @@ public final class Vogar {
         System.out.println("  --results-dir <directory>: read and write (if --record-results used)");
         System.out.println("      results from and to this directory.");
         System.out.println();
-        System.out.println("  --runner-type <default|caliper|main|junit>: specify which runner to use.");
-        System.out.println("      default: runs both JUnit tests and main() classes");
+        System.out.println("  --runner-type <default|caliper|main|junit|testng>: specify which runner to use.");
+        System.out.println("      default: runs JUnit tests, TestNG tests and main() classes");
         System.out.println("      caliper: runs Caliper benchmarks only");
         System.out.println("      main: runs main() classes only");
         System.out.println("      junit: runs JUnit tests only");
+        System.out.println("      testng: runs TestNG tests only");
         System.out.println("      Default is determined by --benchmark and --testonly, if they are");
         System.out.println("      not specified then defaults to: default");
         System.out.println();
@@ -325,6 +332,17 @@ public final class Vogar {
                 + RunnerType.JUNIT.name().toLowerCase());
         System.out.println();
         System.out.println("  --verbose: turn on persistent verbose output.");
+        System.out.println();
+        System.out.println("  --serial-dexing: disallow Vogar spawn multiple simultaneous dex tasks");
+        System.out.println("      Enabling this is useful when there is a memory constraint;");
+        System.out.println("      and each dex task could easily consume around 1.5G of memory.");
+        System.out.println("      Default is: " + serialDexing);
+        System.out.println();
+        System.out.println("  --verbose-dex-stats: print verbose stats of used resources by dex tasks");
+        System.out.println("      Enabling this wraps each dex task in '/usr/bin/time -v' call");
+        System.out.println("      and adds its output to the stdout log. Useful to get a sense of");
+        System.out.println("      resource usage such as RSS memory, CPU usage and wall-clock time.");
+        System.out.println("      Default is: " + verboseDexStats);
         System.out.println();
         System.out.println("  --check-jni: enable CheckJNI mode.");
         System.out.println("      See http://developer.android.com/training/articles/perf-jni.html.");
@@ -664,7 +682,8 @@ public final class Vogar {
 
         AndroidSdk androidSdk = null;
         if (modeId.requiresAndroidSdk()) {
-            androidSdk = AndroidSdk.createAndroidSdk(console, mkdir, modeId, language);
+            androidSdk = AndroidSdk.createAndroidSdk(console, mkdir, modeId, language,
+                    !actionFiles.isEmpty(), serialDexing, verboseDexStats);
         }
 
         if (runnerType == null) {

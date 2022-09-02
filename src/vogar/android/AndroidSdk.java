@@ -58,6 +58,8 @@ public class AndroidSdk {
     private final String desugarJarPath;
     private final Md5Cache dexCache;
     private final Language language;
+    private final boolean serialDexing;
+    private final boolean verboseDexStats;
 
     public static Collection<File> defaultExpectations() {
         return Collections.singletonList(new File("libcore/expectations/knownfailures.txt"));
@@ -70,7 +72,8 @@ public class AndroidSdk {
      * compilation class path and android jar path.
      */
     public static AndroidSdk createAndroidSdk(
-            Log log, Mkdir mkdir, ModeId modeId, Language language) {
+            Log log, Mkdir mkdir, ModeId modeId, Language language,
+            boolean supportBuildFromSource, boolean serialDexing, boolean verboseDexStats) {
         List<String> path = new Command.Builder(log).args("which", ARBITRARY_BUILD_TOOL_NAME)
                 .permitNonZeroExitStatus(true)
                 .execute();
@@ -175,39 +178,43 @@ public class AndroidSdk {
 
             desugarJarPath = desugarJar.getPath();
 
-            String pattern = outDir +
-                    "target/common/obj/JAVA_LIBRARIES/%s_intermediates/classes";
-            if (modeId.isHost()) {
-                pattern = outDir + "host/common/obj/JAVA_LIBRARIES/%s_intermediates/classes";
-            }
-            pattern += ".jar";
-
-            String[] jarNames = modeId.getJarNames();
-            compilationClasspath = new File[jarNames.length];
-            List<String> missingJars = new ArrayList<>();
-            for (int i = 0; i < jarNames.length; i++) {
-                String jar = jarNames[i];
-                File file;
+            if (!supportBuildFromSource) {
+                compilationClasspath = new File[]{};
+            } else {
+                String pattern = outDir +
+                        "target/common/obj/JAVA_LIBRARIES/%s_intermediates/classes";
                 if (modeId.isHost()) {
-                    if  ("conscrypt-hostdex".equals(jar)) {
-                        jar = "conscrypt-host-hostdex";
-                    } else if ("core-icu4j-hostdex".equals(jar)) {
-                        jar = "core-icu4j-host-hostdex";
-                    }
-                    file = new File(String.format(pattern, jar));
-                } else {
-                    file = findApexJar(jar, pattern);
-                    if (file.exists()) {
-                        log.verbose("Using jar " + jar + " from " + file);
-                    } else {
-                        missingJars.add(jar);
-                    }
+                    pattern = outDir + "host/common/obj/JAVA_LIBRARIES/%s_intermediates/classes";
                 }
-                compilationClasspath[i] = file;
-            }
-            if (!missingJars.isEmpty()) {
-                logMissingJars(log, missingJars);
-                throw new RuntimeException("Unable to locate all jars needed for compilation");
+                pattern += ".jar";
+
+                String[] jarNames = modeId.getJarNames();
+                compilationClasspath = new File[jarNames.length];
+                List<String> missingJars = new ArrayList<>();
+                for (int i = 0; i < jarNames.length; i++) {
+                    String jar = jarNames[i];
+                    File file;
+                    if (modeId.isHost()) {
+                        if  ("conscrypt-hostdex".equals(jar)) {
+                            jar = "conscrypt-host-hostdex";
+                        } else if ("core-icu4j-hostdex".equals(jar)) {
+                            jar = "core-icu4j-host-hostdex";
+                        }
+                        file = new File(String.format(pattern, jar));
+                    } else {
+                        file = findApexJar(jar, pattern);
+                        if (file.exists()) {
+                            log.verbose("Using jar " + jar + " from " + file);
+                        } else {
+                            missingJars.add(jar);
+                        }
+                    }
+                    compilationClasspath[i] = file;
+                }
+                if (!missingJars.isEmpty()) {
+                    logMissingJars(log, missingJars);
+                    throw new RuntimeException("Unable to locate all jars needed for compilation");
+                }
             }
         } else {
             throw new RuntimeException("Couldn't derive Android home from "
@@ -215,14 +222,16 @@ public class AndroidSdk {
         }
 
         return new AndroidSdk(log, mkdir, compilationClasspath, androidJarPath, desugarJarPath,
-                new HostFileCache(log, mkdir), language);
+                new HostFileCache(log, mkdir), language, serialDexing, verboseDexStats);
     }
 
     /** Logs jars that couldn't be found ands suggests a command for building them */
     private static void logMissingJars(Log log, List<String> missingJars) {
         StringBuilder makeCommand = new StringBuilder().append("m ");
         for (String jarName : missingJars) {
-            log.warn("Missing compilation jar " + jarName + " from APEX " + apexForJar(jarName));
+            String apex = apexForJar(jarName);
+            log.warn("Missing compilation jar " + jarName +
+                    (apex != null ? " from APEX " + apex : ""));
             makeCommand.append(jarName).append(" ");
         }
         log.info("Suggested make command: " + makeCommand);
@@ -230,10 +239,8 @@ public class AndroidSdk {
 
     /** Returns the name of the APEX a particular jar might be located in */
     private static String apexForJar(String jar) {
-        if ("conscrypt".equals(jar)) {
-            return "com.android.conscrypt";
-        } else if ("core-icu4j".equals(jar)) {
-            return "com.android.i18n";
+        if (jar.endsWith(".api.stubs")) {
+            return null;  // API stubs aren't in any APEX.
         }
         return "com.android.art.testing";
     }
@@ -244,16 +251,20 @@ public class AndroidSdk {
      * always non-null but possibly non-existent and so the caller should check.
      */
     private static File findApexJar(String jar, String filePattern) {
-        File file = new File(String.format(filePattern, jar + "." + apexForJar(jar)));
-        if (file.exists()) {
-            return file;
+        String apex = apexForJar(jar);
+        if (apex != null) {
+            File file = new File(String.format(filePattern, jar + "." + apex));
+            if (file.exists()) {
+                return file;
+            }
         }
         return new File(String.format(filePattern, jar));
     }
 
     @VisibleForTesting
     AndroidSdk(Log log, Mkdir mkdir, File[] compilationClasspath, String androidJarPath,
-               String desugarJarPath, HostFileCache hostFileCache, Language language) {
+               String desugarJarPath, HostFileCache hostFileCache, Language language,
+               boolean serialDexing, boolean verboseDexStats) {
         this.log = log;
         this.mkdir = mkdir;
         this.compilationClasspath = compilationClasspath;
@@ -261,6 +272,8 @@ public class AndroidSdk {
         this.desugarJarPath = desugarJarPath;
         this.dexCache = new Md5Cache(log, "dex", hostFileCache);
         this.language = language;
+        this.serialDexing = serialDexing;
+        this.verboseDexStats = verboseDexStats;
     }
 
     // Goes up N levels in the filesystem hierarchy. Return the last file that exists if this goes
@@ -374,10 +387,14 @@ public class AndroidSdk {
          */
 
         Command.Builder builder = new Command.Builder(log);
+        if (verboseDexStats) {
+            builder.args("/usr/bin/time").args("-v");
+        }
         switch (dexer) {
             case DX:
                 builder.args(DX_COMMAND_NAME);
                 builder.args("-JXms16M").args("-JXmx1536M");
+                builder.args("-JXX:+TieredCompilation").args("-JXX:TieredStopAtLevel=1");
                 builder.args("--min-sdk-version=" + language.getMinApiLevel());
                 if (multidex) {
                     builder.args("--multi-dex");
@@ -397,6 +414,8 @@ public class AndroidSdk {
                 }
                 builder.args(D8_COMMAND_NAME);
                 builder.args("-JXms16M").args("-JXmx1536M");
+                builder.args("-JXX:+TieredCompilation").args("-JXX:TieredStopAtLevel=1");
+                builder.args("--thread-count").args("1");
 
                 // d8 will not allow compiling with a single dex file as the target, but if given
                 // a directory name will start its output in classes.dex but may overflow into
