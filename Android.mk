@@ -31,7 +31,7 @@ LOCAL_JAVA_RESOURCE_DIRS := resources
 LOCAL_STATIC_JAVA_LIBRARIES := \
   caliper \
   caliper-gson \
-  guavalib \
+  guava \
   junit \
   testng \
   vogar-jsr305 \
