@@ -408,7 +408,7 @@ public class AndroidSdk {
             case D8:
                 List<String> sanitizedOutputFilePaths;
                 try {
-                    sanitizedOutputFilePaths = removeDexFilesForD8(filePaths);
+                    sanitizedOutputFilePaths = removeDexFilesForD8(filePaths, outputTempDir);
                 } catch (IOException e) {
                     throw new RuntimeException("Error while removing dex files from archive", e);
                 }
@@ -484,26 +484,35 @@ public class AndroidSdk {
     }
 
     /**
+     * Generates a file path for a modified d8 input file.
+     * @param inputFile the d8 input file.
+     * @param outputDirectory the directory where the modified file should be written.
+     * @return the destination for the modified d8 input file.
+     */
+    private static File getModifiedD8Destination(File inputFile, File outputDirectory) {
+        String name = inputFile.getName();
+        int suffixStart = name.lastIndexOf('.');
+        if (suffixStart != -1) {
+            name = name.substring(0, suffixStart);
+        }
+        return new File(outputDirectory, name + "-d8.jar");
+    }
+
+    /**
       * Removes DEX files from an archive and preserves the rest.
       */
-    private List<String> removeDexFilesForD8(List<String> fileNames) throws IOException {
+    private List<String> removeDexFilesForD8(List<String> fileNames, File tempDir)
+            throws IOException {
         byte[] buffer = new byte[4096];
         List<String> processedFiles = new ArrayList<>(fileNames.size());
         for (String inputFileName : fileNames) {
-            String jarExtension = ".jar";
-            String outputFileName;
-            if (inputFileName.endsWith(jarExtension)) {
-                outputFileName =
-                    inputFileName.substring(0, inputFileName.length() - jarExtension.length())
-                    + "-d8" + jarExtension;
-            } else {
-                outputFileName = inputFileName + "-d8" + jarExtension;
-            }
+            File inputFile = new File(inputFileName);
+            File outputFile = getModifiedD8Destination(inputFile, tempDir);
             try (JarOutputStream outputJar =
-                    new JarOutputStream(new FileOutputStream(outputFileName))) {
+                    new JarOutputStream(new FileOutputStream(outputFile))) {
                 copyJarContentExcludingFiles(buffer, inputFileName, outputJar, ".dex");
             }
-            processedFiles.add(outputFileName);
+            processedFiles.add(outputFile.toString());
         }
         return processedFiles;
     }
