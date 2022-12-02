@@ -43,12 +43,11 @@ import vogar.util.Strings;
 
 
 /**
- * Android SDK commands such as adb, aapt and dx.
+ * Android SDK commands such as adb, aapt and d8.
  */
 public class AndroidSdk {
 
     private static final String D8_COMMAND_NAME = "d8";
-    private static final String DX_COMMAND_NAME = "dx";
     private static final String ARBITRARY_BUILD_TOOL_NAME = D8_COMMAND_NAME;
 
     private final Log log;
@@ -101,7 +100,7 @@ public class AndroidSdk {
          * Android build tree (target):
          *  ${ANDROID_BUILD_TOP}/out/host/linux-x86/bin/aapt
          *  ${ANDROID_BUILD_TOP}/out/host/linux-x86/bin/adb
-         *  ${ANDROID_BUILD_TOP}/out/host/linux-x86/bin/dx
+         *  ${ANDROID_BUILD_TOP}/out/host/linux-x86/bin/d8
          *  ${ANDROID_BUILD_TOP}/out/host/linux-x86/bin/desugar.jar
          *  ${ANDROID_BUILD_TOP}/out/target/common/obj/JAVA_LIBRARIES/core-libart_intermediates
          *      /classes.jar
@@ -379,11 +378,8 @@ public class AndroidSdk {
          * same package they're testing, even when that's a core
          * library package. If you're actually just using this tool to
          * execute arbitrary code, this has the unfortunate
-         * side-effect of preventing "dx" from protecting you from
+         * side-effect of preventing "d8" from protecting you from
          * yourself.
-         *
-         * Memory options pulled from build/core/definitions.mk to
-         * handle large dx input when building dex for APK.
          */
 
         Command.Builder builder = new Command.Builder(log);
@@ -391,20 +387,6 @@ public class AndroidSdk {
             builder.args("/usr/bin/time").args("-v");
         }
         switch (dexer) {
-            case DX:
-                builder.args(DX_COMMAND_NAME);
-                builder.args("-JXms16M").args("-JXmx1536M");
-                builder.args("-JXX:+TieredCompilation").args("-JXX:TieredStopAtLevel=1");
-                builder.args("--min-sdk-version=" + language.getMinApiLevel());
-                if (multidex) {
-                    builder.args("--multi-dex");
-                }
-                builder.args("--dex")
-                    .args("--output=" + output)
-                    .args("--core-library")
-                    .args(filePaths);
-                builder.execute();
-                break;
             case D8:
                 List<String> sanitizedOutputFilePaths;
                 try {
