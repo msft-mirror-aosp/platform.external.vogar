@@ -20,5 +20,6 @@ package vogar;
  * Available tools for generating dex files
  */
 public enum Dexer {
+    DX,
     D8,
 }

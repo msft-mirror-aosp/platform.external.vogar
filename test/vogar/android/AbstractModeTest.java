@@ -83,7 +83,7 @@ public abstract class AbstractModeTest {
                     + ". Please check stdout.");
         }
 
-        run = new Run(vogar, Toolchain.D8, console, mkdir, androidSdk, new Rm(console), target,
+        run = new Run(vogar, Toolchain.DX, console, mkdir, androidSdk, new Rm(console), target,
                 new File("runner/dir"));
 
         classpath = new Classpath();

@@ -61,7 +61,7 @@ public final class DeviceRuntime implements Mode {
             Task currentDexTask = addCreateDexJarAndPushTasks(result, run.basenameOfJar(classpathElement),
                     classpathElement, null);
             // If {@code serialDexing} is enabled, make each subsequent dex task
-            // depend on previous so any moment of time only one dexer (d8) instance is run
+            // depend on previous so any moment of time only one dexer (d8 or dx) instance is run
             // simultaneously.
             if (lastDexTask != null && run.serialDexing) {
                 currentDexTask.afterSuccess(lastDexTask);
