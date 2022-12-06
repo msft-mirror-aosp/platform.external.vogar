@@ -260,7 +260,7 @@ public final class Vogar {
         System.out.println("      DEFAULT: default (or N/A), X32: 32-bit, X64: 64-bit");
         System.out.println("      Default is: " + variant);
         System.out.println();
-        System.out.println("  --toolchain <DX|D8|JAVAC>: Which toolchain to use.");
+        System.out.println("  --toolchain <D8|JAVAC>: Which toolchain to use.");
         System.out.println("      Default depends on --mode value (currently "
                 + modeId.defaultToolchain() + " for --mode=" + modeId + ")");
         System.out.println();
