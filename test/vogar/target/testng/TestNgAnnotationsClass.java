@@ -16,27 +16,30 @@
 
 package vogar.target.testng;
 
-import static org.testng.Assert.assertEquals;
-
-import java.util.Locale;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-/**
- * Verify that the locale is reset to Locale.US before/after each test is run.
- *
- * <p>This ensures that the {@link vogar.target.TestEnvironment} class is used correctly.
- */
-public class ChangeDefaultLocaleTest {
+public class TestNgAnnotationsClass {
+    @BeforeClass
+    public void beforeClass() {
+        System.out.println("@BeforeClass");
+    }
 
-    @Test
-    public void testDefault_Locale_CANADA() {
-        assertEquals(Locale.getDefault(), Locale.US);
-        Locale.setDefault(Locale.CANADA);
+    @AfterClass
+    public void afterClass() {
+        System.out.println("@AfterClass");
     }
 
     @Test
-    public void testDefault_Locale_CHINA() {
-        assertEquals(Locale.getDefault(), Locale.US);
-        Locale.setDefault(Locale.CHINA);
+    public void test1() {
+    }
+
+    @Test
+    public void test2() {
+    }
+
+    @Test
+    public void test3() {
     }
 }
