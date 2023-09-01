@@ -89,6 +89,9 @@ public final class DeviceRuntime implements Mode {
         // If you edit this, see also HostRuntime...
         VmCommandBuilder vmCommandBuilder = new VmCommandBuilder(run.log)
                 .env("ANDROID_DATA", run.getAndroidDataPath())
+                // b/150126287: avoid using libnetd_client within chroot,
+                // as it might not match the netd running outside chroot.
+                .env("ANDROID_NO_USE_FWMARK_CLIENT", "1")
                 .workingDirectory(workingDirectory)
                 .vmCommand(vmCommand)
                 .vmArgs("-Duser.home=" + run.deviceUserHome)
