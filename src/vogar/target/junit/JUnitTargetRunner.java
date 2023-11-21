@@ -44,19 +44,23 @@ public final class JUnitTargetRunner implements TargetRunner {
     private final Class<?> testClass;
     private final RunnerParams runnerParams;
 
+    private final String[] excludeFilters;
+
     public JUnitTargetRunner(TargetMonitor monitor, AtomicReference<String> skipPastReference,
                              TestEnvironment testEnvironment,
                              int timeoutSeconds, Class<?> testClass,
-                             String qualification, String[] args) {
+                             String qualification, String[] excludeFilters, String[] args) {
         this.monitor = monitor;
         this.skipPastReference = skipPastReference;
         this.testEnvironment = testEnvironment;
         this.testClass = testClass;
+        this.excludeFilters = excludeFilters;
 
         TimeoutAndAbortRunRule timeoutRule = new TimeoutAndAbortRunRule(timeoutSeconds);
         runnerParams = new RunnerParams(qualification, args, timeoutRule);
     }
 
+    @Override
     public boolean run() {
         // Use JUnit infrastructure to run the tests.
         RunnerBuilder builder = new VogarRunnerBuilder(runnerParams);
@@ -76,6 +80,12 @@ public final class JUnitTargetRunner implements TargetRunner {
             } catch (NoTestsRemainException ignored) {
                 return true;
             }
+        }
+
+        try {
+            new ExcludeFilter(excludeFilters).apply(runner);
+        } catch (NoTestsRemainException e) {
+            throw new RuntimeException(e);
         }
 
         try {
