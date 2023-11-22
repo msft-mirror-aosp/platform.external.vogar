@@ -85,7 +85,7 @@ public final class JUnitTargetRunner implements TargetRunner {
         try {
             new ExcludeFilter(excludeFilters).apply(runner);
         } catch (NoTestsRemainException e) {
-            throw new RuntimeException(e);
+            return true;
         }
 
         try {
