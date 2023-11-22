@@ -39,6 +39,7 @@ public class TestNgTargetRunner implements TargetRunner {
             int timeoutSeconds,
             Class<?> testClass,
             String qualification,
+            String[] excludeFilters,
             String[] args) {
         this.monitor = monitor;
         this.testClass = testClass;
