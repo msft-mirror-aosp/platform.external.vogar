@@ -35,6 +35,7 @@ public class TestNgRunnerFactory implements RunnerFactory {
             AtomicReference<String> skipPastReference,
             TestEnvironment testEnvironment,
             int timeoutSeconds,
+            String[] excludeFilters,
             String[] args) {
         if (supports(klass)) {
             return new TestNgTargetRunner(
@@ -44,6 +45,7 @@ public class TestNgRunnerFactory implements RunnerFactory {
                     timeoutSeconds,
                     klass,
                     qualification,
+                    excludeFilters,
                     args);
         } else {
             return null;

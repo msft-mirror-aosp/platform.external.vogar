@@ -32,5 +32,5 @@ public interface RunnerFactory {
     @Nullable
     TargetRunner newRunner(TargetMonitor monitor, String qualification, Class<?> klass,
             AtomicReference<String> skipPastReference, TestEnvironment testEnvironment,
-            int timeoutSeconds, String[] args);
+            int timeoutSeconds, String[] excludeFilters, String[] args);
 }

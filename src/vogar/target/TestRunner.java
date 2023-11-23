@@ -52,6 +52,7 @@ public final class TestRunner {
 
     private final RunnerFactory runnerFactory;
     private final String[] args;
+    private final String[] excludeFilters;
     private boolean useSocketMonitor;
 
     public TestRunner(Properties properties, List<String> argsList) {
@@ -60,6 +61,8 @@ public final class TestRunner {
 
         int monitorPort = Integer.parseInt(properties.getProperty(TestProperties.MONITOR_PORT));
         String skipPast = null;
+        List<String> excludeFilters = new ArrayList<>();
+
 
         for (Iterator<String> i = argsList.iterator(); i.hasNext(); ) {
             String arg = i.next();
@@ -71,6 +74,11 @@ public final class TestRunner {
             if (arg.equals("--skipPast")) {
                 i.remove();
                 skipPast = i.next();
+                i.remove();
+            }
+            if (arg.equals("--exclude-filter")) {
+                i.remove();
+                excludeFilters.add(i.next());
                 i.remove();
             }
         }
@@ -95,6 +103,7 @@ public final class TestRunner {
 
         this.monitorPort = monitorPort;
         this.skipPastReference = new AtomicReference<>(skipPast);
+        this.excludeFilters = excludeFilters.toArray(String[]::new);
         this.args = argsList.toArray(new String[argsList.size()]);
     }
 
@@ -201,7 +210,7 @@ public final class TestRunner {
             TargetRunner targetRunner;
             try {
                 targetRunner = runnerFactory.newRunner(monitor, qualification, klass,
-                        skipPastReference, testEnvironment, timeoutSeconds, args);
+                        skipPastReference, testEnvironment, timeoutSeconds, excludeFilters, args);
             } catch (RuntimeException e) {
                 monitor.outcomeStarted(klass.getName());
                 e.printStackTrace();
@@ -246,10 +255,11 @@ public final class TestRunner {
         @Override @Nullable
         public TargetRunner newRunner(TargetMonitor monitor, String qualification,
                 Class<?> klass, AtomicReference<String> skipPastReference,
-                TestEnvironment testEnvironment, int timeoutSeconds, String[] args) {
+                TestEnvironment testEnvironment, int timeoutSeconds, String[] excludeFilters,
+                String[] args) {
             for (RunnerFactory runnerFactory : runnerFactories) {
                 TargetRunner targetRunner = runnerFactory.newRunner(monitor, qualification, klass,
-                        skipPastReference, testEnvironment, timeoutSeconds, args);
+                        skipPastReference, testEnvironment, timeoutSeconds, excludeFilters, args);
                 if (targetRunner != null) {
                     return targetRunner;
                 }
