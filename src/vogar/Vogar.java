@@ -155,6 +155,9 @@ public final class Vogar {
     @Option(names = { "--java-home" })
     File javaHome;
 
+    @Option(names = { "--exclude-filter" })
+    List<String> excludeFilters = new ArrayList<>();
+
     @Option(names = { "--javac-arg" })
     List<String> javacArgs = new ArrayList<String>();
 
@@ -370,6 +373,8 @@ public final class Vogar {
         System.out.println("  --java-home <java_home>: execute the actions on the local workstation");
         System.out.println("      using the specified java home directory. This does not impact");
         System.out.println("      which javac gets used. When unset, java is used from the PATH.");
+        System.out.println();
+        System.out.println("  --exclude-filter <java_annotation>: exclude the annotated tests");
         System.out.println();
         System.out.println("EXOTIC OPTIONS");
         System.out.println();

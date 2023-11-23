@@ -22,6 +22,7 @@ import com.google.common.base.Supplier;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -72,6 +73,7 @@ public final class Run {
     public final int firstMonitorPort;
     public final int timeoutSeconds;
     public final File javaHome;
+    public final List<String> excludeFilters;
     public final Integer debugPort;
     public final Language language;
     public final List<String> javacArgs;
@@ -138,6 +140,8 @@ public final class Run {
         this.javacArgs = vogar.javacArgs;
         this.multidex = vogar.multidex;
         this.javaHome = vogar.javaHome;
+        this.excludeFilters = new ArrayList<>();
+        this.excludeFilters.addAll(vogar.excludeFilters);
         this.largeTimeoutSeconds = vogar.timeoutSeconds * Vogar.LARGE_TIMEOUT_MULTIPLIER;
         this.maxConcurrentActions = (vogar.stream || vogar.modeId == ModeId.ACTIVITY)
                     ? 1
