@@ -14,64 +14,13 @@
 
 LOCAL_PATH := $(call my-dir)
 
-# build vogar jar
-# ============================================================
-
-include $(CLEAR_VARS)
-
-LOCAL_MODULE := vogar
-LOCAL_LICENSE_KINDS := SPDX-license-identifier-Apache-2.0 SPDX-license-identifier-BSD
-LOCAL_LICENSE_CONDITIONS := notice
-LOCAL_NOTICE_FILE := $(LOCAL_PATH)/LICENSE
-LOCAL_MODULE_TAGS := optional
-LOCAL_MODULE_CLASS := JAVA_LIBRARIES
-LOCAL_SRC_FILES := $(call all-java-files-under, src/)
-LOCAL_JAVA_RESOURCE_DIRS := resources
-
-LOCAL_STATIC_JAVA_LIBRARIES := \
-  caliper \
-  gson \
-  guava \
-  junit \
-  testng \
-  vogar-jsr305 \
-  vogar-kxml-libcore-20110123
-
-LOCAL_ADDITIONAL_DEPENDENCIES := \
-  $(HOST_OUT_EXECUTABLES)/d8 \
-  $(HOST_OUT_JAVA_LIBRARIES)/desugar.jar
-
-# Vogar uses android.jar.
-LOCAL_CLASSPATH := $(call resolve-prebuilt-sdk-jar-path,current)
-
-include $(BUILD_HOST_JAVA_LIBRARY)
-
-# build vogar tests jar
-# ============================================================
 # Run the tests using using the following target.
+# ============================================================
 .PHONY: run-vogar-tests
 run-vogar-tests: vogar-tests
 	ANDROID_BUILD_TOP=$$(pwd) \
 	  java -cp ./out/host/linux-x86/framework/vogar-tests.jar \
 	  org.junit.runner.JUnitCore vogar.AllTests
-
-include $(CLEAR_VARS)
-
-LOCAL_MODULE := vogar-tests
-LOCAL_LICENSE_KINDS := SPDX-license-identifier-Apache-2.0 SPDX-license-identifier-BSD
-LOCAL_LICENSE_CONDITIONS := notice
-LOCAL_NOTICE_FILE := $(LOCAL_PATH)/LICENSE
-LOCAL_MODULE_TAGS := optional
-LOCAL_MODULE_CLASS := JAVA_LIBRARIES
-LOCAL_SRC_FILES := $(call all-java-files-under, test/)
-
-LOCAL_STATIC_JAVA_LIBRARIES := \
-	junit \
-	mockito \
-	objenesis \
-	vogar
-
-include $(BUILD_HOST_JAVA_LIBRARY)
 
 # copy vogar script
 # ============================================================
