@@ -54,3 +54,35 @@ java_import_host {
     name: "vogar-kxml-libcore-20110123",
     jars: ["lib/kxml-libcore-20110123.jar"],
 }
+
+// build vogar jar
+java_library_host {
+    name: "vogar",
+    srcs: ["src/**/*.java"],
+    java_resource_dirs: ["resources"],
+    static_libs: [
+        "caliper",
+        "gson",
+        "guava",
+        "junit",
+        "testng",
+        "vogar-jsr305",
+        "vogar-kxml-libcore-20110123",
+    ],
+    // Vogar uses android.jar.
+    libs: [
+        "android_current",
+    ],
+}
+
+// build vogar tests jar
+java_library_host {
+    name: "vogar-tests",
+    srcs: ["test/**/*.java"],
+    static_libs: [
+        "junit",
+        "mockito",
+        "objenesis",
+        "vogar",
+    ],
+}
