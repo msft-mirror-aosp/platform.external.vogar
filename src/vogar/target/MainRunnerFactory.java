@@ -28,7 +28,8 @@ public class MainRunnerFactory implements RunnerFactory {
     @Override @Nullable
     public TargetRunner newRunner(TargetMonitor monitor, String qualification,
             Class<?> klass, AtomicReference<String> skipPastReference,
-            TestEnvironment testEnvironment, int timeoutSeconds, String[] args) {
+            TestEnvironment testEnvironment, int timeoutSeconds, String[] excludeFilters,
+            String[] args) {
         if (new ClassAnalyzer(klass).hasMethod(true, void.class, "main", String[].class)) {
             return new MainTargetRunner(monitor, klass, args);
         } else {
