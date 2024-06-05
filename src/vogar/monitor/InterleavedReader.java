@@ -78,7 +78,15 @@ public final class InterleavedReader implements Closeable {
     int textEnd;
 
     while (true) {
-      int r = reader.read(buffer, count, buffer.length - count);
+      int r = -1;
+
+      try {
+          r = reader.read(buffer, count, buffer.length - count);
+      } catch (IOException e) {
+          // When running under gcstress, the output stream may be closed outside our control when
+          // the target process exits. In order to allow this, catch the stream closed exception and
+          // return whatever has been buffered already. (b/308917607)
+      }
 
       if (r == -1) {
         // the input is exhausted; return the remaining characters
