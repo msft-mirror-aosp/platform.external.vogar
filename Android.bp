@@ -54,3 +54,75 @@ java_import_host {
     name: "vogar-kxml-libcore-20110123",
     jars: ["lib/kxml-libcore-20110123.jar"],
 }
+
+// build vogar jar
+java_library_host {
+    name: "vogar-host-jar",
+    srcs: ["src/**/*.java"],
+    // Make the host jar file name to be vogar.jar due to in vogar-script it
+    // expect the jar to be vogar.jar.
+    stem: "vogar",
+    java_resource_dirs: ["resources"],
+    static_libs: [
+        "caliper",
+        "gson",
+        "guava",
+        "junit",
+        "testng",
+        "vogar-jsr305",
+        "vogar-kxml-libcore-20110123",
+    ],
+    // Vogar uses android.jar.
+    libs: [
+        "android_current",
+    ],
+}
+
+// copy vogar script
+sh_binary_host {
+    // Set filename to the same name as the stem of vogar-host-jar to align with
+    // original make behavior.
+    name: "vogar-script",
+    src: "bin/vogar-android",
+    filename: "vogar",
+}
+
+// User can build both vogar-host-jar and vogar-script just use vogar as target
+// name. This could be replace after soong has implemented the wrapper function
+// for java_library_host.
+phony_rule {
+    name: "vogar",
+    phony_deps: [
+        "vogar-host-jar",
+        "vogar-script",
+    ],
+}
+
+// build vogar tests jar
+java_library_host {
+    name: "vogar-tests",
+    srcs: ["test/**/*.java"],
+    static_libs: [
+        "junit",
+        "mockito",
+        "objenesis",
+        "vogar-host-jar",
+    ],
+}
+
+// Run the tests using using run-vogar-tests.
+java_genrule_host {
+    name: "vogar-tests-result",
+    srcs: [
+        ":vogar-tests",
+    ],
+    cmd: "ANDROID_BUILD_TOP=$$(pwd) java -cp $(in) org.junit.runner.JUnitCore vogar.AllTests 2>&1 | tee $(out)",
+    out: ["vogar-tests-result.txt"],
+}
+
+phony_rule {
+    name: "run-vogar-tests",
+    phony_deps: [
+        "vogar-tests-result",
+    ],
+}
