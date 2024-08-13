@@ -10,6 +10,8 @@ if [ ! -f "${vogar_jar}" ]; then
         android_sdks_dir=`echo ${ANDROID_BUILD_TOP}/prebuilt*/sdk/`
         latest_android_sdk=`ls -1 ${android_sdks_dir} | sort -n | tail -1`
         android_platform_dir=${android_sdks_dir}${latest_android_sdk}
+        export JAVA_HOME=${ANDROID_BUILD_TOP}/prebuilts/jdk/jdk21/linux-x86
+        export PATH=${JAVA_HOME}/bin:${PATH}
     else
         # See if there's an Android SDK on the path.
         adb_path=`which adb`
