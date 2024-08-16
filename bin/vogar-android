@@ -17,5 +17,9 @@ if [ -z "$ANDROID_HOST_OUT" ] ; then
   ANDROID_HOST_OUT=${OUT_DIR:-$ANDROID_BUILD_TOP/out}/host/linux-x86
 fi
 
+export JAVA_HOME=${ANDROID_BUILD_TOP}/prebuilts/jdk/jdk21/linux-x86
+export PATH=${JAVA_HOME}/bin:${PATH}
 vogar_jar=${ANDROID_HOST_OUT}/framework/vogar.jar
+
+echo "vogar-android java binary location:"  `which java` 1>&2
 exec java -classpath ${vogar_jar} vogar.Vogar "$@"
