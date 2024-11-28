@@ -168,7 +168,8 @@ public class AndroidSdk {
                 hostOutDir = outDir + "/host/linux-x86";
             }
 
-            String desugarPattern = hostOutDir + "/framework/desugar.jar";
+            String desugarPattern =
+                androidBuildTop + "/prebuilts/build-tools/common/framework/desugar.jar";
             File desugarJar = new File(desugarPattern);
 
             if (!desugarJar.exists()) {
