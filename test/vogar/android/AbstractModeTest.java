@@ -71,7 +71,7 @@ public abstract class AbstractModeTest {
         rm = new Rm(console);
 
         androidSdk = new AndroidSdk(console, mkdir,
-                new File[] {new File("classpath")}, "android.jar", "desugar.jar",
+                new File[] {new File("classpath")}, "android.jar",
                 new HostFileCache(console, mkdir),
                 Language.CUR, false, false);
         Target target = createTarget();
