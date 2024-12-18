@@ -30,7 +30,7 @@ import vogar.commands.Command;
 /**
  * Runs actions on a remote host using SSH.
  */
-public final class SshTarget extends Target {
+public class SshTarget extends Target {
     private final Log log;
     private final String host;
     private final int port;
