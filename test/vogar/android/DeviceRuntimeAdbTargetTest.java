@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import vogar.Classpath;
 import vogar.Mode;
 import vogar.ModeId;
