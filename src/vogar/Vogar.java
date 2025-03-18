@@ -676,7 +676,11 @@ public final class Vogar {
                 }
                 break;
             case SSH:
-                target = new SshTarget(console, sshHost);
+                if (chrootDir != null) {
+                    target = new SshChrootTarget(console, sshHost, chrootDir);
+                } else {
+                    target = new SshTarget(console, sshHost);
+                }
                 break;
             case LOCAL:
                 target = new LocalTarget(console, mkdir, rm);
