@@ -46,11 +46,6 @@ license {
 }
 
 java_import_host {
-    name: "vogar-jsr305",
-    jars: ["lib/jsr305.jar"],
-}
-
-java_import_host {
     name: "vogar-kxml-libcore-20110123",
     jars: ["lib/kxml-libcore-20110123.jar"],
 }
@@ -67,9 +62,9 @@ java_library_host {
         "caliper",
         "gson",
         "guava",
+        "jsr305",
         "junit",
         "testng",
-        "vogar-jsr305",
         "vogar-kxml-libcore-20110123",
     ],
     // Vogar uses android.jar.

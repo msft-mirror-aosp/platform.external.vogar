@@ -62,6 +62,7 @@ public class DeviceRuntimeSshTargetTest extends AbstractModeTest {
                         + "cd /work"
                         + " &&"
                         + " ANDROID_DATA=runner"
+                        + " ANDROID_NO_USE_FWMARK_CLIENT=1"
                         + " dalvikvm"
                         + " -classpath"
                         + " classes"
